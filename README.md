@@ -15,7 +15,7 @@ so it is always online and always growing.
 | `docs/` | Everything we know and have decided. Portable to any machine or agent. |
 | `content/` | Projects, posts, about, links. The single source of truth for words. |
 | `scene/objects/` | The contract every interactive object follows, and later the objects. |
-| `src/` | The Astro static site (not created yet, Phase 1). |
+| `src/` | The Astro static site. Run `npm install`, then `npm run dev`. |
 
 ## Working from another machine or agent
 

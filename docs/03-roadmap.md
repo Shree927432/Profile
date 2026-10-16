@@ -18,12 +18,12 @@ Time: 2 to 4 evenings. Most of it is deciding, not typing.
 
 ## Phase 1: the static site
 
-- [ ] Astro project in src/, reads content/
-- [ ] Pages: home, projects, project detail, posts, post detail, about
-- [ ] One stylesheet, two fonts max, dark and light
-- [ ] Lighthouse 95+ on mobile for performance and accessibility
+- [x] Astro project in src/, reads content/
+- [x] Pages: home, projects, project detail, posts, post detail, about
+- [x] One stylesheet, two fonts max, dark and light
+- [x] Lighthouse 95+ on mobile for performance and accessibility
 - [ ] Deployed on Cloudflare Pages or Vercel with the real domain
-- [ ] Home page has the empty room hook (canvas + boot.js that does nothing)
+- [x] Home page has the empty room hook (canvas + boot.js that does nothing)
 
 Done when: you would be fine if this were the final site.
 Time: one afternoon with an agent, a weekend by hand.

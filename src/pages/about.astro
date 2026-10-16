@@ -1,0 +1,28 @@
+---
+import { render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { getAbout, getLinkList, getSite } from '../lib/content';
+
+const about = await getAbout();
+const site = getSite();
+const links = getLinkList();
+const Content = about ? (await render(about)).Content : null;
+---
+
+<Base title="About" description={site.description}>
+  <main id="main" class="wrap">
+    <div class="prose">
+      {Content ? <Content /> : <p class="empty">about.md is missing.</p>}
+    </div>
+    {links.length > 0 && (
+      <section class="section" aria-labelledby="h-contact">
+        <h2 id="h-contact">Elsewhere</h2>
+        <ul class="article-links">
+          {links.map((l) => (
+            <li><a href={l.href} rel={l.href.startsWith('mailto:') ? undefined : 'me noopener'}>{l.label}</a></li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </main>
+</Base>

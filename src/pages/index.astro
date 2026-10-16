@@ -1,0 +1,66 @@
+---
+import Base from '../layouts/Base.astro';
+import { getProjects, getPosts, getSite, formatDate, isoDate } from '../lib/content';
+
+const site = getSite();
+const projects = (await getProjects()).slice(0, 4);
+const posts = (await getPosts()).slice(0, 3);
+---
+
+<Base title={site.name} description={site.description}>
+  <main id="main" class="wrap">
+    <div id="static">
+      <h1>{site.name}</h1>
+      <p class="lede">{site.tagline}</p>
+      <p>{site.intro}</p>
+
+      <section class="section" aria-labelledby="h-projects">
+        <div class="section-head">
+          <h2 id="h-projects">Projects</h2>
+          <a href="/projects" class="small">All projects</a>
+        </div>
+        {projects.length === 0 ? (
+          <p class="empty">No projects yet.</p>
+        ) : (
+          <ul class="list">
+            {projects.map((p) => (
+              <li>
+                <a class="item" href={`/projects/${p.id}`}>
+                  <span class="item-title">{p.data.title}</span>
+                  <span class="item-meta">{p.data.year}</span>
+                  <span class="item-summary">{p.data.summary}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section class="section" aria-labelledby="h-posts">
+        <div class="section-head">
+          <h2 id="h-posts">Posts</h2>
+          <a href="/posts" class="small">All posts</a>
+        </div>
+        {posts.length === 0 ? (
+          <p class="empty">No posts yet.</p>
+        ) : (
+          <ul class="list">
+            {posts.map((p) => (
+              <li>
+                <a class="item" href={`/posts/${p.id}`}>
+                  <span class="item-title">{p.data.title}</span>
+                  <time class="item-meta" datetime={isoDate(p.data.date)}>{formatDate(p.data.date)}</time>
+                  <span class="item-summary">{p.data.summary}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  </main>
+
+  <!-- The room hook. See docs/02-architecture.md. boot.js does nothing until Phase 3. -->
+  <canvas id="room" hidden aria-hidden="true"></canvas>
+  <script type="module" src="/scene/boot.js" is:inline></script>
+</Base>

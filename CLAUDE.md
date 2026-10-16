@@ -10,6 +10,7 @@ Read these before doing anything, in this order:
 2. docs/02-architecture.md      how the code is laid out, the rules that must not break
 3. docs/03-roadmap.md           what phase we are in and what is next
 4. docs/05-decisions.md         decisions already made. Do not re-open them without asking.
+5. docs/08-model-guide.md       which model, effort and agent (.claude/agents/) fits each task
 
 Then check docs/05-decisions.md again before finishing: if you made a decision the
 owner agreed to, append it there with the date.
@@ -30,6 +31,11 @@ owner agreed to, append it there with the date.
 - Plain Three.js as ES modules. No React, no bundler-only tricks for the scene. Astro
   for the static site. Nothing else unless a decision in docs/05-decisions.md allows it.
 
+## Choosing a model
+
+When starting a session or handing off work, pick the agent, model and effort from
+the table in docs/08-model-guide.md. Say which you picked in one line.
+
 ## How to work with the owner
 
 - Show, do not tell. Prefer a screenshot or a running preview over a description.
@@ -42,7 +48,8 @@ owner agreed to, append it there with the date.
 ## Where things are
 
     content/        the words, projects, posts, links (the only source of truth)
-    docs/           vision, reference, architecture, roadmap, ideas, decisions
+    docs/           vision, reference, architecture, roadmap, ideas, decisions, model guide
+    .claude/agents/ builder (Sonnet), designer (Opus), quick (Haiku)
     scene/          the 3D room (empty until Phase 3)
     scene/objects/  one file per interactive object, see CONTRACT.md
     src/            the Astro static site (created in Phase 1)

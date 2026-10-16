@@ -1,0 +1,74 @@
+---
+import '../styles/global.css';
+import { getLinkList, getSite } from '../lib/content';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Page type for og:type. */
+  type?: 'website' | 'article';
+}
+
+const { title, description = '', type = 'website' } = Astro.props;
+const siteName = getSite().name;
+const fullTitle = title === siteName ? siteName : `${title} · ${siteName}`;
+const path = Astro.url.pathname;
+const links = getLinkList();
+
+const nav = [
+  { href: '/projects', label: 'Projects' },
+  { href: '/posts', label: 'Posts' },
+  { href: '/about', label: 'About' },
+];
+const isCurrent = (href: string) => path === href || path.startsWith(href + '/');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    {description && <meta name="description" content={description} />}
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f6f2" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141413" />
+    <meta property="og:title" content={fullTitle} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:type" content={type} />
+    <link rel="canonical" href={new URL(path, Astro.site)} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="wrap">
+        <a class="site-name" href="/" aria-current={path === '/' ? 'page' : undefined}>{siteName}</a>
+        <nav class="site-nav" aria-label="Main">
+          <ul>
+            {nav.map((n) => (
+              <li><a href={n.href} aria-current={isCurrent(n.href) ? 'page' : undefined}>{n.label}</a></li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <slot />
+
+    <footer class="site-footer">
+      <div class="wrap">
+        {links.length > 0 && (
+          <ul aria-label="Elsewhere">
+            {links.map((l) => (
+              <li><a href={l.href} rel={l.href.startsWith('mailto:') ? undefined : 'me noopener'}>{l.label}</a></li>
+            ))}
+          </ul>
+        )}
+        <p>© {new Date().getFullYear()} {siteName}</p>
+      </div>
+    </footer>
+  </body>
+</html>

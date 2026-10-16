@@ -41,3 +41,12 @@ Plain markdown. Who you are, what you do, what you are into. First person.
       "x": "",
       "resume": ""
     }
+
+## site.json
+
+    {
+      "name": "Your name, used as the site title",
+      "tagline": "One line under your name on the home page",
+      "intro": "Two or three sentences for the home page",
+      "description": "One sentence for search engines and link previews"
+    }

@@ -1,0 +1,27 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getProjects } from '../../lib/content';
+
+const projects = await getProjects();
+---
+
+<Base title="Projects" description="Things I have built.">
+  <main id="main" class="wrap">
+    <h1>Projects</h1>
+    {projects.length === 0 ? (
+      <p class="empty">No projects yet.</p>
+    ) : (
+      <ul class="list">
+        {projects.map((p) => (
+          <li>
+            <a class="item" href={`/projects/${p.id}`}>
+              <span class="item-title">{p.data.title}</span>
+              <span class="item-meta">{p.data.year}</span>
+              <span class="item-summary">{p.data.summary}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </main>
+</Base>
