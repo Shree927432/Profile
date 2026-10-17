@@ -1,0 +1,6 @@
+Read CLAUDE.md, then docs/00-vision.md, docs/02-architecture.md,
+docs/03-roadmap.md, docs/05-decisions.md and docs/08-model-guide.md.
+Then read handover/START-HERE.md and the Status section of README.md.
+We are at the end of Phase 1. Continue from the "Next" list in README.md,
+one step at a time. Show me screenshots, keep answers short, and ask
+before deleting content or adding dependencies.
