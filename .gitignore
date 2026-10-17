@@ -5,3 +5,7 @@ dist/
 *.blend1
 # Large scene assets (glb, ktx2, mp3) are tracked with git-lfs, not ignored.
 # See docs/02-architecture.md. Run: git lfs track "scene/assets/**"
+
+# Raw session exports: full detail, includes private app context. Local only.
+transcripts-raw/
+docs/transcripts/
