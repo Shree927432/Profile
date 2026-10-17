@@ -51,5 +51,4 @@ Next, in this order:
    in `astro.config.mjs` and deploy from this GitHub repo.
 5. Decide the premise in `docs/00-vision.md`. Phase 2 needs it.
 
-To resume with any agent: "Read CLAUDE.md and the Status section of README.md,
-then continue from 'Next'." 
+To resume with any agent, open `handover/START-HERE.md` and paste the prompt in it. 

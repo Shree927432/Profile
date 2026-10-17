@@ -9,3 +9,6 @@ dist/
 # Raw session exports: full detail, includes private app context. Local only.
 transcripts-raw/
 docs/transcripts/
+
+# Private chat transcripts, kept local only
+handover/transcripts/
