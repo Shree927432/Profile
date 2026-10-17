@@ -23,6 +23,33 @@ Clone this folder (it is a git repository). Open it with any agent. Tell it:
 "Read CLAUDE.md and docs/03-roadmap.md, then continue the current phase."
 Everything an agent needs to know is in the files, not in anyone's chat history.
 
-## Status
+## Status (2026-10-17)
 
-Phase 0: documentation and planning. No site code yet.
+Phase 1, almost done. The Astro static site is built and works locally. Lighthouse
+mobile scored 100 on performance, accessibility, best practices and SEO.
+
+Run it:
+
+    npm install
+    npm run dev        # http://localhost:4321
+    npm run build      # output in dist/
+
+### Where we left off
+
+Done:
+- All six pages, one layout, one stylesheet, dark and light, room hook on home.
+- `/content.json` generated at build for the future room.
+- Real links in `content/links.json` (resume still empty, so it is hidden).
+- First real post: `content/posts/nobody-starts-from-zero.md`. Check its date
+  and summary, and that you are happy with the personal details being public.
+
+Next, in this order:
+1. Write `content/about.md` and the tagline and intro in `content/site.json`.
+2. Add at least 3 real projects in `content/projects/`.
+3. Delete `content/projects/example-project.md` and `content/posts/example-post.md`.
+4. Pick hosting (Cloudflare Pages or Vercel) and the domain, then set `site`
+   in `astro.config.mjs` and deploy from this GitHub repo.
+5. Decide the premise in `docs/00-vision.md`. Phase 2 needs it.
+
+To resume with any agent: "Read CLAUDE.md and the Status section of README.md,
+then continue from 'Next'." 

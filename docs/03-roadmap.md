@@ -3,7 +3,7 @@
 Each phase ends with something online. Never skip ahead more than one phase.
 Update the status line when a phase changes.
 
-**Current phase: 0**
+**Current phase: 1** (site built, waiting on real content and deploy. Phase 0 premise still open.)
 
 ## Phase 0: plan and content (now)
 
