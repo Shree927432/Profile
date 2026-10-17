@@ -11,6 +11,7 @@ Read these before doing anything, in this order:
 3. docs/03-roadmap.md           what phase we are in and what is next
 4. docs/05-decisions.md         decisions already made. Do not re-open them without asking.
 5. docs/08-model-guide.md       which model, effort and agent (.claude/agents/) fits each task
+6. docs/09-chat-notes.md        links, deploy steps, costs, drafts saved from the planning chat
 
 Then check docs/05-decisions.md again before finishing: if you made a decision the
 owner agreed to, append it there with the date.
