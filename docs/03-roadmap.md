@@ -3,13 +3,13 @@
 Each phase ends with something online. Never skip ahead more than one phase.
 Update the status line when a phase changes.
 
-**Current phase: 1** (site live on Cloudflare Pages, custom domain still open. Phase 0 premise decided, object list waiting on the owner.)
+**Current phase: 2** (site live on Cloudflare Pages, custom domain deferred. Premise and objects confirmed. Building the first screen.)
 
 ## Phase 0: plan and content (now)
 
 - [x] Folder, docs, agent instructions
 - [x] Decide the premise (docs/00-vision.md). One sentence. (2026-10-19: the bedroom music studio)
-- [ ] List 6 to 10 objects and what each does (nine proposed 2026-10-19, owner to confirm)
+- [x] List 6 to 10 objects and what each does (nine, confirmed 2026-10-19)
 - [x] Write content: about.md, links.json, at least 3 projects, 1 post
 - [ ] Mood board folder: docs/moodboard/ with 10 to 20 reference images
 

@@ -50,8 +50,7 @@ Done:
 
 Next, in this order:
 1. Add the custom domain in Cloudflare Pages, then set `site` in `astro.config.mjs`.
-2. Premise decided (bedroom music studio). Confirm the object list in
-   `docs/00-vision.md`, then start Phase 2.
+2. Phase 2: the posts screen on the desk monitor, as a screen module.
 3. Update the fine-tune project page as the 30-day plan moves (repo link, scorecard).
 
 To resume with any agent, open `handover/START-HERE.md` and paste the prompt in it. 

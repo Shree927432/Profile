@@ -49,7 +49,7 @@ Shorter prompts for single steps:
 | About, intro, tagline | Written 2026-10-19 |
 | Projects | Three real: CI diagnosis MCP, GST reconciliation, small model fine-tune (in progress). Examples deleted |
 | Deploy and domain | Live on Cloudflare Pages at https://shrikantpawade.pages.dev, redeploys on push to main. Custom domain still open |
-| Premise for the 3D room | Decided: bedroom music studio, upright piano. Objects proposed, owner to confirm |
+| Premise for the 3D room | Confirmed 2026-10-19: bedroom music studio, upright piano, nine objects |
 | Agents | `.claude/agents/`: builder (Sonnet), designer (Opus), quick (Haiku) |
 
 ## 4. Next steps, in order
@@ -58,8 +58,7 @@ Done 2026-10-19: about page and home text, three real projects, example files de
 
 1. Add the custom domain in Cloudflare Pages, set `site` in `astro.config.mjs`,
    tick the domain box in `docs/03-roadmap.md`. Phase 1 is then done.
-2. Premise decided 2026-10-19 (bedroom music studio). Confirm the object list
-   in `docs/00-vision.md`, then start Phase 2.
+2. Phase 2: the posts screen on the desk monitor, as a screen module.
 3. Keep `content/projects/small-model-fine-tune.md` current as the 30-day plan moves.
 
 ## 5. Things a new agent should know (not obvious from the code)

@@ -41,10 +41,10 @@ day, the weather, the mood, and the sound.
 **Premise:** My room in Pune, a bedroom that became a music studio: a wall of
 guitars, an upright piano, and the desk where the models get trained.
 **Time and weather:** 5:40 a.m., first light, the two hours before the day starts.
-The window follows the real time and weather in Pune. _(Proposed, owner to confirm.)_
-**Mood in three words:** Quiet, focused, lived-in. _(Proposed.)_
+The window follows the real time and weather in Pune.
+**Mood in three words:** Quiet, focused, lived-in.
 **What you hear:** Birds outside, the computer's fan, and the piano or a guitar
-when you touch it. _(Proposed.)_
+when you touch it.
 
 Reference: the owner's chosen photo, `docs/moodboard/local/chosen-room-guitar-wall-bedroom-studio.jpg`
 (local only, not in git), with its digital piano swapped for an upright. Our
@@ -55,7 +55,7 @@ at the back, desk with monitor, speakers and a mic arm in the corner, acoustic
 panels and a wall of guitars on the right, the upright piano below the guitars,
 a rug on a wooden floor, one ceiling light.
 
-## The objects (proposed 2026-10-19, owner to confirm)
+## The objects (confirmed 2026-10-19)
 
 List 6 to 10 objects. For each: what it is, what it does when clicked, what
 content it shows. Fewer objects that fully work beat many that half work.
