@@ -1,10 +1,13 @@
 // Runs one screen module (see objects/CONTRACT.md) on a plain 2D canvas on the page.
 // Draws only while on screen and the tab is visible; maps keys, clicks, wheel and touch to input().
 
-const W = 640;
-const H = 400;
+// 16:10 always. Narrow slots (phones) get a smaller logical size, so text stays readable.
+const WIDE = 640;
+const NARROW = 400;
 
 export async function mountScreen(container, mod) {
+  const W = container.clientWidth < 480 ? NARROW : WIDE;
+  const H = (W * 10) / 16;
   const res = await fetch("/content.json");
   if (!res.ok) throw new Error("content.json " + res.status);
   const content = await res.json();

@@ -1,5 +1,6 @@
 // Screen: the desk monitor. Lists posts (newest first) on a dark navy terminal-style display.
 // Keys/click/scroll select a post; Enter or clicking a row calls open(post.url).
+// On a narrow canvas (phones) rows show the title only, in bigger text.
 //
 // Uses only mount's arguments: no imports, globals or DOM. Times are in milliseconds.
 
@@ -13,7 +14,9 @@ const FONT = 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", 
 const PAD = 24;
 const HEADER_Y = 40;
 const LIST_TOP = 64;
-const ROW_H = 56;
+const ROW_H = 56;       // title + date/summary line
+const ROW_H_COMPACT = 38; // narrow canvas: title only, bigger
+const COMPACT_BELOW = 500; // canvas width in logical units
 const HINT_Y_FROM_BOTTOM = 18;
 const BLINK_MS = 530;
 const SCROLL_STEP = 40; // scroll units per row
@@ -23,8 +26,10 @@ export default {
   mount({ canvas, ctx, width, height, content, open, reduce, say }) {
     const posts = (content && content.posts) || [];
     const text = (content && content.site && content.site.screens && content.site.screens.posts) || {};
+    const compact = width < COMPACT_BELOW;
+    const rowH = compact ? ROW_H_COMPACT : ROW_H;
     const listBottom = height - 44;
-    const rows = Math.max(1, Math.floor((listBottom - LIST_TOP) / ROW_H));
+    const rows = Math.max(1, Math.floor((listBottom - LIST_TOP) / rowH));
 
     let sel = 0;
     let top = 0;
@@ -83,15 +88,16 @@ export default {
       const textW = width - PAD * 2 - 16;
       for (let i = 0; i < rows && top + i < posts.length; i++) {
         const p = posts[top + i];
-        const y = LIST_TOP + i * ROW_H;
+        const y = LIST_TOP + i * rowH;
         const on = top + i === sel;
         if (on) {
           ctx.fillStyle = HILITE;
-          ctx.fillRect(PAD - 10, y, width - PAD * 2 + 20 - 8, ROW_H - 6);
+          ctx.fillRect(PAD - 10, y, width - PAD * 2 + 20 - 8, rowH - 6);
         }
-        ctx.font = `bold 17px ${FONT}`;
+        ctx.font = `bold ${compact ? 20 : 17}px ${FONT}`;
         ctx.fillStyle = on ? FG_BRIGHT : FG;
-        ctx.fillText(fit((on ? "> " : "  ") + (p.title || ""), textW), PAD, y + 22);
+        ctx.fillText(fit((on ? "> " : "  ") + (p.title || ""), textW), PAD, y + (compact ? 24 : 22));
+        if (compact) continue;
         ctx.font = `13px ${FONT}`;
         ctx.fillStyle = on ? FG : FG_DIM;
         const meta = [p.date, p.summary].filter(Boolean).join("  ");
@@ -100,7 +106,7 @@ export default {
 
       // scroll bar, only when the list is longer than the screen
       if (posts.length > rows) {
-        const trackH = rows * ROW_H - 6;
+        const trackH = rows * rowH - 6;
         const thumbH = Math.max(16, (trackH * rows) / posts.length);
         const thumbY = LIST_TOP + ((trackH - thumbH) * top) / (posts.length - rows);
         ctx.fillStyle = HILITE;
@@ -109,7 +115,7 @@ export default {
         ctx.fillRect(width - 14, thumbY, 4, thumbH);
       }
 
-      ctx.font = `13px ${FONT}`;
+      ctx.font = `${compact ? 15 : 13}px ${FONT}`;
       ctx.fillStyle = FG_DIM;
       ctx.fillText(fit(text.hint || "", width - PAD * 2), PAD, height - HINT_Y_FROM_BOTTOM);
       ctx.restore();
@@ -158,7 +164,7 @@ export default {
           return false;
         }
         if (ev.type === "click") {
-          const i = Math.floor((ev.y - LIST_TOP) / ROW_H);
+          const i = Math.floor((ev.y - LIST_TOP) / rowH);
           if (ev.y < LIST_TOP || i < 0 || i >= rows || top + i >= posts.length) return false;
           sel = top + i;
           dirty = true;

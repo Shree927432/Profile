@@ -50,7 +50,8 @@ Done:
 
 Next, in this order:
 1. Add the custom domain in Cloudflare Pages, then set `site` in `astro.config.mjs`.
-2. Phase 2: posts screen built and live. Fix small text on phones, then Phase 3.
+2. Phase 2 done: posts screen live on desktop and phone. Next is Phase 3,
+   the Three.js room shell (builder agent, Sonnet, high effort).
 3. Update the fine-tune project page as the 30-day plan moves (repo link, scorecard).
 
 To resume with any agent, open `handover/START-HERE.md` and paste the prompt in it. 
