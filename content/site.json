@@ -1,6 +1,6 @@
 {
   "name": "Shrikant Pawade",
-  "tagline": "Builder of things on the web.",
-  "intro": "Replace this with two sentences about who you are and what you are working on right now. It shows at the top of the home page.",
-  "description": "Personal site of Shrikant Pawade: projects, notes and contact details."
+  "tagline": "Pianist by training, building with AI, learning in public from Pune.",
+  "intro": "About a year ago I left a career in music to learn how language models are trained, by building small ones and fine-tuning them on my own data. This site is where the work goes, including the parts that fail.",
+  "description": "Shrikant Pawade, a pianist turned AI builder in Pune. Projects, essays and notes on training small language models."
 }
