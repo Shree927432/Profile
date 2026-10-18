@@ -347,3 +347,37 @@ main {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- screen slot (desk monitor, Phase 2) ---------- */
+
+.screen-slot { display: none; }
+html.js .screen-slot {
+  display: block;
+  position: relative;
+  max-width: var(--measure);
+  margin: 0 0 1.5rem;
+  padding: 10px;
+  background: #15181e;
+  border: 1px solid #2a2d33;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.25);
+}
+/* reserves the 16:10 space until the canvas arrives, so nothing shifts */
+html.js .screen-slot:not(:has(canvas))::before {
+  content: "";
+  display: block;
+  aspect-ratio: 16 / 10;
+}
+.screen-slot canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  border-radius: 4px;
+  outline: none;
+  touch-action: pan-y;
+}
+html.js .screen-slot:has(canvas:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}

@@ -8,6 +8,7 @@ const posts = (await getPosts()).slice(0, 3);
 ---
 
 <Base title={site.name} description={site.description}>
+  <script slot="head" is:inline>document.documentElement.classList.add('js')</script>
   <main id="main" class="wrap">
     <div id="static">
       <h1>{site.name}</h1>
@@ -41,6 +42,7 @@ const posts = (await getPosts()).slice(0, 3);
           <h2 id="h-posts">Posts</h2>
           <a href="/posts" class="small">All posts</a>
         </div>
+        <div id="screen-slot" class="screen-slot"></div>
         {posts.length === 0 ? (
           <p class="empty">No posts yet.</p>
         ) : (

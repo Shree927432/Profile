@@ -3,7 +3,7 @@
 Each phase ends with something online. Never skip ahead more than one phase.
 Update the status line when a phase changes.
 
-**Current phase: 2** (site live on Cloudflare Pages, custom domain deferred. Premise and objects confirmed. Building the first screen.)
+**Current phase: 2** (site live on Cloudflare Pages, custom domain deferred. Premise and objects confirmed. Posts screen built; text is small on phones, owner to choose a fix.)
 
 ## Phase 0: plan and content (now)
 
@@ -31,10 +31,10 @@ Time: one afternoon with an agent, a weekend by hand.
 
 ## Phase 2: first screen, no 3D
 
-- [ ] One 2D canvas on the home page, styled as a CRT or LCD, listing posts
-- [ ] Built as a screen module per scene/objects/CONTRACT.md
-- [ ] Keyboard navigation inside it, scroll, click to open a post
-- [ ] Hidden behind the boot check; static list still there for everyone else
+- [x] One 2D canvas on the home page, styled as a CRT or LCD, listing posts (LCD monitor, 2026-10-19)
+- [x] Built as a screen module per scene/objects/CONTRACT.md (`scene/objects/monitor-posts.js`)
+- [x] Keyboard navigation inside it, scroll, click to open a post
+- [x] Hidden behind the boot check; static list still there for everyone else
 
 Done when: the module contract has been used once for real and feels right.
 Time: 2 to 3 sessions.

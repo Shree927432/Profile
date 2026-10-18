@@ -58,7 +58,7 @@ Done 2026-10-19: about page and home text, three real projects, example files de
 
 1. Add the custom domain in Cloudflare Pages, set `site` in `astro.config.mjs`,
    tick the domain box in `docs/03-roadmap.md`. Phase 1 is then done.
-2. Phase 2: the posts screen on the desk monitor, as a screen module.
+2. Phase 2: posts screen built and live. Fix small text on phones, then Phase 3.
 3. Keep `content/projects/small-model-fine-tune.md` current as the 30-day plan moves.
 
 ## 5. Things a new agent should know (not obvious from the code)

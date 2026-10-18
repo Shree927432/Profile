@@ -36,7 +36,8 @@ export function createLamp(THREE, ctx) {
 // scene/objects/monitor-posts.js
 export default {
   id: "monitor-posts",
-  mount({ canvas, ctx, width, height, audio, content, open }) {
+  mount({ canvas, ctx, width, height, audio, content, open, reduce, say }) {
+    // reduce: true when prefers-reduced-motion. say(text): one line for screen readers.
     // draw with the 2D ctx. return true from frame() only when pixels changed.
     return {
       frame(t, dt) { return false; },

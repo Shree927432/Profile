@@ -25,6 +25,9 @@ it before finishing. Re-opening a decision needs the owner's say-so.
 | 2026-10-19 | Premise: the owner's room in Pune, a bedroom turned music studio, with a wall of guitars, an upright piano (not digital), and a desk with monitor, speakers and mic. Chosen from the owner's own reference photo over the three sketched options. Object list and time of day are in docs/00-vision.md. | The owner picked the room. It is personal (pianist, guitars, the AI work at the desk), one room keeps Phase 4 small, and it is not a desk at night like the reference. |
 | 2026-10-19 | Reference photos from the web live in `docs/moodboard/local/`, which git ignores. | The repo is public. The photos are not ours to publish. |
 | 2026-10-19 | Owner confirmed the nine objects, the 5:40 a.m. setting, mood and sound, and the current pick (instruments really play; window follows Pune time and weather; the plant grows on return visits). | Owner's approval in chat. |
+| 2026-10-19 | Phase 2 posts screen: `scene/objects/monitor-posts.js` (screen module), run on the home page by `scene/screen-host.js` on a 640×400 canvas, mounted by `scene/boot.js` into `#screen-slot`. The static posts list stays for everyone. Look follows the room sketch's monitor: navy screen, light blue system monospace. | Uses the contract once for real before Phase 3. Built by the builder agent, reviewed and tested here. |
+| 2026-10-19 | Screen contract `mount()` gains two fields: `reduce` (prefers-reduced-motion) and `say(text)` (one line for screen readers). Screen text lives in `content/site.json` under `screens.posts`. | Screens need the same reduced-motion and screen-reader hooks room objects get through ctx. No text in scene code. |
+| 2026-10-19 | `html.js` class set by an inline script in the home page head; `#screen-slot` shows and reserves 16:10 only with it. | No layout shift, and without JavaScript the home page looks exactly as before. |
 
 ## Open questions (move to the table when answered)
 

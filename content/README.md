@@ -49,7 +49,12 @@ Plain markdown. Who you are, what you do, what you are into. First person.
       "tagline": "One line under your name on the home page",
       "intro": "Two or three sentences for the home page",
       "description": "One sentence for search engines and link previews",
+      "screens": { "posts": { "title": "", "hint": "", "empty": "", "label": "" } },
       "notFound": { "title": "", "text": "", "link": "" }
     }
 
 `notFound` is the text of the 404 page.
+
+`screens.posts` is the text on the desk monitor, the only words on it that are not
+post data: `title` (header), `hint` (bottom line), `empty` (no posts), `label`
+(accessible name of the canvas, read by screen readers).
