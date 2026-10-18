@@ -22,10 +22,11 @@ it before finishing. Re-opening a decision needs the owner's say-so.
 | 2026-10-19 | Hosting: Cloudflare Pages, connected to the GitHub repo, live at https://shrikantpawade.pages.dev. Every push to main redeploys. `site` in astro.config.mjs points there until a custom domain exists. | Owner's choice. Free, no config file needed for a static Astro build. |
 | 2026-10-19 | Node pinned to 22.22.0 in `.node-version`. | Astro 7 needs Node 22.22 or newer; Cloudflare's build reads the file. |
 | 2026-10-19 | A 404 page (`src/pages/404.astro`), text in `content/site.json` under `notFound`. | Without it Cloudflare Pages serves the home page with status 200 for every unknown address. |
+| 2026-10-19 | Premise: the owner's room in Pune, a bedroom turned music studio, with a wall of guitars, an upright piano (not digital), and a desk with monitor, speakers and mic. Chosen from the owner's own reference photo over the three sketched options. Object list and time of day are proposed in docs/00-vision.md, pending the owner's confirmation. | The owner picked the room. It is personal (pianist, guitars, the AI work at the desk), one room keeps Phase 4 small, and it is not a desk at night like the reference. |
+| 2026-10-19 | Reference photos from the web live in `docs/moodboard/local/`, which git ignores. | The repo is public. The photos are not ours to publish. |
 
 ## Open questions (move to the table when answered)
 
-- The premise sentence.
 - The object list.
 - Domain.
 - Mesh naming scheme for Blender (decide before Phase 4).

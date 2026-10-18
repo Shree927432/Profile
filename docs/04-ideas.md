@@ -37,7 +37,7 @@ waits. One fully working crazy idea beats twelve half-working ones.
 - Favicon and tab title join the scene. Closing the tab turns the lamp off first.
 - A print stylesheet that prints a brochure of the room.
 
-## Our current pick (TO DECIDE)
-Big bet: _____
-Small surprise 1: _____
-Small surprise 2: _____
+## Our current pick (proposed 2026-10-19, owner to confirm)
+Big bet: the instruments really play. Piano keys and guitar strings make real notes.
+Small surprise 1: the window follows the real time and weather in Pune.
+Small surprise 2: the plant grows a leaf each time you come back.

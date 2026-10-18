@@ -12,3 +12,6 @@ docs/transcripts/
 
 # Private chat transcripts, kept local only
 handover/transcripts/
+
+# Reference photos from the web: not ours to publish. Local only.
+docs/moodboard/local/
