@@ -1,6 +1,6 @@
 # Start here (new session, new account, or new agent)
 
-Last updated: 2026-10-19. Everything below is also on GitHub:
+Last updated: 2026-10-19 (Phase 3 paused). Everything below is also on GitHub:
 https://github.com/Shree927432/Profile
 
 ## 1. Get the project
@@ -58,8 +58,9 @@ Done 2026-10-19: about page and home text, three real projects, example files de
 
 1. Add the custom domain in Cloudflare Pages, set `site` in `astro.config.mjs`,
    tick the domain box in `docs/03-roadmap.md`. Phase 1 is then done.
-2. Phase 2 done: posts screen live on desktop and phone. Next is Phase 3,
-   the Three.js room shell (builder agent, Sonnet, high effort).
+2. Phase 2 done: posts screen live on desktop and phone.
+   Phase 3 (the Three.js room shell) is paused. Unfinished work is on the branch
+   `phase-3-room-shell`. Resume from `handover/phase-3-brief.md`.
 3. Keep `content/projects/small-model-fine-tune.md` current as the 30-day plan moves.
 
 ## 5. Things a new agent should know (not obvious from the code)
