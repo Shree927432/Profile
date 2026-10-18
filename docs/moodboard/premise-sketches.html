@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Premise sketches</title>
+<style>
+  :root { --bg:#f4f1ea; --ink:#1d1c1a; --muted:#6b675f; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width:980px; margin:0 auto; padding:24px 16px 64px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .note { color:var(--muted); margin:0 0 28px; font-size:14px; }
+  section { margin:0 0 40px; }
+  h2 { font-size:18px; margin:0 0 2px; }
+  .line { color:var(--muted); margin:0 0 10px; font-size:14px; }
+  svg { width:100%; height:auto; display:block; border-radius:10px; }
+  .tag { font:600 13px system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<main>
+<h1>Premise sketches</h1>
+<p class="note">Rough illustrations to compare the feel of each room. Not the final look: that comes from Blender in Phase 4. Labels mark the clickable objects.</p>
+
+<!-- ============ A: PRACTICE ROOM ============ -->
+<section id="a">
+<h2>A. The practice room, 5:40 a.m.</h2>
+<p class="line">Before dawn into first light. Quiet, focused, warm. Fan, metronome, crows, the piano.</p>
+<svg viewBox="0 0 960 600" role="img" aria-label="Sketch of a pianist's practice room at dawn">
+  <defs>
+    <linearGradient id="a-wall" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e9d9c0"/><stop offset="1" stop-color="#c9b394"/>
+    </linearGradient>
+    <linearGradient id="a-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5d6f9c"/><stop offset=".55" stop-color="#e7a98a"/><stop offset="1" stop-color="#f6d7a4"/>
+    </linearGradient>
+    <linearGradient id="a-beam" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff1cf" stop-opacity=".55"/><stop offset="1" stop-color="#fff1cf" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="a-floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9c7a58"/><stop offset="1" stop-color="#6e5238"/>
+    </linearGradient>
+    <linearGradient id="a-piano" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3b2418"/><stop offset=".5" stop-color="#55331f"/><stop offset="1" stop-color="#2c1a11"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="600" fill="url(#a-wall)"/>
+  <rect y="470" width="960" height="130" fill="url(#a-floor)"/>
+  <rect y="462" width="960" height="10" fill="#e3d2b6"/>
+  <!-- window -->
+  <rect x="60" y="90" width="210" height="250" fill="url(#a-sky)"/>
+  <circle cx="200" cy="300" r="34" fill="#ffe6ad" opacity=".9"/>
+  <path d="M60 300 L95 285 L120 300 L150 280 L190 296 L230 284 L270 298 L270 340 L60 340Z" fill="#4a4a5e" opacity=".55"/>
+  <rect x="52" y="82" width="226" height="266" fill="none" stroke="#f5ecdc" stroke-width="14"/>
+  <line x1="165" y1="90" x2="165" y2="340" stroke="#f5ecdc" stroke-width="8"/>
+  <line x1="60" y1="215" x2="270" y2="215" stroke="#f5ecdc" stroke-width="8"/>
+  <path d="M110 140 q8 -6 16 0 q8 -6 16 0" fill="none" stroke="#2b2b35" stroke-width="2.5"/>
+  <path d="M210 120 q6 -5 12 0 q6 -5 12 0" fill="none" stroke="#2b2b35" stroke-width="2"/>
+  <!-- light beam -->
+  <polygon points="270,100 270,340 760,600 420,600" fill="url(#a-beam)"/>
+  <!-- ceiling fan -->
+  <line x1="520" y1="0" x2="520" y2="28" stroke="#6d6250" stroke-width="5"/>
+  <ellipse cx="520" cy="34" rx="20" ry="9" fill="#6d6250"/>
+  <ellipse cx="455" cy="36" rx="62" ry="6" fill="#857865"/>
+  <ellipse cx="585" cy="36" rx="62" ry="6" fill="#857865"/>
+  <!-- calendar -->
+  <rect x="770" y="90" width="130" height="150" fill="#fbf7ef" stroke="#b9a68a"/>
+  <rect x="770" y="90" width="130" height="28" fill="#c0563a"/>
+  <text x="835" y="109" text-anchor="middle" fill="#fff" class="tag" font-size="12">OCT · NOV</text>
+  <g stroke="#c0563a" stroke-width="2">
+    <path d="M782 130 l12 12 M794 130 l-12 12"/><path d="M800 130 l12 12 M812 130 l-12 12"/>
+  </g>
+  <g fill="none" stroke="#cfc2ad">
+    <rect x="818" y="130" width="14" height="14"/><rect x="836" y="130" width="14" height="14"/><rect x="854" y="130" width="14" height="14"/><rect x="872" y="130" width="14" height="14"/>
+    <rect x="782" y="150" width="14" height="14"/><rect x="800" y="150" width="14" height="14"/><rect x="818" y="150" width="14" height="14"/><rect x="836" y="150" width="14" height="14"/><rect x="854" y="150" width="14" height="14"/><rect x="872" y="150" width="14" height="14"/>
+    <rect x="782" y="170" width="14" height="14"/><rect x="800" y="170" width="14" height="14"/><rect x="818" y="170" width="14" height="14"/><rect x="836" y="170" width="14" height="14"/><rect x="854" y="170" width="14" height="14"/><rect x="872" y="170" width="14" height="14"/>
+    <rect x="782" y="190" width="14" height="14"/><rect x="800" y="190" width="14" height="14"/><rect x="818" y="190" width="14" height="14"/><rect x="836" y="190" width="14" height="14"/><rect x="854" y="190" width="14" height="14"/><rect x="872" y="190" width="14" height="14"/>
+  </g>
+  <!-- gig poster -->
+  <g transform="rotate(3 655 135)">
+    <rect x="605" y="70" width="100" height="135" fill="#232a4a"/>
+    <circle cx="655" cy="120" r="26" fill="#e9b04a"/>
+    <text x="655" y="172" text-anchor="middle" fill="#f3e6c8" class="tag" font-size="13">LIVE</text>
+    <text x="655" y="190" text-anchor="middle" fill="#f3e6c8" font-size="10">SAT · PUNE</text>
+    <circle cx="655" cy="76" r="4" fill="#c0563a"/>
+  </g>
+  <!-- upright piano -->
+  <rect x="330" y="230" width="380" height="240" rx="6" fill="url(#a-piano)"/>
+  <rect x="330" y="222" width="390" height="16" rx="4" fill="#24150d"/>
+  <rect x="350" y="250" width="340" height="80" rx="4" fill="#2a170e" opacity=".7"/>
+  <rect x="318" y="330" width="404" height="34" fill="#2a170e"/>
+  <!-- keys -->
+  <rect x="330" y="334" width="380" height="26" fill="#f6f1e6"/>
+  <g fill="#1b120c">
+    <rect x="345" y="334" width="7" height="16"/><rect x="363" y="334" width="7" height="16"/><rect x="390" y="334" width="7" height="16"/><rect x="408" y="334" width="7" height="16"/><rect x="426" y="334" width="7" height="16"/>
+    <rect x="453" y="334" width="7" height="16"/><rect x="471" y="334" width="7" height="16"/><rect x="498" y="334" width="7" height="16"/><rect x="516" y="334" width="7" height="16"/><rect x="534" y="334" width="7" height="16"/>
+    <rect x="561" y="334" width="7" height="16"/><rect x="579" y="334" width="7" height="16"/><rect x="606" y="334" width="7" height="16"/><rect x="624" y="334" width="7" height="16"/><rect x="642" y="334" width="7" height="16"/>
+    <rect x="669" y="334" width="7" height="16"/><rect x="687" y="334" width="7" height="16"/>
+  </g>
+  <rect x="340" y="364" width="14" height="106" fill="#24150d"/><rect x="686" y="364" width="14" height="106" fill="#24150d"/>
+  <!-- music stand / sheet music -->
+  <rect x="440" y="262" width="80" height="62" fill="#fbf6ea" transform="rotate(-2 480 293)"/>
+  <rect x="522" y="262" width="80" height="62" fill="#f4eedf" transform="rotate(2 562 293)"/>
+  <g stroke="#9c8f78" stroke-width="1">
+    <path d="M448 274 h64 M448 279 h64 M448 284 h64 M448 296 h64 M448 301 h64 M448 306 h64"/>
+    <path d="M530 274 h64 M530 279 h64 M530 284 h64 M530 296 h64 M530 301 h64 M530 306 h64"/>
+  </g>
+  <!-- metronome -->
+  <polygon points="380,222 398,160 416,222" fill="#6b3b22"/>
+  <line x1="398" y1="215" x2="407" y2="168" stroke="#e9d6a8" stroke-width="2"/>
+  <!-- chai glass -->
+  <path d="M466 198 l4 24 h18 l4 -24z" fill="#c98b4a" opacity=".9"/>
+  <path d="M466 198 h26" stroke="#f7efe0" stroke-width="2"/>
+  <path d="M474 190 q4 -8 0 -14 M484 190 q4 -8 0 -14" fill="none" stroke="#fff" stroke-width="1.5" opacity=".7"/>
+  <!-- bench + laptop -->
+  <rect x="400" y="410" width="240" height="18" rx="3" fill="#4a2c1b"/>
+  <rect x="412" y="428" width="12" height="42" fill="#3a2215"/><rect x="616" y="428" width="12" height="42" fill="#3a2215"/>
+  <polygon points="470,410 570,410 580,402 460,402" fill="#9aa0a8"/>
+  <polygon points="472,402 568,402 556,350 484,350" fill="#2b2f36"/>
+  <polygon points="477,398 563,398 553,355 487,355" fill="#11161d"/>
+  <polyline points="492,362 504,378 516,384 528,389 540,391 550,392" fill="none" stroke="#7fd1a0" stroke-width="2"/>
+  <!-- labels -->
+  <g class="tag" fill="#1d1c1a">
+    <text x="165" y="372" text-anchor="middle">Window · real Pune time</text>
+    <text x="835" y="262" text-anchor="middle">30-day calendar</text>
+    <text x="725" y="60" text-anchor="middle">Gig poster · contact</text>
+    <text x="398" y="150" text-anchor="middle">Metronome</text>
+    <text x="480" y="168" text-anchor="middle">Chai</text>
+    <text x="520" y="248" text-anchor="middle" fill="#f3e6c8">Sheet music · posts</text>
+    <text x="520" y="455" text-anchor="middle" fill="#f3e6c8">Laptop · projects</text>
+    <text x="760" y="390">Playable piano</text>
+    <text x="520" y="66" text-anchor="middle">Ceiling fan</text>
+  </g>
+  <line x1="756" y1="386" x2="712" y2="350" stroke="#1d1c1a" stroke-width="1.2"/>
+</svg>
+</section>
+
+<!-- ============ B: GREEN ROOM ============ -->
+<section id="b">
+<h2>B. The green room, 11:40 p.m. Saturday</h2>
+<p class="line">Late night, warm and humid. Tired, buzzing, private. Muffled crowd through the wall, a chime when the run finishes.</p>
+<svg viewBox="0 0 960 600" role="img" aria-label="Sketch of a backstage green room after a gig">
+  <defs>
+    <linearGradient id="b-wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a2430"/><stop offset="1" stop-color="#3a2f36"/>
+    </linearGradient>
+    <radialGradient id="b-glow" cx=".7" cy=".35" r=".55">
+      <stop offset="0" stop-color="#ffcf87" stop-opacity=".35"/><stop offset="1" stop-color="#ffcf87" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b-bulb"><stop offset="0" stop-color="#fff6d8"/><stop offset=".5" stop-color="#ffd27a"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient>
+    <linearGradient id="b-door" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff9d5c" stop-opacity=".9"/><stop offset="1" stop-color="#ff9d5c" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="600" fill="url(#b-wall)"/>
+  <rect width="960" height="600" fill="url(#b-glow)"/>
+  <rect y="480" width="960" height="120" fill="#1a1619"/>
+  <!-- door ajar -->
+  <rect x="40" y="120" width="170" height="360" fill="#151214"/>
+  <rect x="40" y="120" width="26" height="360" fill="#ffb877"/>
+  <polygon points="66,480 66,120 70,120 300,560 120,600" fill="url(#b-door)" opacity=".35"/>
+  <rect x="66" y="120" width="144" height="360" fill="#4a3a3c"/>
+  <circle cx="190" cy="310" r="7" fill="#c6a46a"/>
+  <!-- lanyard hook -->
+  <circle cx="290" cy="170" r="5" fill="#a0948a"/>
+  <path d="M290 172 L272 260 M290 172 L308 260" stroke="#c0563a" stroke-width="4" fill="none"/>
+  <rect x="266" y="258" width="48" height="64" rx="4" fill="#f2e9d8"/>
+  <rect x="266" y="258" width="48" height="16" rx="4" fill="#c0563a"/>
+  <text x="290" y="300" text-anchor="middle" font-size="11" class="tag" fill="#2a2430">ALL</text>
+  <text x="290" y="313" text-anchor="middle" font-size="11" class="tag" fill="#2a2430">ACCESS</text>
+  <!-- mirror with bulbs -->
+  <rect x="560" y="80" width="330" height="250" rx="6" fill="#d8c7a8"/>
+  <rect x="580" y="100" width="290" height="210" fill="#4b4a58"/>
+  <rect x="580" y="100" width="290" height="210" fill="#8f8aa3" opacity=".25"/>
+  <g>
+    <circle cx="560" cy="110" r="22" fill="url(#b-bulb)"/><circle cx="560" cy="170" r="22" fill="url(#b-bulb)"/><circle cx="560" cy="230" r="22" fill="url(#b-bulb)"/><circle cx="560" cy="290" r="22" fill="url(#b-bulb)"/>
+    <circle cx="890" cy="110" r="22" fill="url(#b-bulb)"/><circle cx="890" cy="170" r="22" fill="url(#b-bulb)"/><circle cx="890" cy="230" r="22" fill="url(#b-bulb)"/><circle cx="890" cy="290" r="22" fill="url(#b-bulb)"/>
+    <circle cx="630" cy="80" r="22" fill="url(#b-bulb)"/><circle cx="700" cy="80" r="22" fill="url(#b-bulb)"/><circle cx="770" cy="80" r="22" fill="url(#b-bulb)"/><circle cx="840" cy="80" r="22" fill="url(#b-bulb)"/>
+  </g>
+  <!-- setlist taped -->
+  <rect x="610" y="140" width="96" height="130" fill="#f7f2e6" transform="rotate(-4 658 205)"/>
+  <rect x="640" y="132" width="36" height="12" fill="#e8dcae" opacity=".85" transform="rotate(-4 658 205)"/>
+  <g transform="rotate(-4 658 205)" font-size="10" fill="#2a2430" font-family="ui-monospace, monospace">
+    <text x="618" y="166">SETLIST</text>
+    <text x="618" y="186">1 ci-diagnosis</text>
+    <text x="618" y="202">2 reconcile</text>
+    <text x="618" y="218">3 fine-tune</text>
+    <text x="618" y="234">4 ...</text>
+  </g>
+  <!-- counter -->
+  <rect x="520" y="330" width="420" height="20" fill="#5a4636"/>
+  <rect x="530" y="350" width="400" height="130" fill="#3d2f26"/>
+  <!-- tea glass on counter -->
+  <path d="M840 300 l4 30 h20 l4 -30z" fill="#b5713a" opacity=".85"/>
+  <path d="M840 300 h28" stroke="#f4e7d1" stroke-width="2"/>
+  <!-- flight case + laptop -->
+  <rect x="300" y="380" width="230" height="110" fill="#22201f"/>
+  <rect x="300" y="380" width="230" height="110" fill="none" stroke="#9ea3a8" stroke-width="5"/>
+  <g fill="#c7cbcf"><rect x="296" y="376" width="16" height="16"/><rect x="518" y="376" width="16" height="16"/><rect x="296" y="478" width="16" height="16"/><rect x="518" y="478" width="16" height="16"/></g>
+  <rect x="395" y="425" width="40" height="14" rx="2" fill="#9ea3a8"/>
+  <polygon points="350,380 480,380 492,372 338,372" fill="#9aa0a8"/>
+  <polygon points="352,372 478,372 464,300 366,300" fill="#2b2f36"/>
+  <polygon points="358,368 472,368 459,305 371,305" fill="#11161d"/>
+  <polyline points="378,318 392,336 408,344 424,349 440,351 452,352" fill="none" stroke="#7fd1a0" stroke-width="2"/>
+  <polygon points="358,368 472,368 520,480 300,480" fill="#7fd1a0" opacity=".06"/>
+  <!-- keyboard on stand -->
+  <rect x="150" y="430" width="160" height="24" rx="3" fill="#121212" transform="rotate(-3 230 442)"/>
+  <rect x="158" y="436" width="144" height="10" fill="#e9e4da" transform="rotate(-3 230 442)"/>
+  <path d="M180 455 L240 520 M280 455 L220 520" stroke="#6d6a66" stroke-width="5"/>
+  <!-- labels -->
+  <g class="tag" fill="#f3e9d8">
+    <text x="125" y="104" text-anchor="middle">Door · crowd swells</text>
+    <text x="290" y="345" text-anchor="middle">Pass · contact</text>
+    <text x="725" y="352" text-anchor="middle">Mirror bulbs · light</text>
+    <text x="658" y="290" text-anchor="middle" fill="#1d1c1a">Setlist · projects</text>
+    <text x="854" y="292" text-anchor="middle">Tea</text>
+    <text x="415" y="290" text-anchor="middle">Laptop · posts</text>
+    <text x="415" y="515" text-anchor="middle">Flight case</text>
+    <text x="230" y="545" text-anchor="middle">Keyboard · plays</text>
+  </g>
+</svg>
+</section>
+
+<!-- ============ C: CONTROL ROOM ============ -->
+<section id="c">
+<h2>C. The studio control room, 2 a.m.</h2>
+<p class="line">Deep night, no windows, lit by equipment. Precise, nocturnal, absorbed. Speaker hiss, fader clicks, music when a fader goes up.</p>
+<svg viewBox="0 0 960 600" role="img" aria-label="Sketch of a recording studio control room at night">
+  <defs>
+    <linearGradient id="c-wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f1622"/><stop offset="1" stop-color="#1b2533"/>
+    </linearGradient>
+    <linearGradient id="c-desk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a3f47"/><stop offset="1" stop-color="#22262c"/>
+    </linearGradient>
+    <radialGradient id="c-glow" cx=".5" cy=".38" r=".5">
+      <stop offset="0" stop-color="#5fa8ff" stop-opacity=".22"/><stop offset="1" stop-color="#5fa8ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="960" height="600" fill="url(#c-wall)"/>
+  <rect width="960" height="600" fill="url(#c-glow)"/>
+  <!-- acoustic panels -->
+  <g fill="#253244">
+    <rect x="40" y="40" width="120" height="180" rx="4"/><rect x="800" y="40" width="120" height="180" rx="4"/>
+  </g>
+  <g stroke="#2e3d52" stroke-width="2">
+    <path d="M50 70 h100 M50 100 h100 M50 130 h100 M50 160 h100 M50 190 h100"/>
+    <path d="M810 70 h100 M810 100 h100 M810 130 h100 M810 160 h100 M810 190 h100"/>
+  </g>
+  <!-- studio clock -->
+  <rect x="425" y="30" width="110" height="40" rx="6" fill="#090c11"/>
+  <text x="480" y="58" text-anchor="middle" fill="#ff4a3a" font-family="ui-monospace, monospace" font-size="24" font-weight="700">02:14</text>
+  <!-- speakers -->
+  <rect x="200" y="120" width="90" height="150" rx="6" fill="#14181e"/>
+  <circle cx="245" cy="160" r="18" fill="#2a2f37"/><circle cx="245" cy="225" r="32" fill="#2a2f37"/><circle cx="245" cy="225" r="12" fill="#14181e"/>
+  <rect x="670" y="120" width="90" height="150" rx="6" fill="#14181e"/>
+  <circle cx="715" cy="160" r="18" fill="#2a2f37"/><circle cx="715" cy="225" r="32" fill="#2a2f37"/><circle cx="715" cy="225" r="12" fill="#14181e"/>
+  <!-- main monitor -->
+  <rect x="330" y="100" width="300" height="180" rx="6" fill="#0a0d12"/>
+  <rect x="342" y="112" width="276" height="156" fill="#0f2238"/>
+  <g font-family="ui-monospace, monospace" font-size="12" fill="#9fd0ff">
+    <text x="356" y="136">POSTS</text>
+    <text x="356" y="160">&gt; Nobody Starts From Zero</text>
+    <text x="356" y="180" fill="#5f88b0">  ...</text>
+  </g>
+  <rect x="470" y="280" width="20" height="30" fill="#0a0d12"/>
+  <!-- VU meters -->
+  <g>
+    <rect x="352" y="300" width="110" height="60" rx="4" fill="#efe2b8"/>
+    <path d="M364 350 A50 50 0 0 1 450 350" fill="none" stroke="#6b5d3a" stroke-width="1.5"/>
+    <path d="M436 322 A50 50 0 0 1 450 350" fill="none" stroke="#c0392b" stroke-width="3"/>
+    <line x1="407" y1="356" x2="430" y2="318" stroke="#222" stroke-width="2"/>
+    <rect x="498" y="300" width="110" height="60" rx="4" fill="#efe2b8"/>
+    <path d="M510 350 A50 50 0 0 1 596 350" fill="none" stroke="#6b5d3a" stroke-width="1.5"/>
+    <path d="M582 322 A50 50 0 0 1 596 350" fill="none" stroke="#c0392b" stroke-width="3"/>
+    <line x1="553" y1="356" x2="566" y2="314" stroke="#222" stroke-width="2"/>
+  </g>
+  <!-- patch bay rack -->
+  <rect x="40" y="250" width="130" height="200" rx="4" fill="#0b0e13"/>
+  <g fill="#3b4250">
+    <circle cx="62" cy="280" r="5"/><circle cx="84" cy="280" r="5"/><circle cx="106" cy="280" r="5"/><circle cx="128" cy="280" r="5"/><circle cx="150" cy="280" r="5"/>
+    <circle cx="62" cy="304" r="5"/><circle cx="84" cy="304" r="5"/><circle cx="106" cy="304" r="5"/><circle cx="128" cy="304" r="5"/><circle cx="150" cy="304" r="5"/>
+    <circle cx="62" cy="340" r="5"/><circle cx="84" cy="340" r="5"/><circle cx="106" cy="340" r="5"/><circle cx="128" cy="340" r="5"/><circle cx="150" cy="340" r="5"/>
+    <circle cx="62" cy="364" r="5"/><circle cx="84" cy="364" r="5"/><circle cx="106" cy="364" r="5"/><circle cx="128" cy="364" r="5"/><circle cx="150" cy="364" r="5"/>
+  </g>
+  <path d="M84 280 C 90 330, 140 320, 128 364" stroke="#e9b04a" stroke-width="4" fill="none"/>
+  <path d="M62 304 C 40 360, 120 380, 150 340" stroke="#c0563a" stroke-width="4" fill="none"/>
+  <path d="M150 280 C 170 320, 90 330, 106 340" stroke="#4fb3a0" stroke-width="4" fill="none"/>
+  <!-- headphones on hook -->
+  <rect x="842" y="250" width="8" height="18" fill="#4a5262"/>
+  <path d="M816 330 C 816 270, 876 270, 876 330" stroke="#191c22" stroke-width="10" fill="none"/>
+  <rect x="804" y="318" width="24" height="40" rx="10" fill="#191c22"/><rect x="864" y="318" width="24" height="40" rx="10" fill="#191c22"/>
+  <!-- talkback mic -->
+  <path d="M760 420 C 760 380, 740 360, 720 350" stroke="#7d8594" stroke-width="3" fill="none"/>
+  <rect x="706" y="336" width="20" height="28" rx="9" fill="#2a2f37" transform="rotate(-30 716 350)"/>
+  <!-- mixing desk -->
+  <polygon points="80,600 880,600 820,400 140,400" fill="url(#c-desk)"/>
+  <polygon points="140,400 820,400 826,416 134,416" fill="#4a5059"/>
+  <g>
+    <!-- 12 channel strips -->
+    <g stroke="#15181d" stroke-width="4">
+      <line x1="200" y1="450" x2="190" y2="570"/><line x1="250" y1="450" x2="243" y2="570"/><line x1="300" y1="450" x2="296" y2="570"/>
+      <line x1="350" y1="450" x2="349" y2="570"/><line x1="400" y1="450" x2="401" y2="570"/><line x1="450" y1="450" x2="453" y2="570"/>
+      <line x1="510" y1="450" x2="513" y2="570"/><line x1="560" y1="450" x2="566" y2="570"/><line x1="610" y1="450" x2="619" y2="570"/>
+      <line x1="660" y1="450" x2="672" y2="570"/><line x1="710" y1="450" x2="725" y2="570"/><line x1="760" y1="450" x2="778" y2="570"/>
+    </g>
+    <g fill="#d9dde3">
+      <rect x="186" y="520" width="16" height="10" rx="2"/><rect x="238" y="540" width="16" height="10" rx="2"/><rect x="290" y="470" width="16" height="10" rx="2"/>
+      <rect x="342" y="530" width="16" height="10" rx="2"/><rect x="393" y="545" width="16" height="10" rx="2"/><rect x="444" y="510" width="16" height="10" rx="2"/>
+      <rect x="504" y="535" width="16" height="10" rx="2"/><rect x="554" y="490" width="16" height="10" rx="2"/><rect x="606" y="545" width="16" height="10" rx="2"/>
+      <rect x="658" y="525" width="16" height="10" rx="2"/><rect x="708" y="540" width="16" height="10" rx="2"/><rect x="758" y="550" width="16" height="10" rx="2"/>
+    </g>
+    <g>
+      <circle cx="200" cy="430" r="5" fill="#4fd17a"/><circle cx="250" cy="430" r="5" fill="#4fd17a"/><circle cx="300" cy="430" r="5" fill="#ffd34a"/>
+      <circle cx="350" cy="430" r="5" fill="#4fd17a"/><circle cx="400" cy="430" r="5" fill="#2c3a2f"/><circle cx="450" cy="430" r="5" fill="#4fd17a"/>
+      <circle cx="510" cy="430" r="5" fill="#ff5a4a"/><circle cx="560" cy="430" r="5" fill="#4fd17a"/><circle cx="610" cy="430" r="5" fill="#2c3a2f"/>
+      <circle cx="660" cy="430" r="5" fill="#4fd17a"/><circle cx="710" cy="430" r="5" fill="#2c3a2f"/><circle cx="760" cy="430" r="5" fill="#4fd17a"/>
+    </g>
+  </g>
+  <!-- labels -->
+  <g class="tag" fill="#cfe2ff">
+    <text x="480" y="90" text-anchor="middle">Studio clock</text>
+    <text x="480" y="378" text-anchor="middle">VU meters · live data</text>
+    <text x="105" y="472" text-anchor="middle">Patch bay · links</text>
+    <text x="846" y="380" text-anchor="middle">Headphones · music</text>
+    <text x="700" y="320" text-anchor="middle">Talkback mic</text>
+    <text x="480" y="592" text-anchor="middle">Mixing desk · each fader is a section</text>
+  </g>
+</svg>
+</section>
+</main>
+</body>
+</html>
