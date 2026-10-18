@@ -10,7 +10,7 @@ Update the status line when a phase changes.
 - [x] Folder, docs, agent instructions
 - [ ] Decide the premise (docs/00-vision.md). One sentence.
 - [ ] List 6 to 10 objects and what each does
-- [ ] Write content: about.md, links.json, at least 3 projects, 1 post
+- [x] Write content: about.md, links.json, at least 3 projects, 1 post
 - [ ] Mood board folder: docs/moodboard/ with 10 to 20 reference images
 
 Done when: a stranger can read docs/00-vision.md and picture the site.
