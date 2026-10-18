@@ -4,8 +4,8 @@ import sceneFiles from './src/integrations/scene-files.mjs';
 
 // https://astro.build/config
 export default defineConfig({
-  // Set the real domain here once decided (docs/05-decisions.md).
-  site: 'https://example.com',
+  // Live on Cloudflare Pages. Replace with the custom domain once it is set up.
+  site: 'https://shrikantpawade.pages.dev',
   output: 'static',
   trailingSlash: 'never',
   build: { format: 'file' },

@@ -45,10 +45,11 @@ Done:
 - About page, tagline and home intro written (2026-10-19).
 - Three real projects: CI diagnosis MCP server, GST reconciliation, small model
   fine-tune (in progress). Example project and post deleted.
+- Live on Cloudflare Pages at https://shrikantpawade.pages.dev. Every push to
+  main redeploys.
 
 Next, in this order:
-1. Pick hosting (Cloudflare Pages or Vercel) and the domain, then set `site`
-   in `astro.config.mjs` and deploy from this GitHub repo.
+1. Add the custom domain in Cloudflare Pages, then set `site` in `astro.config.mjs`.
 2. Decide the premise in `docs/00-vision.md`. Phase 2 needs it.
 3. Update the fine-tune project page as the 30-day plan moves (repo link, scorecard).
 

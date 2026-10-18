@@ -3,7 +3,7 @@
 Each phase ends with something online. Never skip ahead more than one phase.
 Update the status line when a phase changes.
 
-**Current phase: 1** (site built, waiting on real content and deploy. Phase 0 premise still open.)
+**Current phase: 1** (site live on Cloudflare Pages, custom domain still open. Phase 0 premise still open.)
 
 ## Phase 0: plan and content (now)
 
@@ -22,7 +22,8 @@ Time: 2 to 4 evenings. Most of it is deciding, not typing.
 - [x] Pages: home, projects, project detail, posts, post detail, about
 - [x] One stylesheet, two fonts max, dark and light
 - [x] Lighthouse 95+ on mobile for performance and accessibility
-- [ ] Deployed on Cloudflare Pages or Vercel with the real domain
+- [x] Deployed on Cloudflare Pages: https://shrikantpawade.pages.dev (2026-10-19)
+- [ ] Custom domain
 - [x] Home page has the empty room hook (canvas + boot.js that does nothing)
 
 Done when: you would be fine if this were the final site.

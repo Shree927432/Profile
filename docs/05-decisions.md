@@ -19,11 +19,13 @@ it before finishing. Re-opening a decision needs the owner's say-so.
 | 2026-10-16 | Added `content/site.json` (name, tagline, intro, description) for home page text and site title. | Rule: no text hard-coded in pages. Documented in content/README.md. |
 | 2026-10-16 | Colour theme: warm off-white and near-black, orange accent, from `prefers-color-scheme` only (no toggle). | Taste placeholder, easy to change in the `:root` variables of global.css. Owner may want a different palette. |
 | 2026-10-16 | Model per task from docs/08-model-guide.md; agents builder (Sonnet), designer (Opus), quick (Haiku) in .claude/agents/. | Start cheap, move up on evidence; keeps usage for taste-heavy phases. |
+| 2026-10-19 | Hosting: Cloudflare Pages, connected to the GitHub repo, live at https://shrikantpawade.pages.dev. Every push to main redeploys. `site` in astro.config.mjs points there until a custom domain exists. | Owner's choice. Free, no config file needed for a static Astro build. |
+| 2026-10-19 | Node pinned to 22.22.0 in `.node-version`. | Astro 7 needs Node 22.22 or newer; Cloudflare's build reads the file. |
+| 2026-10-19 | A 404 page (`src/pages/404.astro`), text in `content/site.json` under `notFound`. | Without it Cloudflare Pages serves the home page with status 200 for every unknown address. |
 
 ## Open questions (move to the table when answered)
 
 - The premise sentence.
 - The object list.
-- Hosting: Cloudflare Pages or Vercel.
 - Domain.
 - Mesh naming scheme for Blender (decide before Phase 4).

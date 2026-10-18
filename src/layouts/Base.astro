@@ -12,7 +12,8 @@ interface Props {
 const { title, description = '', type = 'website' } = Astro.props;
 const siteName = getSite().name;
 const fullTitle = title === siteName ? siteName : `${title} · ${siteName}`;
-const path = Astro.url.pathname;
+// The build emits foo.html files (build.format 'file'); normalise to the clean URL.
+const path = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/') || '/';
 const links = getLinkList();
 
 const nav = [

@@ -1,0 +1,14 @@
+---
+import Base from '../layouts/Base.astro';
+import { getSite } from '../lib/content';
+
+const { notFound } = getSite();
+---
+
+<Base title={notFound.title}>
+  <main id="main" class="wrap">
+    <h1>{notFound.title}</h1>
+    <p>{notFound.text}</p>
+    <p><a href="/">{notFound.link}</a></p>
+  </main>
+</Base>

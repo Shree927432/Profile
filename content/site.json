@@ -2,5 +2,10 @@
   "name": "Shrikant Pawade",
   "tagline": "Pianist by training, building with AI, learning in public from Pune.",
   "intro": "About a year ago I left a career in music to learn how language models are trained, by building small ones and fine-tuning them on my own data. This site is where the work goes, including the parts that fail.",
-  "description": "Shrikant Pawade, a pianist turned AI builder in Pune. Projects, essays and notes on training small language models."
+  "description": "Shrikant Pawade, a pianist turned AI builder in Pune. Projects, essays and notes on training small language models.",
+  "notFound": {
+    "title": "Page not found",
+    "text": "There is nothing at this address. It may have moved, or the link may be wrong.",
+    "link": "Go to the home page"
+  }
 }

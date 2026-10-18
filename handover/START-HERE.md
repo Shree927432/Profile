@@ -48,7 +48,7 @@ Shorter prompts for single steps:
 | Posts | One real essay: "Nobody Starts From Zero" (date and summary are guesses, check them) |
 | About, intro, tagline | Written 2026-10-19 |
 | Projects | Three real: CI diagnosis MCP, GST reconciliation, small model fine-tune (in progress). Examples deleted |
-| Deploy and domain | Not done. Hosting choice and domain still open |
+| Deploy and domain | Live on Cloudflare Pages at https://shrikantpawade.pages.dev, redeploys on push to main. Custom domain still open |
 | Premise for the 3D room | Not decided. Phase 2 needs it |
 | Agents | `.claude/agents/`: builder (Sonnet), designer (Opus), quick (Haiku) |
 
@@ -56,8 +56,8 @@ Shorter prompts for single steps:
 
 Done 2026-10-19: about page and home text, three real projects, example files deleted.
 
-1. Pick hosting and the domain, deploy, set `site` in `astro.config.mjs`.
-   Tick the deploy box in `docs/03-roadmap.md`. Phase 1 is then done.
+1. Add the custom domain in Cloudflare Pages, set `site` in `astro.config.mjs`,
+   tick the domain box in `docs/03-roadmap.md`. Phase 1 is then done.
 2. Decide the premise in `docs/00-vision.md`, then start Phase 2.
 3. Keep `content/projects/small-model-fine-tune.md` current as the 30-day plan moves.
 
