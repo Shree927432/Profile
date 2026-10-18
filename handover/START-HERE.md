@@ -1,6 +1,6 @@
 # Start here (new session, new account, or new agent)
 
-Last updated: 2026-10-17. Everything below is also on GitHub:
+Last updated: 2026-10-19. Everything below is also on GitHub:
 https://github.com/Shree927432/Profile
 
 ## 1. Get the project
@@ -46,21 +46,20 @@ Shorter prompts for single steps:
 | Static site (Phase 1) | Built, works locally, Lighthouse mobile 100 on all four categories |
 | Links | Real, in `content/links.json`. Resume empty, so hidden |
 | Posts | One real essay: "Nobody Starts From Zero" (date and summary are guesses, check them) |
-| About, intro, tagline | Still placeholder text |
-| Projects | Only the example file |
+| About, intro, tagline | Written 2026-10-19 |
+| Projects | Three real: CI diagnosis MCP, GST reconciliation, small model fine-tune (in progress). Examples deleted |
 | Deploy and domain | Not done. Hosting choice and domain still open |
 | Premise for the 3D room | Not decided. Phase 2 needs it |
 | Agents | `.claude/agents/`: builder (Sonnet), designer (Opus), quick (Haiku) |
 
 ## 4. Next steps, in order
 
-1. Write `content/about.md` and the tagline and intro in `content/site.json`.
-2. Add at least 3 real projects in `content/projects/`. The small language
-   model fine-tuning work in `~/Documents/slm-30-day-plan` could be one.
-3. Delete the two example files in `content/projects/` and `content/posts/`.
-4. Pick hosting and the domain, deploy, set `site` in `astro.config.mjs`.
+Done 2026-10-19: about page and home text, three real projects, example files deleted.
+
+1. Pick hosting and the domain, deploy, set `site` in `astro.config.mjs`.
    Tick the deploy box in `docs/03-roadmap.md`. Phase 1 is then done.
-5. Decide the premise in `docs/00-vision.md`, then start Phase 2.
+2. Decide the premise in `docs/00-vision.md`, then start Phase 2.
+3. Keep `content/projects/small-model-fine-tune.md` current as the 30-day plan moves.
 
 ## 5. Things a new agent should know (not obvious from the code)
 

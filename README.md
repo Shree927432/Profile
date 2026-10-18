@@ -23,7 +23,7 @@ Clone this folder (it is a git repository). Open it with any agent. Tell it:
 "Read CLAUDE.md and docs/03-roadmap.md, then continue the current phase."
 Everything an agent needs to know is in the files, not in anyone's chat history.
 
-## Status (2026-10-17)
+## Status (2026-10-19)
 
 Phase 1, almost done. The Astro static site is built and works locally. Lighthouse
 mobile scored 100 on performance, accessibility, best practices and SEO.
@@ -42,13 +42,14 @@ Done:
 - Real links in `content/links.json` (resume still empty, so it is hidden).
 - First real post: `content/posts/nobody-starts-from-zero.md`. Check its date
   and summary, and that you are happy with the personal details being public.
+- About page, tagline and home intro written (2026-10-19).
+- Three real projects: CI diagnosis MCP server, GST reconciliation, small model
+  fine-tune (in progress). Example project and post deleted.
 
 Next, in this order:
-1. Write `content/about.md` and the tagline and intro in `content/site.json`.
-2. Add at least 3 real projects in `content/projects/`.
-3. Delete `content/projects/example-project.md` and `content/posts/example-post.md`.
-4. Pick hosting (Cloudflare Pages or Vercel) and the domain, then set `site`
+1. Pick hosting (Cloudflare Pages or Vercel) and the domain, then set `site`
    in `astro.config.mjs` and deploy from this GitHub repo.
-5. Decide the premise in `docs/00-vision.md`. Phase 2 needs it.
+2. Decide the premise in `docs/00-vision.md`. Phase 2 needs it.
+3. Update the fine-tune project page as the 30-day plan moves (repo link, scorecard).
 
 To resume with any agent, open `handover/START-HERE.md` and paste the prompt in it. 
