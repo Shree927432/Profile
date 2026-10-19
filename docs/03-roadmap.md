@@ -3,7 +3,7 @@
 Each phase ends with something online. Never skip ahead more than one phase.
 Update the status line when a phase changes.
 
-**Current phase: 2** (site live on Cloudflare Pages, custom domain deferred. Premise and objects confirmed. Posts screen live on desktop and phone. Next: Phase 3, the room shell.)
+**Current phase: 2** (site live on Cloudflare Pages, custom domain deferred. Premise and objects confirmed. Phase 2 done and live. Phase 3 paused on branch phase-3-room-shell, see handover/phase-3-brief.md.)
 
 ## Phase 0: plan and content (now)
 
