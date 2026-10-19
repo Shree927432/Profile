@@ -20,48 +20,53 @@ Open the `My_website` folder as the session's folder, then paste:
 
     Read CLAUDE.md, then docs/00-vision.md, docs/02-architecture.md,
     docs/03-roadmap.md, docs/05-decisions.md and docs/08-model-guide.md.
-    Then read handover/START-HERE.md and the Status section of README.md.
-    We are at the end of Phase 1. Continue from the "Next" list in README.md,
-    one step at a time. Show me screenshots, keep answers short, and ask
-    before deleting content or adding dependencies.
+    Then read handover/START-HERE.md, the Status section of README.md and
+    handover/phase-3-brief.md. Phases 1 and 2 are done and live. Phase 3, the
+    Three.js room shell, is paused on the branch phase-3-room-shell. Resume it
+    from the brief with the builder agent, one step at a time. Review and test
+    its work before merging into main. Show me screenshots, keep answers short,
+    and ask before deleting content or adding dependencies.
+
+The same prompt is in `handover/RESUME-PROMPT.txt`.
 
 Shorter prompts for single steps:
 
-- About page: "Read CLAUDE.md. Draft content/about.md and the tagline and
-  intro in content/site.json in my voice, using content/posts/nobody-starts-from-zero.md
-  as a sample of how I write. Three short paragraphs, first person."
-- Projects: "Read CLAUDE.md and content/README.md. I will describe my projects.
-  Turn each into content/projects/<slug>.md with the frontmatter in content/README.md."
-- Deploy: "Read CLAUDE.md and docs/05-decisions.md. Deploy this Astro site to
-  <Cloudflare Pages | Vercel> from the GitHub repo, then set `site` in astro.config.mjs."
-- Premise: "Read docs/00-vision.md and docs/01-reference-felix-site.md. Give me
-  three premise options, each with one sentence, time, weather, mood, sound,
-  and 6 to 8 objects."
+- Resume Phase 3: "Read CLAUDE.md and handover/phase-3-brief.md. Switch to the
+  branch phase-3-room-shell and finish the brief with the builder agent."
+- Custom domain: "Read CLAUDE.md and docs/05-decisions.md. I bought <domain>.
+  Walk me through adding it in Cloudflare Pages, then set `site` in astro.config.mjs."
+- New project or post: "Read CLAUDE.md and content/README.md. Turn this into
+  content/projects/<slug>.md (or content/posts/<slug>.md): <description>."
+- Fine-tune page: "Read CLAUDE.md. Update content/projects/small-model-fine-tune.md
+  with: <repo link, scorecard, what broke>."
 
 ## 3. Where things stand
 
 | Area | State |
 |---|---|
 | Docs, roadmap, decisions | Done, in `docs/` |
-| Static site (Phase 1) | Built, works locally, Lighthouse mobile 100 on all four categories |
+| Static site (Phase 1) | Done and live. Lighthouse mobile 100 on all four categories (measured before the posts screen) |
 | Links | Real, in `content/links.json`. Resume empty, so hidden |
 | Posts | One real essay: "Nobody Starts From Zero" (date and summary are guesses, check them) |
 | About, intro, tagline | Written 2026-10-19 |
 | Projects | Three real: CI diagnosis MCP, GST reconciliation, small model fine-tune (in progress). Examples deleted |
-| Deploy and domain | Live on Cloudflare Pages at https://shrikantpawade.pages.dev, redeploys on push to main. Custom domain still open |
+| Deploy and domain | Live on Cloudflare Pages at https://shrikantpawade.pages.dev, redeploys on push to main. Custom domain later, owner's choice |
 | Premise for the 3D room | Confirmed 2026-10-19: bedroom music studio, upright piano, nine objects |
+| Posts screen (Phase 2) | Done and live 2026-10-19. A screen module on the home page, keyboard, click and tap. Titles only on phones |
+| Room shell (Phase 3) | Paused 2026-10-19. Three.js added on the branch `phase-3-room-shell`, the rest not started. See `handover/phase-3-brief.md` |
 | Agents | `.claude/agents/`: builder (Sonnet), designer (Opus), quick (Haiku) |
 
 ## 4. Next steps, in order
 
-Done 2026-10-19: about page and home text, three real projects, example files deleted.
+Done 2026-10-19: about page and home text, three real projects, example files
+deleted, deploy to Cloudflare Pages, premise and objects, Phase 2 posts screen.
 
-1. Add the custom domain in Cloudflare Pages, set `site` in `astro.config.mjs`,
-   tick the domain box in `docs/03-roadmap.md`. Phase 1 is then done.
-2. Phase 2 done: posts screen live on desktop and phone.
-   Phase 3 (the Three.js room shell) is paused. Unfinished work is on the branch
-   `phase-3-room-shell`. Resume from `handover/phase-3-brief.md`.
-3. Keep `content/projects/small-model-fine-tune.md` current as the 30-day plan moves.
+1. Resume Phase 3, the Three.js room shell, on the branch `phase-3-room-shell`.
+   Follow `handover/phase-3-brief.md`. Builder agent, Sonnet, high effort.
+2. Phase 4 after that: the real room model in Blender. Designer agent, Opus.
+3. Whenever the owner buys one: add the custom domain in Cloudflare Pages, set
+   `site` in `astro.config.mjs`, tick the domain box in `docs/03-roadmap.md`.
+4. Keep `content/projects/small-model-fine-tune.md` current as the 30-day plan moves.
 
 ## 5. Things a new agent should know (not obvious from the code)
 

@@ -25,8 +25,9 @@ Everything an agent needs to know is in the files, not in anyone's chat history.
 
 ## Status (2026-10-19)
 
-Phase 1, almost done. The Astro static site is built and works locally. Lighthouse
-mobile scored 100 on performance, accessibility, best practices and SEO.
+Phases 1 and 2 are done and live at https://shrikantpawade.pages.dev. Phase 3,
+the Three.js room shell, is paused on a branch. Lighthouse mobile scored 100 on
+performance, accessibility, best practices and SEO in Phase 1.
 
 Run it:
 
@@ -49,10 +50,11 @@ Done:
   main redeploys.
 
 Next, in this order:
-1. Add the custom domain in Cloudflare Pages, then set `site` in `astro.config.mjs`.
-2. Phase 2 done: posts screen live on desktop and phone.
-   Phase 3 (the Three.js room shell) is paused. Unfinished work is on the branch
-   `phase-3-room-shell`. Resume from `handover/phase-3-brief.md`.
-3. Update the fine-tune project page as the 30-day plan moves (repo link, scorecard).
+1. Resume Phase 3, the Three.js room shell, on the branch `phase-3-room-shell`.
+   Follow `handover/phase-3-brief.md`.
+2. Phase 4: the real room model in Blender.
+3. Custom domain, whenever one is bought: add it in Cloudflare Pages, then set
+   `site` in `astro.config.mjs`.
+4. Update the fine-tune project page as the 30-day plan moves (repo link, scorecard).
 
 To resume with any agent, open `handover/START-HERE.md` and paste the prompt in it. 
