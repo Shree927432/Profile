@@ -3,6 +3,27 @@
 Status: paused at the owner's request. Work so far is on the branch
 `phase-3-room-shell` (not merged, not reviewed). The live site is Phase 2.
 
+## Context to read first
+
+Premise (from docs/00-vision.md): Shrikant's room in Pune at 5:40 a.m., a
+bedroom that became a music studio, with a wall of guitars, an upright piano,
+and the desk where the models get trained. Quiet, focused, lived-in.
+
+- `docs/00-vision.md`: premise, setting, sound, the nine objects and what
+  each click does. The Phase 3 box stands in for the desk monitor.
+- `docs/04-ideas.md`: big bet (the instruments really play) and two surprises.
+- `docs/moodboard/room-sketch.html`: the room layout and the monitor's look.
+  Open it in a browser. Use it for rough colours only; looks come in Phase 4.
+- `docs/moodboard/README.md`: what each reference is. The owner's photo is in
+  `docs/moodboard/local/` on the owner's Mac only (not in git).
+- `docs/05-decisions.md`, latest rows: Phase 2 screen, Three.js from npm, the
+  `?room` gate.
+- `scene/objects/CONTRACT.md` and the Phase 2 files: `scene/boot.js`,
+  `scene/screen-host.js`, `scene/objects/monitor-posts.js`.
+
+Mesh names: the placeholder uses `monitor_body` and `monitor_screen`. Keep
+them; they become the first entries in the Blender naming list for Phase 4.
+
 ## Done on the branch
 - `three@0.186.1` added to package.json (exact version, owner approved).
 - `src/integrations/scene-files.mjs` serves `node_modules/three/build/` and the

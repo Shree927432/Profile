@@ -21,7 +21,8 @@ Open the `My_website` folder as the session's folder, then paste:
     Read CLAUDE.md, then docs/00-vision.md, docs/02-architecture.md,
     docs/03-roadmap.md, docs/05-decisions.md and docs/08-model-guide.md.
     Then read handover/START-HERE.md, the Status section of README.md and
-    handover/phase-3-brief.md. Phases 1 and 2 are done and live. Phase 3, the
+    handover/phase-3-brief.md (it lists the premise and design files to
+    read too). Phases 1 and 2 are done and live. Phase 3, the
     Three.js room shell, is paused on the branch phase-3-room-shell. Resume it
     from the brief with the builder agent, one step at a time. Review and test
     its work before merging into main. Show me screenshots, keep answers short,
