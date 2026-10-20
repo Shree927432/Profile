@@ -95,6 +95,33 @@ function webgl2Available() {
   }
 }
 
+// While the room is on, the plain page is only visually hidden, so its links would be invisible
+// tab stops. Take them out of the tab order (screen readers still reach them by reading) and put
+// the old tabindex back on fallback. The skip link is included: it points at hidden content.
+const TAB_HIDDEN = "#static, .site-header, .site-footer, .skip-link";
+const FOCUSABLE = "a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]";
+let savedTabindex = null; // Map of element -> previous tabindex attribute (or null)
+
+function leaveTabOrder() {
+  savedTabindex = new Map();
+  for (const host of document.querySelectorAll(TAB_HIDDEN)) {
+    for (const el of [host, ...host.querySelectorAll(FOCUSABLE)]) {
+      if (!el.matches(FOCUSABLE) || savedTabindex.has(el)) continue;
+      savedTabindex.set(el, el.getAttribute("tabindex"));
+      el.setAttribute("tabindex", "-1");
+    }
+  }
+}
+
+function restoreTabOrder() {
+  if (!savedTabindex) return;
+  for (const [el, old] of savedTabindex) {
+    if (old === null) el.removeAttribute("tabindex");
+    else el.setAttribute("tabindex", old);
+  }
+  savedTabindex = null;
+}
+
 async function startRoom() {
   const canvas = document.getElementById("room");
   let overlay = null;
@@ -117,7 +144,8 @@ async function startRoom() {
 
     root.classList.add("room-on");
     canvas.hidden = false;
-    document.body.append(overlay);
+    leaveTabOrder();
+    document.body.prepend(overlay); // before the canvas, so Tab goes: plain-page link, then canvas
     loading.textContent = text.loading; // after insertion, so screen readers announce it
 
     const { start } = await import("./desktop.js");
@@ -126,11 +154,13 @@ async function startRoom() {
   } catch (err) {
     console.error("Room not started, showing the plain page:", err);
     root.classList.remove("room-on");
+    restoreTabOrder();
     if (overlay) overlay.remove();
     if (canvas) {
       canvas.hidden = true;
       canvas.setAttribute("aria-hidden", "true");
       canvas.removeAttribute("aria-label");
+      canvas.removeAttribute("tabindex");
     }
     const t = await noteText();
     showNote(t.failedNote, null);

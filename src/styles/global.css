@@ -359,6 +359,13 @@ html.room-on .site-footer {
 }
 html.room-on main { padding: 0; }
 html.room-on #room { touch-action: none; }
+/* Keyboard focus on the room: inset, so it is not cut off at the window edge. */
+#room:focus { outline: none; }
+#room:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+  border-radius: 0;
+}
 
 /* Overlay: small bar, top left, readable on a dark scene in either colour theme. */
 .room-overlay {

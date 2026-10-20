@@ -10,8 +10,9 @@
 //     screen                 monitor-posts.js on an offscreen canvas -> CanvasTexture
 //     loop                   one setAnimationLoop; stops while the tab is hidden
 //
-// Next steps plug in at the TODO markers: pick map + raycaster, wheel/keys to the screen,
-// quality ladder + ?debug.
+// Input (all on the canvas): pick.js holds the pick map; taps raycast it, the wheel and a
+// one-finger drag that starts on the screen scroll the list, keys go to the screen.
+// Next step plugs in at the TODO marker: quality ladder + ?debug.
 //
 // Every word shown comes from content.site.room / content.site.screens.
 
@@ -23,6 +24,7 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { buildPlaceholderRoom } from "./placeholder-room.js";
 import monitorPosts from "./objects/monitor-posts.js";
+import { createPickMap } from "./pick.js";
 
 const deg = THREE.MathUtils.degToRad;
 
@@ -40,11 +42,21 @@ const ZOOM_FAR = 1.2;
 // Bloom: threshold sits above the lit room, so only the screen glows.
 const BLOOM = { strength: 0.18, radius: 0.4, threshold: 0.9 };
 const SCREEN_GLOW = 1.3; // screen colour multiplier (above 1 so it clears the bloom threshold)
-const SCREEN_W = 640; // logical size of the screen canvas; backing store is 2x
-const SCREEN_H = 400;
+// Logical size of the screen canvas (backing store is 2x). Same rule as screen-host.js and the
+// decision of 2026-10-19: under 480 CSS px wide the screen is the narrow 400x250 layout.
+// Chosen once at start; picking uses the same numbers.
+const SCREEN_WIDE = { w: 640, h: 400 };
+const SCREEN_NARROW = { w: 400, h: 250 };
+const NARROW_BELOW = 480;
+// Tap vs drag: a pointer that moved less than this many CSS px and was down less than this
+// many ms counts as a tap.
+const TAP_MAX_MOVE = 6;
+const TAP_MAX_MS = 500;
+const WHEEL_LINE_PX = 16; // deltaMode "lines" -> px, as in screen-host.js
 
 export async function start({ canvas, content, overlay, params, reduce }) {
   const text = content.site.room;
+  const { w: SCREEN_W, h: SCREEN_H } = window.innerWidth < NARROW_BELOW ? SCREEN_NARROW : SCREEN_WIDE;
 
   // ---- renderer + composer ----
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -105,7 +117,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   const say = (s) => { live.textContent = ""; live.textContent = s; };
   const open = (url) => { location.href = url; };
 
-  // The handle for the next step: screenHandle.input({type:"key"|"click"|"scroll"|"open", ...}).
+  // screenHandle.input({type:"key"|"click"|"scroll"|"open", ...}) returns true if it used the event.
   const screenHandle = monitorPosts.mount({
     canvas: screenCanvas, ctx: screenCtx, width: SCREEN_W, height: SCREEN_H,
     audio: null, content, open, reduce, say,
@@ -177,8 +189,123 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   canvas.removeAttribute("aria-hidden");
   canvas.setAttribute("aria-label", text.canvasLabel);
 
-  // TODO(pick map): one raycaster, a Map of mesh -> owner, tap vs drag, UV -> screen canvas click.
-  // TODO(wheel/keys): wheel over the screen -> screenHandle.input scroll; keys -> screenHandle.input.
+  // ---- picking and input ----
+  // ctx.interact for Phase 5 room objects: they call interact.set(mesh, {kind, part, owner}).
+  const interact = createPickMap(THREE, camera, canvas);
+  interact.set(screenMesh, { kind: "screen", part: "monitor_screen" });
+
+  // screen UV (0..1, origin bottom-left) -> screen canvas coordinates (origin top-left).
+  // The plane's UVs run left-to-right, bottom-to-top (see placeholder-room.js), hence 1 - v.
+  function tapScreen(hit) {
+    if (!hit.uv) return false;
+    return screenHandle.input({ type: "click", x: hit.uv.x * SCREEN_W, y: (1 - hit.uv.y) * SCREEN_H });
+  }
+
+  // The one place a pick turns into an action. Phase 5 objects get click(part, hit).
+  function dispatchTap(picked) {
+    const { info, hit } = picked;
+    if (info.kind === "screen") return tapScreen(hit);
+    if (info.owner && info.owner.click) { info.owner.click(info.part, hit); return true; }
+    return false;
+  }
+  const isScreen = (picked) => !!picked && picked.info.kind === "screen";
+
+  // Height of the screen on the display in CSS px, to turn finger movement into screen units.
+  const _corner = new THREE.Vector3();
+  function screenPixelHeight() {
+    const geo = screenMesh.geometry;
+    if (!geo.boundingBox) geo.computeBoundingBox();
+    const { min, max } = geo.boundingBox;
+    const yAt = (y) => {
+      _corner.set((min.x + max.x) / 2, y, (min.z + max.z) / 2).applyMatrix4(screenMesh.matrixWorld).project(camera);
+      return _corner.y;
+    };
+    return Math.abs(yAt(max.y) - yAt(min.y)) * 0.5 * canvas.clientHeight;
+  }
+  const scrollScreen = (dy) => screenHandle.input({ type: "scroll", dy });
+
+  // Pointer state. A gesture is one primary pointer: tap, orbit (OrbitControls), or a touch
+  // drag that started on the screen (scrolls the list, controls disabled until it ends).
+  let down = null; // { id, x, y, t, scrolling, lastY }
+  function endGesture() {
+    down = null;
+    controls.enabled = true;
+  }
+
+  // Window capture so these run before OrbitControls' own listeners on the canvas.
+  window.addEventListener("pointerdown", (e) => {
+    if (e.target !== canvas) return;
+    if (down && e.pointerType === "touch") { endGesture(); return; } // second finger: pinch/zoom goes to the controls
+    if (!e.isPrimary || (e.pointerType === "mouse" && e.button !== 0)) return;
+    down = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), scrolling: false, lastY: e.clientY };
+    if (e.pointerType === "touch" && isScreen(interact.pick(e.clientX, e.clientY))) {
+      down.scrolling = true;
+      controls.enabled = false; // OrbitControls ignores this pointer entirely
+      try { canvas.setPointerCapture(e.pointerId); } catch { /* pointerup still arrives on the canvas */ }
+    }
+  }, { capture: true });
+
+  canvas.addEventListener("pointermove", (e) => {
+    if (down && down.scrolling && e.pointerId === down.id) {
+      const px = screenPixelHeight();
+      if (px > 0) scrollScreen(((down.lastY - e.clientY) * SCREEN_H) / px);
+      down.lastY = e.clientY;
+      return;
+    }
+    if (e.pointerType !== "touch") { hoverX = e.clientX; hoverY = e.clientY; hoverDirty = true; }
+  });
+
+  function onPointerEnd(e) {
+    if (!down || e.pointerId !== down.id) return;
+    const d = down;
+    endGesture();
+    if (e.type !== "pointerup") return;
+    const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y);
+    if (moved >= TAP_MAX_MOVE || performance.now() - d.t >= TAP_MAX_MS) return;
+    const picked = interact.pick(e.clientX, e.clientY);
+    if (picked) dispatchTap(picked);
+  }
+  canvas.addEventListener("pointerup", onPointerEnd);
+  canvas.addEventListener("pointercancel", onPointerEnd);
+  canvas.addEventListener("lostpointercapture", (e) => { if (down && e.pointerId === down.id && down.scrolling) endGesture(); });
+
+  // Hover: raycast at most once per frame, from the last pointermove, never for touch.
+  let hoverX = 0;
+  let hoverY = 0;
+  let hoverDirty = false;
+  let hoverPointer = false;
+  function updateHover() {
+    if (!hoverDirty) return;
+    hoverDirty = false;
+    const on = !!interact.pick(hoverX, hoverY);
+    if (on !== hoverPointer) { hoverPointer = on; canvas.style.cursor = on ? "pointer" : ""; }
+  }
+  canvas.addEventListener("pointerleave", () => {
+    hoverDirty = false;
+    hoverPointer = false;
+    canvas.style.cursor = "";
+  });
+
+  // Wheel over the screen scrolls the list instead of zooming; elsewhere OrbitControls zooms.
+  window.addEventListener("wheel", (e) => {
+    if (e.target !== canvas || e.ctrlKey) return;
+    if (!isScreen(interact.pick(e.clientX, e.clientY))) return;
+    const px = screenPixelHeight();
+    if (px <= 0) return;
+    const k = e.deltaMode === 1 ? WHEEL_LINE_PX : 1;
+    if (scrollScreen((e.deltaY * k * SCREEN_H) / px)) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  }, { capture: true, passive: false });
+
+  // Keyboard: the canvas is focusable (tab stop); keys go to the screen.
+  canvas.tabIndex = 0;
+  canvas.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (screenHandle.input({ type: "key", key: e.key })) e.preventDefault();
+  });
+
   // TODO(quality ladder + ?debug): fps meter in overlay, full / auto / smooth via setPixelRatio.
 
   // ---- loop ----
@@ -187,6 +314,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     const dt = last ? t - last : 0;
     last = t;
     controls.update();
+    updateHover();
     if (screenHandle.frame(t, dt)) { screenTexture.needsUpdate = true; needsRender = true; }
     // Reduced motion: draw only when something changed (orbit, resize, screen).
     if (!reduce || needsRender) {
