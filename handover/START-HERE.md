@@ -52,7 +52,7 @@ Shorter prompts for single steps:
 | Deploy and domain | Live on Cloudflare Pages at https://shrikantpawade.pages.dev, redeploys on push to main. Custom domain later, owner's choice |
 | Premise for the 3D room | Confirmed 2026-10-19: bedroom music studio, upright piano, nine objects |
 | Posts screen (Phase 2) | Done and live 2026-10-19. A screen module on the home page, keyboard, click and tap. Titles only on phones |
-| Room shell (Phase 3) | Done 2026-10-21, on main. Shows only with `?room` (`?room&debug` for fps and quality). Placeholder desk and monitor; clicking or Enter on the post opens it. See `handover/phase-3-brief.md` |
+| Room shell (Phase 3) | Done 2026-10-21, on main. Shows only with `?room` (`?room&debug` for fps and quality). Placeholder desk and monitor; clicking or Enter on the post glides into the screen, then opens it. Tuned after the owner's phone test: no glow pass, draws only on change, eased zoom See `handover/phase-3-brief.md` |
 | Agents | `.claude/agents/`: builder (Sonnet), designer (Opus), quick (Haiku) |
 
 ## 4. Next steps, in order
@@ -61,7 +61,7 @@ Done 2026-10-19: about page and home text, three real projects, example files
 deleted, deploy to Cloudflare Pages, premise and objects, Phase 2 posts screen.
 Done 2026-10-21: Phase 3 room shell.
 
-1. Check the room's fps on a real phone: open `/?room&debug` (not measured yet).
+1. Done 2026-10-21: owner tried the room on their phone; speed, zoom and the glide were fixed and approved.
 2. Phase 4: the real room model in Blender. Designer agent, Opus. Decide the
    Blender mesh naming list first (open question in docs/05-decisions.md).
 3. Whenever the owner buys one: add the custom domain in Cloudflare Pages, set

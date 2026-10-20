@@ -49,14 +49,13 @@ Done:
 - Live on Cloudflare Pages at https://shrikantpawade.pages.dev. Every push to
   main redeploys.
 - Phase 3 room shell (2026-10-21): `/?room` shows a placeholder desk and monitor
-  with the posts screen; click, tap or Enter opens a post. `/?room&debug` shows
+  with the posts screen; click, tap or Enter glides into the screen and opens the post. `/?room&debug` shows
   fps and the quality buttons.
 
 Next, in this order:
-1. Check the room's fps on a real phone at `/?room&debug`.
-2. Phase 4: the real room model in Blender.
-3. Custom domain, whenever one is bought: add it in Cloudflare Pages, then set
+1. Phase 4: the real room model in Blender.
+2. Custom domain, whenever one is bought: add it in Cloudflare Pages, then set
    `site` in `astro.config.mjs`.
-4. Update the fine-tune project page as the 30-day plan moves (repo link, scorecard).
+3. Update the fine-tune project page as the 30-day plan moves (repo link, scorecard).
 
 To resume with any agent, open `handover/START-HERE.md` and paste the prompt in it. 
