@@ -3,7 +3,7 @@
 Each phase ends with something online. Never skip ahead more than one phase.
 Update the status line when a phase changes.
 
-**Current phase: 4, not started** (site live on Cloudflare Pages, custom domain deferred. Phases 2 and 3 done. The Phase 3 room shell is on main behind `?room`, see handover/phase-3-brief.md.)
+**Current phase: 4, planned, modelling not started** (site live on Cloudflare Pages, custom domain deferred. Phases 2 and 3 done; the room shell is on main behind `?room`. Phase 4 plan and next step: handover/phase-4-brief.md.)
 
 ## Phase 0: plan and content (now)
 

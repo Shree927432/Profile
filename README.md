@@ -26,7 +26,8 @@ Everything an agent needs to know is in the files, not in anyone's chat history.
 ## Status (2026-10-21)
 
 Phases 1 and 2 are done and live at https://shrikantpawade.pages.dev. Phase 3,
-the Three.js room shell, is done on main and shows only at `/?room`. Lighthouse mobile scored 100 on
+the Three.js room shell, is done on main and shows only at `/?room`. Phase 4, the
+room model in Blender, is planned; modelling starts next (`handover/phase-4-brief.md`). Lighthouse mobile scored 100 on
 performance, accessibility, best practices and SEO in Phase 1.
 
 Run it:
@@ -52,8 +53,14 @@ Done:
   with the posts screen; click, tap or Enter glides into the screen and opens the post. `/?room&debug` shows
   fps and the quality buttons.
 
+- Phase 4 planning (2026-10-21): the room tells the evolution of music (six era
+  guitars, 88-key piano, a DJ controller and a K-pop lightstick); mesh names final
+  in `scene/objects/MESHES.md`; Blender 5.2.2 installed; the making-of video and
+  blog are planned in `docs/10-video-plan.md` and `docs/drafts/making-of-post.md`.
+
 Next, in this order:
-1. Phase 4: the real room model in Blender.
+1. Phase 4 Step 1: room shell, desk, monitor and the TOP test export
+   (`handover/phase-4-brief.md`). Then the rest of the room, one step at a time.
 2. Custom domain, whenever one is bought: add it in Cloudflare Pages, then set
    `site` in `astro.config.mjs`.
 3. Update the fine-tune project page as the 30-day plan moves (repo link, scorecard).

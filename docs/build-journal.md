@@ -142,3 +142,11 @@ site or the room. Keep each entry short. No polishing; the post does that.
   beside the desk: Slash, Hetfield, Tim Henson.
 - The 4x4 pad console became a generic two-deck DJ controller; the pan knob moved to a
   small audio interface next to it. Still one object, still 9 in the room.
+
+## 2026-10-21, end of day: Blender installed, paused before modelling
+
+- Blender 5.2.2 installed with Homebrew; it runs headless and sees the M2 Pro GPU.
+- The first modelling step (room shell, desk, monitor, a "TOP" test pattern to prove
+  the screen loads upright in the website) was briefed to the designer agent. The
+  owner said "can stop for now"; it was stopped before any file was written.
+- Everything needed to start tomorrow is in handover/phase-4-brief.md.

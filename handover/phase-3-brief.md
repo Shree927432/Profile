@@ -1,4 +1,4 @@
-# Phase 3 brief (done 2026-10-21)
+# Phase 3 brief (done 2026-10-21; Phase 4 continues in handover/phase-4-brief.md)
 
 Status: done. Built in four steps by the builder agent, reviewed, tested and merged
 into main on 2026-10-21. The room shows only with `?room`; `/` is still Phase 2.

@@ -61,8 +61,13 @@ the table in docs/08-model-guide.md. Say which you picked in one line.
 ## Where things are
 
     content/        the words, projects, posts, links (the only source of truth)
-    docs/           vision, reference, architecture, roadmap, ideas, decisions, model guide
+    docs/           vision, reference, architecture, roadmap, ideas, decisions, model guide,
+                    video plan, build journal, drafts/ (the making-of blog post)
+    handover/       start here when resuming: START-HERE.md and the current phase brief
     .claude/agents/ builder (Sonnet), designer (Opus), quick (Haiku)
-    scene/          the 3D room (empty until Phase 3)
-    scene/objects/  one file per interactive object, see CONTRACT.md
+    scene/          the 3D room (Phase 3 shell; the Blender model arrives in Phase 4)
+    scene/objects/  one file per interactive object, see CONTRACT.md; MESHES.md lists
+                    every mesh name Blender and the code share
+    blender/        Phase 4: Python scripts that build and export the room (to come)
     src/            the Astro static site (created in Phase 1)
+    video-local/    videos and their scripts, local only (git ignores it)

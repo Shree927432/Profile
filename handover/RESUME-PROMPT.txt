@@ -1,9 +1,11 @@
 Read CLAUDE.md, then docs/00-vision.md, docs/02-architecture.md,
 docs/03-roadmap.md, docs/05-decisions.md and docs/08-model-guide.md.
 Then read handover/START-HERE.md, the Status section of README.md and
-handover/phase-3-brief.md (it lists the premise and design files to
-read too). Phases 1 to 3 are done. The Three.js room shell is on main and
-shows only with ?room. Next is Phase 4, the room model: plan it with the
-designer agent, one step at a time. Review and test its work before
-merging into main. Show me screenshots, keep answers short,
-and ask before deleting content or adding dependencies.
+handover/phase-4-brief.md (it lists the files to read and the setup on
+this Mac). Phases 1 to 3 are done and live; the room shows at ?room.
+Phase 4 planning is done: the room tells the evolution of music, and the
+mesh names are final in scene/objects/MESHES.md. Start Phase 4 Step 1
+(room shell, desk, monitor, TOP test) with the designer agent, one step
+at a time. Review and test its work before committing. Keep the build
+journal, video plan and blog draft current. Show me screenshots, keep
+answers short, and ask before deleting content or adding dependencies.
