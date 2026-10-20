@@ -15,3 +15,6 @@ handover/transcripts/
 
 # Reference photos from the web: not ours to publish. Local only.
 docs/moodboard/local/
+
+# Build timelapse videos and the scripts that make them. Local only.
+video-local/
