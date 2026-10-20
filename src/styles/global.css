@@ -392,6 +392,17 @@ html.room-on #room { touch-action: none; }
 .room-loading { color: var(--fg-muted); }
 .room-loading[hidden] { display: none; }
 
+/* Opening a post from the room (scene/glide.js): the page fades to the plain site's background
+   at the end of the glide, so the jump into the post reads as one motion. Opacity is set from JS. */
+.room-fade {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ?debug panel: fps, pixel ratio, three mode buttons. Wraps under the exit link on phones. */
 .room-debug {
   display: flex;

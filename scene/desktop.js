@@ -10,10 +10,14 @@
 //     screen + glow          monitor-posts.js on an offscreen canvas -> CanvasTexture; a soft
 //                            halo plane behind it (made here so it survives the GLB)
 //     camera + controls      resize() fits the monitor to the aspect; zoom is ours, not OrbitControls'
+//     glide                  opening a post: light-up, glide to the close-up, fade, go (glide.js)
 //     loop                   one setAnimationLoop; draws only when something changed
 //
 // Camera: setCameraDistance() is the one function that moves the camera along its line of sight.
 // zoomTo()/zoomBy() set the goal (a fraction of the fitted distance); stepZoom() eases toward it.
+// The nearest zoom is the close-up (closeUpDistance(): the screen nearly fills the view), the same
+// place the glide ends. While the glide runs it alone moves the camera; orbit, zoom, picking and
+// keys are locked. Back from the post (bfcache) puts everything back to the start view.
 // Input (all on the canvas): pick.js holds the pick map; taps raycast it, the wheel and a
 // one-finger drag that starts on the screen scroll the list, keys go to the screen. Wheel off
 // the screen, ctrl+wheel (trackpad pinch) and a two-finger touch pinch zoom.
@@ -28,6 +32,7 @@ import { buildPlaceholderRoom } from "./placeholder-room.js";
 import monitorPosts from "./objects/monitor-posts.js";
 import { createPickMap } from "./pick.js";
 import { createQuality, MODES } from "./quality.js";
+import { createGlide } from "./glide.js";
 
 const deg = THREE.MathUtils.degToRad;
 
@@ -40,15 +45,19 @@ const FIT_MARGIN_H = 1.1;
 const START_POLAR = deg(82);
 const POLAR_BAND = deg(8);
 const AZIMUTH_LIMIT = deg(25);
-// Zoom, as fractions of the fitted distance. Near brings the screen to fill a phone.
-const ZOOM_NEAR = 0.55;
+// Zoom, as fractions of the fitted distance. The near end is not a constant: it is the close-up,
+// where the screen fills CLOSE_UP_FILL of the view's tighter side (recomputed on resize).
+const CLOSE_UP_FILL = 0.92;
 const ZOOM_FAR = 1.6;
 const ZOOM_SETTLE_MS = 60; // easing time constant: ~250 ms to settle
 const WHEEL_ZOOM = 0.0012; // per wheel px: a 100 px notch is about 13 %
 const PINCH_WHEEL_ZOOM = 0.01; // ctrl+wheel (trackpad pinch) sends small deltas
-// Glow: a cheap stand-in for bloom. A soft additive halo plane just behind the screen.
-const GLOW = { color: 0x9fd0ff, opacity: 0.3, size: 1.45, texture: 128 }; // size: multiple of the screen
+// Glow: a cheap stand-in for bloom. An additive plane just behind the screen whose alpha falls off
+// as a Gaussian of the distance to the screen's edge, so it has no rim. reach and sigma in metres.
+const GLOW = { color: 0x9fd0ff, opacity: 0.14, reach: 0.14, sigma: 0.04, pxPerMetre: 160 };
 const GLOW_BEHIND = 0.0005; // metres behind the screen plane
+// Opening a post lights the screen up: colour and glow multiplied by 1 + these at full light.
+const LIGHT = { screen: 0.22, glow: 0.9 };
 // Logical size of the screen canvas (backing store is 2x). Same rule as screen-host.js and the
 // decision of 2026-10-19: under 480 CSS px wide the screen is the narrow 400x250 layout.
 // Chosen once at start; picking uses the same numbers.
@@ -105,6 +114,17 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   if (!screenMesh || !bodyMesh) throw new Error("room has no monitor_screen / monitor_body");
   const lookAt = screenMesh.getWorldPosition(new THREE.Vector3());
   const bodySize = new THREE.Box3().setFromObject(bodyMesh).getSize(new THREE.Vector3());
+  // The screen in world space: size (metres), rotation, and the direction it faces.
+  const screenQuat = new THREE.Quaternion();
+  const screenSize = new THREE.Vector3();
+  {
+    const geo = screenMesh.geometry;
+    if (!geo.boundingBox) geo.computeBoundingBox();
+    const scl = new THREE.Vector3();
+    screenMesh.matrixWorld.decompose(new THREE.Vector3(), screenQuat, scl);
+    geo.boundingBox.getSize(screenSize).multiply(scl);
+  }
+  const screenNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(screenQuat);
 
   // ---- posts screen on the monitor ----
   const screenCanvas = document.createElement("canvas");
@@ -119,7 +139,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   live.setAttribute("aria-live", "polite");
   overlay.append(live);
   const say = (s) => { live.textContent = ""; live.textContent = s; };
-  const open = (url) => { location.href = url; };
+  const open = (url) => startGlide(url); // the screen asks for a post: glide in, then go
 
   // screenHandle.input({type:"key"|"click"|"scroll"|"open", ...}) returns true if it used the event.
   const screenHandle = monitorPosts.mount({
@@ -138,41 +158,50 @@ export async function start({ canvas, content, overlay, params, reduce }) {
 
   // ---- glow: soft halo behind the screen (not pickable, not in the pick map) ----
   // Placed from the screen's world transform, so it follows whatever monitor_screen is in the GLB.
+  // Alpha is exp(-(d/sigma)^2), d = distance outside the screen rectangle: no disc, no rim.
+  let halo = null;
   {
+    const W = screenSize.x + GLOW.reach * 2;
+    const H = screenSize.y + GLOW.reach * 2;
     const c = document.createElement("canvas");
-    c.width = c.height = GLOW.texture;
+    c.width = Math.round(W * GLOW.pxPerMetre);
+    c.height = Math.round(H * GLOW.pxPerMetre);
     const g = c.getContext("2d");
     if (g) {
-      const r = GLOW.texture / 2;
-      const grad = g.createRadialGradient(r, r, 0, r, r, r);
-      grad.addColorStop(0, "rgba(255,255,255,1)");
-      grad.addColorStop(0.6, "rgba(255,255,255,0.45)");
-      grad.addColorStop(0.82, "rgba(255,255,255,0.12)");
-      grad.addColorStop(1, "rgba(255,255,255,0)");
-      g.fillStyle = grad;
-      g.fillRect(0, 0, GLOW.texture, GLOW.texture);
+      const img = g.createImageData(c.width, c.height);
+      for (let y = 0; y < c.height; y++) {
+        for (let x = 0; x < c.width; x++) {
+          const dx = Math.max(0, Math.abs((x + 0.5) / GLOW.pxPerMetre - W / 2) - screenSize.x / 2);
+          const dy = Math.max(0, Math.abs((y + 0.5) / GLOW.pxPerMetre - H / 2) - screenSize.y / 2);
+          const i = (y * c.width + x) * 4;
+          img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
+          img.data[i + 3] = Math.round(255 * Math.exp(-(dx * dx + dy * dy) / (GLOW.sigma * GLOW.sigma)));
+        }
+      }
+      g.putImageData(img, 0, 0);
       const tex = new THREE.CanvasTexture(c);
       tex.colorSpace = THREE.SRGBColorSpace;
-      const geo = screenMesh.geometry;
-      if (!geo.boundingBox) geo.computeBoundingBox();
-      const pos = new THREE.Vector3();
-      const quat = new THREE.Quaternion();
-      const scl = new THREE.Vector3();
-      screenMesh.matrixWorld.decompose(pos, quat, scl);
-      const size = geo.boundingBox.getSize(new THREE.Vector3()).multiply(scl);
-      const halo = new THREE.Mesh(
-        new THREE.PlaneGeometry(size.x * GLOW.size, size.y * GLOW.size),
+      halo = new THREE.Mesh(
+        new THREE.PlaneGeometry(W, H),
         new THREE.MeshBasicMaterial({
           map: tex, color: GLOW.color, transparent: true, opacity: GLOW.opacity,
           blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
         })
       );
       halo.name = "monitor_glow";
-      halo.quaternion.copy(quat);
-      halo.position.copy(pos).addScaledVector(new THREE.Vector3(0, 0, 1).applyQuaternion(quat), -GLOW_BEHIND);
+      halo.quaternion.copy(screenQuat);
+      halo.position.copy(lookAt).addScaledVector(screenNormal, -GLOW_BEHIND);
       halo.renderOrder = 1;
       scene.add(halo);
     }
+  }
+
+  // Opening a post: k = 0 at rest, 1 fully lit. The row itself is lit by the screen's own
+  // selection highlight; this brightens the whole screen and its glow a little.
+  function light(k) {
+    screenMesh.material.color.setScalar(1 + LIGHT.screen * k);
+    if (halo) halo.material.opacity = GLOW.opacity * (1 + LIGHT.glow * k);
+    needsRender = true;
   }
 
   // ---- camera + orbit ----
@@ -189,6 +218,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   controls.maxPolarAngle = START_POLAR + POLAR_BAND;
 
   let fitDistance = 0;
+  let zoomNear = 1; // the close-up as a fraction of the fit; set by resize()
   // Zoom is a fraction of the fitted distance, so it survives resizes. zoomNow follows zoomGoal.
   let zoomGoal = 1;
   let zoomNow = 1;
@@ -200,21 +230,35 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     return Math.max((bodySize.y / 2) * FIT_MARGIN_V / tanV, (bodySize.x / 2) * FIT_MARGIN_H / tanH);
   }
 
+  // Distance, straight on, at which the screen fills CLOSE_UP_FILL of the view's tighter side.
+  // The nearest zoom, and where the glide ends.
+  function closeUpDistance() {
+    const tanV = Math.tan(deg(FOV) / 2) * CLOSE_UP_FILL;
+    const tanH = Math.tan(deg(FOV) / 2) * camera.aspect * CLOSE_UP_FILL;
+    return Math.max(screenSize.y / 2 / tanV, screenSize.x / 2 / tanH);
+  }
+
   // THE function that moves the camera along its line of sight to the target. Everything that
-  // changes the distance (wheel, pinch, easing, resize, a later glide to a post) ends here.
+  // changes the distance (wheel, pinch, easing, resize) ends here. The glide (glide.js) moves the
+  // camera itself while it runs, and nothing else does then.
   const _dir = new THREE.Vector3();
   function setCameraDistance(d) {
     _dir.subVectors(camera.position, controls.target);
-    if (_dir.lengthSq() === 0) _dir.setFromSphericalCoords(1, START_POLAR, 0); // first call
     camera.position.copy(controls.target).addScaledVector(_dir.setLength(d), 1);
     needsRender = true;
   }
 
-  const clampZoom = (z) => THREE.MathUtils.clamp(z, ZOOM_NEAR, ZOOM_FAR);
+  // The start view's direction: START_POLAR, straight on. resize() then sets the distance.
+  function placeAtStart() {
+    camera.position.setFromSphericalCoords(1, START_POLAR, 0).add(controls.target);
+  }
+
+  const clampZoom = (z) => THREE.MathUtils.clamp(z, zoomNear, ZOOM_FAR);
 
   // Set where the zoom should end up (a fraction of the fit). instant skips the easing; with
-  // reduced motion it is always instant.
+  // reduced motion it is always instant. Ignored during the glide.
   function zoomTo(fraction, instant = false) {
+    if (glide.active) return;
     zoomGoal = clampZoom(fraction);
     if (instant || reduce) { zoomNow = zoomGoal; setCameraDistance(fitDistance * zoomNow); }
     else needsRender = true;
@@ -239,14 +283,49 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     camera.updateProjectionMatrix();
 
     fitDistance = fittedDistance();
-    controls.minDistance = fitDistance * ZOOM_NEAR; // safety net only; zoomNow is already inside
+    zoomNear = Math.min(1, closeUpDistance() / fitDistance);
+    zoomGoal = clampZoom(zoomGoal);
+    zoomNow = clampZoom(zoomNow);
+    controls.minDistance = fitDistance * zoomNear; // safety net only; zoomNow is already inside
     controls.maxDistance = fitDistance * ZOOM_FAR;
+    needsRender = true;
+    if (glide.active) return; // the glide owns the camera; it reads closeUpDistance() each tick
     setCameraDistance(fitDistance * zoomNow);
     camera.lookAt(controls.target);
     controls.update();
-    needsRender = true;
   }
 
+  // ---- glide (opening a post) ----
+  const glide = createGlide({
+    THREE, camera, target: controls.target, normal: screenNormal,
+    closeUp: closeUpDistance, light, reduce,
+  });
+  function startGlide(url) {
+    if (glide.active) return;
+    glide.go(url);
+    endGesture(); // controls off (see syncControls)
+    zoomGoal = zoomNow; // a zoom still easing stops where it is
+    hoverDirty = false;
+    hoverPointer = false;
+    canvas.style.cursor = "";
+  }
+  // Back from the post: the browser may restore this page as it was left, close up and faded.
+  window.addEventListener("pageshow", (e) => {
+    if (!e.persisted) return;
+    glide.reset();
+    controls.enableDamping = false;
+    controls.update(); // drops any orbit momentum left from before the glide
+    controls.enableDamping = !reduce;
+    zoomGoal = zoomNow = 1;
+    placeAtStart();
+    touches.clear();
+    pinchDist = 0;
+    pinchLock = false;
+    endGesture();
+    resize();
+  });
+
+  placeAtStart();
   resize();
   window.addEventListener("resize", resize);
   window.addEventListener("orientationchange", resize);
@@ -299,7 +378,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   const touches = new Map(); // pointerId -> { x, y } for touches on the canvas
   let pinchDist = 0; // distance between the two fingers at the last move, 0 when not pinching
   let pinchLock = false; // true from the second finger down until all fingers are up
-  const syncControls = () => { controls.enabled = !pinchLock && !(down && down.scrolling); };
+  const syncControls = () => { controls.enabled = !glide.active && !pinchLock && !(down && down.scrolling); };
   function endGesture() {
     down = null;
     syncControls();
@@ -311,7 +390,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
 
   // Window capture so these run before OrbitControls' own listeners on the canvas.
   window.addEventListener("pointerdown", (e) => {
-    if (e.target !== canvas) return;
+    if (e.target !== canvas || glide.active) return; // no taps, drags or pinches during the glide
     if (e.pointerType === "touch") {
       touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (touches.size === 2) { // second finger: pinch, whatever the first one was doing
@@ -357,7 +436,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
       down.lastY = e.clientY;
       return;
     }
-    if (e.pointerType !== "touch") { hoverX = e.clientX; hoverY = e.clientY; hoverDirty = true; }
+    if (e.pointerType !== "touch" && !glide.active) { hoverX = e.clientX; hoverY = e.clientY; hoverDirty = true; }
   });
 
   function onPointerEnd(e) {
@@ -395,6 +474,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   // pinch) always zooms and never reaches the browser's page zoom.
   window.addEventListener("wheel", (e) => {
     if (e.target !== canvas) return;
+    if (glide.active) { e.preventDefault(); e.stopImmediatePropagation(); return; }
     const k = e.deltaMode === 1 ? WHEEL_LINE_PX : 1;
     if (!e.ctrlKey && isScreen(interact.pick(e.clientX, e.clientY))) {
       const px = screenPixelHeight();
@@ -413,6 +493,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   canvas.tabIndex = 0;
   canvas.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (glide.active) return; // Tab still works; nothing else reaches the screen
     if (screenHandle.input({ type: "key", key: e.key })) e.preventDefault();
   });
 
@@ -454,7 +535,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   }
 
   // ---- loop ----
-  // Draws only when something changed: orbit or its damping (controls "change"), zoom easing,
+  // Draws only when something changed: orbit or its damping (controls "change"), zoom easing, the glide,
   // the screen's frame() returning true, a resize, a quality change. Otherwise the tick is free.
   // The ladder is fed only with the gap between two consecutive drawn ticks, i.e. during motion.
   // Gaps around idle draws (the cursor blink) are not frame times and never reach it.
@@ -463,9 +544,13 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   function renderFrame(t) {
     const dt = last ? t - last : 0;
     last = t;
-    stepZoom(dt);
-    controls.update();
-    updateHover();
+    if (glide.active) {
+      if (glide.step(dt)) needsRender = true;
+    } else {
+      stepZoom(dt);
+      controls.update();
+      updateHover();
+    }
     if (screenHandle.frame(t, dt)) { screenTexture.needsUpdate = true; needsRender = true; }
     const drew = needsRender;
     if (drew) {
