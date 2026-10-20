@@ -1,22 +1,24 @@
 // Quality ladder for the room: full / auto / smooth. Pure logic, no Three.js, no DOM.
 // desktop.js creates one with createQuality({ dpr, reduce, apply }) and feeds it frame times.
 //
-//   full    pixel ratio min(dpr, 2), bloom on.
-//   smooth  pixel ratio min(dpr, 1), bloom off.
+//   full    pixel ratio min(dpr, 2).
+//   smooth  pixel ratio min(dpr, 1).
 //   auto    starts at full, steps down one rung when the average fps of a ~2 s window is
 //           under DOWN_BELOW_FPS, steps back up one rung after UP_AFTER_MS above
 //           UP_ABOVE_FPS. Never above full. Rungs: 2 -> 1.5 -> 1 -> 0.75 (only those below
-//           the device's own ratio); bloom is on at the top rung and at ratios above 1.
-//   With reduce true the room draws only on change, so fps means nothing: auto stays on full.
+//           the device's own ratio). The only knob is the pixel ratio (the glow is a cheap
+//           halo plane and costs next to nothing, so there is nothing else to switch).
+//   The room draws only on change, so frame() must be fed only the gap between two
+//   CONSECUTIVE drawn frames (motion). Idle gaps are not frame times. With reduce true auto
+//   stays on full.
 //
-// API: mode, fps (rolling, for the meter), rung ({ pixelRatio, bloom }), frame(dtMs),
-//      set(mode), pause(), resume(). apply({ pixelRatio, bloom }) is called on every change,
-//      and once when created.
+// API: mode, fps (rolling, last value measured during motion, 0 before any), rung ({ pixelRatio }),
+//      frame(dtMs), set(mode), pause(), resume(). apply({ pixelRatio }) is called on every
+//      change, and once when created.
 
 const MAX_PIXEL_RATIO = 2;
 const RUNGS = [2, 1.5, 1, 0.75]; // pixel ratios, top to bottom
 const SMOOTH_PIXEL_RATIO = 1; // smooth uses min(dpr, this)
-const BLOOM_ABOVE_RATIO = 1; // below the top rung, bloom only above this ratio
 
 const SETTLE_MS = 1000; // ignored after start, after any change, after a stall or a pause
 const WINDOW_MS = 2000; // one measuring window
@@ -31,11 +33,8 @@ export const MODES = ["full", "auto", "smooth"];
 
 export function createQuality({ dpr = 1, reduce = false, apply }) {
   const full = Math.min(dpr || 1, MAX_PIXEL_RATIO);
-  const rungs = [full, ...RUNGS.filter((r) => r < full)].map((pixelRatio, i) => ({
-    pixelRatio,
-    bloom: i === 0 || pixelRatio > BLOOM_ABOVE_RATIO,
-  }));
-  const smooth = { pixelRatio: Math.min(full, SMOOTH_PIXEL_RATIO), bloom: false };
+  const rungs = [full, ...RUNGS.filter((r) => r < full)].map((pixelRatio) => ({ pixelRatio }));
+  const smooth = { pixelRatio: Math.min(full, SMOOTH_PIXEL_RATIO) };
 
   let mode = "auto";
   let index = 0; // rung used by full and auto
@@ -62,7 +61,7 @@ export function createQuality({ dpr = 1, reduce = false, apply }) {
   function show(next) {
     rung = next;
     restartMeasuring();
-    apply({ pixelRatio: rung.pixelRatio, bloom: rung.bloom });
+    apply({ pixelRatio: rung.pixelRatio });
   }
 
   function step(by) {
@@ -96,7 +95,7 @@ export function createQuality({ dpr = 1, reduce = false, apply }) {
   const api = {
     get mode() { return mode; },
     get fps() { return fps; },
-    get rung() { return { pixelRatio: rung.pixelRatio, bloom: rung.bloom }; },
+    get rung() { return { pixelRatio: rung.pixelRatio }; },
 
     // dtMs: real time since the previous rendered frame.
     frame(dtMs) {
@@ -143,6 +142,6 @@ export function createQuality({ dpr = 1, reduce = false, apply }) {
     },
   };
 
-  apply({ pixelRatio: rung.pixelRatio, bloom: rung.bloom });
+  apply({ pixelRatio: rung.pixelRatio });
   return api;
 }

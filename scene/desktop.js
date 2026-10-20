@@ -1,18 +1,22 @@
-// The room page: renderer, camera, orbit, bloom, the posts screen on the monitor.
+// The room page: renderer, camera, orbit, zoom, the posts screen on the monitor.
 // Called by boot.js (see its header for what start() receives).
 //
 // What lives where, top to bottom:
-//   constants          camera, orbit, bloom numbers in one place
+//   constants          camera, orbit, zoom, glow numbers in one place
 //   start()            wires everything; resolves after the first frame is drawn
-//     renderer / composer    setPixelRatio() is the one place pixel ratio changes
-//     quality                quality.js decides pixel ratio and bloom; applyQuality() applies it
+//     renderer               plain renderer.render(); setPixelRatio() is the one place pixel ratio changes
+//     quality                quality.js decides the pixel ratio; applyQuality() applies it
 //     scene                  lights + buildPlaceholderRoom() (Phase 4: GLB loader instead)
-//     camera + controls      frame() fits the monitor to the aspect on every resize
-//     screen                 monitor-posts.js on an offscreen canvas -> CanvasTexture
-//     loop                   one setAnimationLoop; stops while the tab is hidden
+//     screen + glow          monitor-posts.js on an offscreen canvas -> CanvasTexture; a soft
+//                            halo plane behind it (made here so it survives the GLB)
+//     camera + controls      resize() fits the monitor to the aspect; zoom is ours, not OrbitControls'
+//     loop                   one setAnimationLoop; draws only when something changed
 //
+// Camera: setCameraDistance() is the one function that moves the camera along its line of sight.
+// zoomTo()/zoomBy() set the goal (a fraction of the fitted distance); stepZoom() eases toward it.
 // Input (all on the canvas): pick.js holds the pick map; taps raycast it, the wheel and a
-// one-finger drag that starts on the screen scroll the list, keys go to the screen.
+// one-finger drag that starts on the screen scroll the list, keys go to the screen. Wheel off
+// the screen, ctrl+wheel (trackpad pinch) and a two-finger touch pinch zoom.
 // Quality ladder (quality.js): full / auto / smooth. With ?debug a small panel in the overlay
 // shows fps and the pixel ratio and switches the mode.
 //
@@ -20,10 +24,6 @@
 
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { buildPlaceholderRoom } from "./placeholder-room.js";
 import monitorPosts from "./objects/monitor-posts.js";
 import { createPickMap } from "./pick.js";
@@ -40,11 +40,15 @@ const FIT_MARGIN_H = 1.1;
 const START_POLAR = deg(82);
 const POLAR_BAND = deg(8);
 const AZIMUTH_LIMIT = deg(25);
-const ZOOM_NEAR = 0.8; // of the fitted distance
-const ZOOM_FAR = 1.2;
-// Bloom: threshold sits above the lit room, so only the screen glows.
-const BLOOM = { strength: 0.18, radius: 0.4, threshold: 0.9 };
-const SCREEN_GLOW = 1.3; // screen colour multiplier (above 1 so it clears the bloom threshold)
+// Zoom, as fractions of the fitted distance. Near brings the screen to fill a phone.
+const ZOOM_NEAR = 0.55;
+const ZOOM_FAR = 1.6;
+const ZOOM_SETTLE_MS = 60; // easing time constant: ~250 ms to settle
+const WHEEL_ZOOM = 0.0012; // per wheel px: a 100 px notch is about 13 %
+const PINCH_WHEEL_ZOOM = 0.01; // ctrl+wheel (trackpad pinch) sends small deltas
+// Glow: a cheap stand-in for bloom. A soft additive halo plane just behind the screen.
+const GLOW = { color: 0x9fd0ff, opacity: 0.3, size: 1.45, texture: 128 }; // size: multiple of the screen
+const GLOW_BEHIND = 0.0005; // metres behind the screen plane
 // Logical size of the screen canvas (backing store is 2x). Same rule as screen-host.js and the
 // decision of 2026-10-19: under 480 CSS px wide the screen is the narrow 400x250 layout.
 // Chosen once at start; picking uses the same numbers.
@@ -61,10 +65,10 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   const text = content.site.room;
   const { w: SCREEN_W, h: SCREEN_H } = window.innerWidth < NARROW_BELOW ? SCREEN_NARROW : SCREEN_WIDE;
 
-  // ---- renderer + composer ----
+  // ---- renderer ----
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.NeutralToneMapping; // applied by OutputPass; keeps the screen's colours
+  renderer.toneMapping = THREE.NeutralToneMapping; // the screen material opts out (toneMapped: false)
   renderer.setClearColor(BACKGROUND);
 
   const scene = new THREE.Scene();
@@ -72,25 +76,15 @@ export async function start({ canvas, content, overlay, params, reduce }) {
 
   const camera = new THREE.PerspectiveCamera(FOV, 1, 0.05, 30);
 
-  // MSAA target: the composer would otherwise lose antialiasing.
-  const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 });
-  const composer = new EffectComposer(renderer, target);
-  composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), BLOOM.strength, BLOOM.radius, BLOOM.threshold);
-  composer.addPass(bloom);
-  composer.addPass(new OutputPass());
-
+  // The loop draws only when this is true (see renderFrame). Anything that changes the picture sets it.
   let needsRender = true;
-  // The one place that changes resolution. Both resize their buffers at the current size.
+  // The one place that changes resolution.
   function setPixelRatio(pr) {
     renderer.setPixelRatio(pr);
-    composer.setPixelRatio(pr);
     needsRender = true;
   }
-  // Called by the quality ladder at start and on every change. With bloom off the pass is
-  // skipped; the screen keeps its colour (OutputPass tone-maps either way), it only loses the glow.
-  function applyQuality({ pixelRatio, bloom: bloomOn }) {
-    bloom.enabled = bloomOn;
+  // Called by the quality ladder at start and on every change.
+  function applyQuality({ pixelRatio }) {
     setPixelRatio(pixelRatio);
   }
   const quality = createQuality({ dpr: window.devicePixelRatio || 1, reduce, apply: applyQuality });
@@ -139,15 +133,53 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   screenTexture.magFilter = THREE.LinearFilter;
   screenTexture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   screenMesh.material.dispose();
-  // toneMapped:false only matters when drawing straight to the screen; with the composer the
-  // OutputPass tone-maps everything, which is why the neutral curve is used.
+  // toneMapped:false: the screen shows the posts colours exactly as drawn.
   screenMesh.material = new THREE.MeshBasicMaterial({ map: screenTexture, toneMapped: false });
-  screenMesh.material.color.setScalar(SCREEN_GLOW);
+
+  // ---- glow: soft halo behind the screen (not pickable, not in the pick map) ----
+  // Placed from the screen's world transform, so it follows whatever monitor_screen is in the GLB.
+  {
+    const c = document.createElement("canvas");
+    c.width = c.height = GLOW.texture;
+    const g = c.getContext("2d");
+    if (g) {
+      const r = GLOW.texture / 2;
+      const grad = g.createRadialGradient(r, r, 0, r, r, r);
+      grad.addColorStop(0, "rgba(255,255,255,1)");
+      grad.addColorStop(0.6, "rgba(255,255,255,0.45)");
+      grad.addColorStop(0.82, "rgba(255,255,255,0.12)");
+      grad.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = grad;
+      g.fillRect(0, 0, GLOW.texture, GLOW.texture);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const geo = screenMesh.geometry;
+      if (!geo.boundingBox) geo.computeBoundingBox();
+      const pos = new THREE.Vector3();
+      const quat = new THREE.Quaternion();
+      const scl = new THREE.Vector3();
+      screenMesh.matrixWorld.decompose(pos, quat, scl);
+      const size = geo.boundingBox.getSize(new THREE.Vector3()).multiply(scl);
+      const halo = new THREE.Mesh(
+        new THREE.PlaneGeometry(size.x * GLOW.size, size.y * GLOW.size),
+        new THREE.MeshBasicMaterial({
+          map: tex, color: GLOW.color, transparent: true, opacity: GLOW.opacity,
+          blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+        })
+      );
+      halo.name = "monitor_glow";
+      halo.quaternion.copy(quat);
+      halo.position.copy(pos).addScaledVector(new THREE.Vector3(0, 0, 1).applyQuaternion(quat), -GLOW_BEHIND);
+      halo.renderOrder = 1;
+      scene.add(halo);
+    }
+  }
 
   // ---- camera + orbit ----
   const controls = new OrbitControls(camera, canvas);
   controls.target.copy(lookAt);
   controls.enablePan = false;
+  controls.enableZoom = false; // zoom is ours (zoomTo / stepZoom): OrbitControls would dolly instantly
   controls.enableDamping = !reduce;
   controls.dampingFactor = 0.08;
   controls.rotateSpeed = 0.6;
@@ -157,6 +189,9 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   controls.maxPolarAngle = START_POLAR + POLAR_BAND;
 
   let fitDistance = 0;
+  // Zoom is a fraction of the fitted distance, so it survives resizes. zoomNow follows zoomGoal.
+  let zoomGoal = 1;
+  let zoomNow = 1;
 
   // Distance at which the whole monitor fits both ways, with margins.
   function fittedDistance() {
@@ -165,24 +200,48 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     return Math.max((bodySize.y / 2) * FIT_MARGIN_V / tanV, (bodySize.x / 2) * FIT_MARGIN_H / tanH);
   }
 
+  // THE function that moves the camera along its line of sight to the target. Everything that
+  // changes the distance (wheel, pinch, easing, resize, a later glide to a post) ends here.
+  const _dir = new THREE.Vector3();
+  function setCameraDistance(d) {
+    _dir.subVectors(camera.position, controls.target);
+    if (_dir.lengthSq() === 0) _dir.setFromSphericalCoords(1, START_POLAR, 0); // first call
+    camera.position.copy(controls.target).addScaledVector(_dir.setLength(d), 1);
+    needsRender = true;
+  }
+
+  const clampZoom = (z) => THREE.MathUtils.clamp(z, ZOOM_NEAR, ZOOM_FAR);
+
+  // Set where the zoom should end up (a fraction of the fit). instant skips the easing; with
+  // reduced motion it is always instant.
+  function zoomTo(fraction, instant = false) {
+    zoomGoal = clampZoom(fraction);
+    if (instant || reduce) { zoomNow = zoomGoal; setCameraDistance(fitDistance * zoomNow); }
+    else needsRender = true;
+  }
+  const zoomBy = (ratio, instant = false) => zoomTo(zoomGoal * ratio, instant);
+
+  // Every tick, before controls.update(): ease toward the goal, frame-rate independent.
+  function stepZoom(dt) {
+    if (zoomNow === zoomGoal) return;
+    const k = 1 - Math.exp(-Math.min(dt, 100) / ZOOM_SETTLE_MS);
+    zoomNow += (zoomGoal - zoomNow) * k;
+    if (Math.abs(zoomGoal - zoomNow) < 0.0005) zoomNow = zoomGoal;
+    setCameraDistance(fitDistance * zoomNow);
+  }
+
   // Sets size, projection and framing. Keeps the user's zoom (as a fraction of the fit).
   function resize() {
     const w = Math.max(1, canvas.clientWidth);
     const h = Math.max(1, canvas.clientHeight);
     renderer.setSize(w, h, false);
-    composer.setSize(w, h);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
 
-    const zoom = fitDistance ? camera.position.distanceTo(controls.target) / fitDistance : 1;
     fitDistance = fittedDistance();
-    controls.minDistance = fitDistance * ZOOM_NEAR;
+    controls.minDistance = fitDistance * ZOOM_NEAR; // safety net only; zoomNow is already inside
     controls.maxDistance = fitDistance * ZOOM_FAR;
-    const dist = THREE.MathUtils.clamp(fitDistance * zoom, controls.minDistance, controls.maxDistance);
-    const dir = camera.position.clone().sub(controls.target);
-    if (dir.lengthSq() === 0) dir.setFromSphericalCoords(1, START_POLAR, 0); // first call
-    dir.setLength(dist);
-    camera.position.copy(controls.target).add(dir);
+    setCameraDistance(fitDistance * zoomNow);
     camera.lookAt(controls.target);
     controls.update();
     needsRender = true;
@@ -234,16 +293,35 @@ export async function start({ canvas, content, overlay, params, reduce }) {
 
   // Pointer state. A gesture is one primary pointer: tap, orbit (OrbitControls), or a touch
   // drag that started on the screen (scrolls the list, controls disabled until it ends).
+  // Two touches down is a pinch: it zooms, never taps, and rotation stays off until every
+  // finger is up (OrbitControls would otherwise jump when one finger lifts).
   let down = null; // { id, x, y, t, scrolling, lastY }
+  const touches = new Map(); // pointerId -> { x, y } for touches on the canvas
+  let pinchDist = 0; // distance between the two fingers at the last move, 0 when not pinching
+  let pinchLock = false; // true from the second finger down until all fingers are up
+  const syncControls = () => { controls.enabled = !pinchLock && !(down && down.scrolling); };
   function endGesture() {
     down = null;
-    controls.enabled = true;
+    syncControls();
   }
+  const touchGap = () => {
+    const [a, b] = [...touches.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
 
   // Window capture so these run before OrbitControls' own listeners on the canvas.
   window.addEventListener("pointerdown", (e) => {
     if (e.target !== canvas) return;
-    if (down && e.pointerType === "touch") { endGesture(); return; } // second finger: pinch/zoom goes to the controls
+    if (e.pointerType === "touch") {
+      touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touches.size === 2) { // second finger: pinch, whatever the first one was doing
+        pinchLock = true;
+        pinchDist = touchGap();
+        endGesture();
+        return;
+      }
+      if (pinchLock) return;
+    }
     if (!e.isPrimary || (e.pointerType === "mouse" && e.button !== 0)) return;
     down = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), scrolling: false, lastY: e.clientY };
     if (e.pointerType === "touch" && isScreen(interact.pick(e.clientX, e.clientY))) {
@@ -252,6 +330,25 @@ export async function start({ canvas, content, overlay, params, reduce }) {
       try { canvas.setPointerCapture(e.pointerId); } catch { /* pointerup still arrives on the canvas */ }
     }
   }, { capture: true });
+
+  window.addEventListener("pointermove", (e) => {
+    const t = touches.get(e.pointerId);
+    if (!t) return;
+    t.x = e.clientX;
+    t.y = e.clientY;
+    if (touches.size === 2 && pinchDist > 0) {
+      const gap = touchGap();
+      if (gap > 0) zoomBy(pinchDist / gap, true); // fingers apart -> closer
+      pinchDist = gap;
+    }
+  });
+  function touchEnd(e) {
+    if (!touches.delete(e.pointerId)) return;
+    pinchDist = 0;
+    if (touches.size === 0) { pinchLock = false; syncControls(); }
+  }
+  window.addEventListener("pointerup", touchEnd);
+  window.addEventListener("pointercancel", touchEnd);
 
   canvas.addEventListener("pointermove", (e) => {
     if (down && down.scrolling && e.pointerId === down.id) {
@@ -294,17 +391,22 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     canvas.style.cursor = "";
   });
 
-  // Wheel over the screen scrolls the list instead of zooming; elsewhere OrbitControls zooms.
+  // Wheel: over the screen it scrolls the list; anywhere else it zooms. ctrl+wheel (trackpad
+  // pinch) always zooms and never reaches the browser's page zoom.
   window.addEventListener("wheel", (e) => {
-    if (e.target !== canvas || e.ctrlKey) return;
-    if (!isScreen(interact.pick(e.clientX, e.clientY))) return;
-    const px = screenPixelHeight();
-    if (px <= 0) return;
+    if (e.target !== canvas) return;
     const k = e.deltaMode === 1 ? WHEEL_LINE_PX : 1;
-    if (scrollScreen((e.deltaY * k * SCREEN_H) / px)) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
+    if (!e.ctrlKey && isScreen(interact.pick(e.clientX, e.clientY))) {
+      const px = screenPixelHeight();
+      if (px > 0 && scrollScreen((e.deltaY * k * SCREEN_H) / px)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        return;
+      }
     }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    zoomBy(Math.exp(e.deltaY * k * (e.ctrlKey ? PINCH_WHEEL_ZOOM : WHEEL_ZOOM))); // down/pinch in = farther
   }, { capture: true, passive: false });
 
   // Keyboard: the canvas is focusable (tab stop); keys go to the screen.
@@ -337,7 +439,8 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     overlay.append(panel);
 
     function refreshDebug() {
-      fpsEl.textContent = labels.fps + " " + Math.round(quality.fps);
+      // quality.fps keeps the last value measured during motion; 0 until there has been motion.
+      fpsEl.textContent = labels.fps + " " + (quality.fps ? Math.round(quality.fps) : "\u2013");
       ratioEl.textContent = quality.rung.pixelRatio + "\u00d7";
       for (const [mode, b] of buttons) b.setAttribute("aria-pressed", String(mode === quality.mode));
     }
@@ -351,24 +454,29 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   }
 
   // ---- loop ----
+  // Draws only when something changed: orbit or its damping (controls "change"), zoom easing,
+  // the screen's frame() returning true, a resize, a quality change. Otherwise the tick is free.
+  // The ladder is fed only with the gap between two consecutive drawn ticks, i.e. during motion.
+  // Gaps around idle draws (the cursor blink) are not frame times and never reach it.
   let last = 0; // time of the previous loop tick
-  let lastDrawn = 0; // time of the previous drawn frame, for the quality ladder
+  let lastDrew = false; // did the previous tick draw?
   function renderFrame(t) {
     const dt = last ? t - last : 0;
     last = t;
+    stepZoom(dt);
     controls.update();
     updateHover();
     if (screenHandle.frame(t, dt)) { screenTexture.needsUpdate = true; needsRender = true; }
-    // Reduced motion: draw only when something changed (orbit, resize, screen).
-    if (!reduce || needsRender) {
-      composer.render();
+    const drew = needsRender;
+    if (drew) {
+      renderer.render(scene, camera);
       needsRender = false;
-      if (lastDrawn) quality.frame(t - lastDrawn);
-      lastDrawn = t;
+      if (lastDrew && dt > 0) quality.frame(dt);
     }
+    lastDrew = drew;
     if (updateDebug) updateDebug(t);
   }
-  function run() { last = 0; lastDrawn = 0; quality.resume(); renderer.setAnimationLoop(renderFrame); }
+  function run() { last = 0; lastDrew = false; quality.resume(); renderer.setAnimationLoop(renderFrame); }
   function stop() { renderer.setAnimationLoop(null); quality.pause(); }
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
 
