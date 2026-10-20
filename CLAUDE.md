@@ -16,6 +16,10 @@ Read these before doing anything, in this order:
 Then check docs/05-decisions.md again before finishing: if you made a decision the
 owner agreed to, append it there with the date.
 
+Also before finishing: if the work changed the site or the room, add a short dated
+entry to docs/build-journal.md (facts, numbers, what the owner said, what broke).
+In Phase 4 and 5, save footage as docs/10-video-plan.md describes.
+
 ## Hard rules
 
 - Content lives in `content/` as markdown and JSON. Never hard-code text, links or
