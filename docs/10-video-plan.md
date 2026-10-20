@@ -2,52 +2,61 @@
 
 Written 2026-10-21. The goal is a video that goes past Felix's "redesign in 90
 seconds" (see docs/01-reference-felix-site.md). His is a fast montage of process
-footage. Ours is one continuous shot inside the room, cut to the owner's own
-piano playing.
+footage. Ours is the room building itself inside one continuous world, cut to the
+owner's own piano playing.
 
 ## The idea in one sentence
 
-At 5:40 a.m. in the room in Pune, the camera drifts through the dark studio while
-first light comes up, and every object builds itself as the camera passes, in time
-with a classical piece played by the owner.
+The room in Pune assembles itself in a storm to the third movement of Beethoven's
+Moonlight Sonata, then everything stops, and the first movement plays while first
+light fills the finished room at 5:40 a.m.
 
-## Three parts
+## Music (decided 2026-10-21, owner's choice)
 
-| Part | What it is | Length | Made when |
-|---|---|---|---|
-| A. One shot at dawn | One continuous camera move through the Blender room. Each object goes wireframe, then clay, then textured and lit, then it works (a guitar lifts, the monitor plays the site's history as screen recordings). No cuts, no title cards. | 90 to 120 s, 16:9 | After Phase 4 and 5 |
-| B. The piano drives it | The owner plays a public-domain piece. Bars and notes become events: a bar reveals an object, a chord change brings in a phase, the room's piano keys move with the playing. | Same as A | Recording any time; edit after Phase 5 |
-| C. Proof on a phone | A real phone in hand: the room loads fast, the glide into the monitor, the instruments play. Cut to the same music. | 30 s, 9:16 for Reels and LinkedIn | After Phase 5 |
+Beethoven, Piano Sonata No. 14 in C-sharp minor, Op. 27 No. 2, played by the owner.
 
-Only overlay allowed: one small recording counter in a corner (date, a red REC
-dot), in the room's own style. No slides, no captions.
+| Section | Excerpt | Role |
+|---|---|---|
+| 1. Storm | 3rd movement (Presto agitato), from the start, about 60 to 75 s | The room builds. Each rising arpeggio carries the camera; each pair of accented chords snaps an object into place. |
+| 2. Silence | About 1 s | The cut between the two worlds. |
+| 3. Dawn | 1st movement (Adagio sostenuto), from the start, about 30 to 40 s | The finished room at first light. Slow drift, no more building. |
 
-## The music
+Both halves come from the same sonata, and the video ends on the premise: quiet,
+focused, lived-in.
 
-Rules:
-- The composition must be public domain (the composer died more than 70 years
-  ago). All the pieces below qualify.
-- The recording must be the owner's own playing. Never use a commercial recording:
-  performances are copyrighted even when the piece is not.
-- Best: record MIDI from a digital keyboard while playing, plus the audio. MIDI
-  gives exact note times, so every cut and key press lands on the real note.
-  Audio alone also works; then bar times are marked by hand or by beat detection.
-- Play freely. Rubato is fine, because the edit follows the recording, not a
-  fixed tempo.
+Recording:
+- The composition is public domain. The recording must be the owner's own: never
+  a commercial recording, which is copyrighted even when the piece is not.
+- Best: MIDI from a digital keyboard plus the audio, in one take per movement.
+  MIDI gives the exact time of every note, so cuts and the room's piano keys land
+  on the real notes. Audio alone also works; then bar times are marked by hand.
+- Tempo is free. The edit follows the recording, not a click track.
+- The two movements are recorded separately; the silence between them is made in
+  the edit.
 
-Candidates (owner picks, see the open question in docs/05-decisions.md):
+## Shot plan
 
-| Piece | Period | Why it fits | Length to use |
-|---|---|---|---|
-| Bach, Prelude in C major, BWV 846 (Well-Tempered Clavier I) | Baroque | One chord per bar, same pattern every bar: each bar can build one thing. The calmest fit for "quiet, focused". | Full piece, about 2 min |
-| Debussy, Clair de lune | Impressionist | Starts almost silent, opens up in the middle: matches dark room to first light. Very famous. | Opening to the first big arpeggios, about 2 min |
-| Beethoven, Moonlight Sonata, 1st movement | Classical to Romantic | Slow, steady triplets, instantly known. Night more than dawn. | First 1.5 to 2 min |
-| Mozart, Sonata in C, K. 545, 1st movement | Classical | Bright and quick. Better for the 30 s phone cut than for the dawn shot. | Exposition, about 1 min |
-| Chopin, Nocturne in E-flat, Op. 9 No. 2 | Romantic | Lyrical, intimate, a pianist's piece. | First 1.5 min |
+| Time (approx.) | Music | Picture |
+|---|---|---|
+| 0:00 | Silence | Black. A small REC counter fades in, the date of the first commit. |
+| 0:02 | Presto, first phrases | Night. The empty shell of the room in wireframe: floor, walls, the window as a dark frame. The camera rides each arpeggio upward. |
+| ~0:10 | Accented chords | The desk, then the monitor snap in: wireframe, clay, lit, in the length of one chord pair. The monitor plays the site's history as screen recordings (Phases 1 to 3). |
+| ~0:25 | Presto continues | Speakers, the mic on its arm, the bookshelf with the picture frames, the bed. One object per chord pair. |
+| ~0:40 | Rising intensity | The guitar wall: one guitar per accent, each lifting off its hook for a moment. |
+| ~0:55 | The phrase's peak | The upright piano last. Its keys play the Presto notes in sync. |
+| ~1:10 | Silence, about 1 s | Hard cut. The room is complete and still. The REC counter jumps to 05:40. |
+| ~1:11 | Adagio, opening triplets | Slow drift from the bed toward the window. First light rises, the plant on the sill catches it, the piano keys move with the triplets. |
+| ~1:45 | Adagio fades | The camera settles on the monitor. The live site is on it. End on the REC counter showing shrikantpawade.pages.dev. |
 
-Current recommendation: Bach's Prelude in C for the dawn shot. Its bar-by-bar
-regularity makes the build-up readable. Mozart K. 545 for the phone cut, if a
-second piece is wanted.
+No slides, no captions. The only overlay is the small REC counter, in the room's style.
+
+## Three outputs
+
+| Output | What | Length |
+|---|---|---|
+| Master | The full storm-to-dawn shot above | 1:40 to 2:00, 16:9 |
+| Phone cut | The storm only, on a real phone in hand: the room loading, the glide into the monitor, the instruments playing | 30 s, 9:16 for Reels and LinkedIn |
+| Teaser | The silence and the first dawn seconds only | 10 to 15 s, for a link preview |
 
 ## Footage to capture during Phase 4 and 5
 
@@ -57,8 +66,11 @@ needs a reshoot of the process.
 - Where: `video-local/footage/<YYYY-MM-DD>-<step>/` (git ignores `video-local/`).
 - Blender: for each prop group, a still at wireframe, clay, textured and lit;
   plus a 120-frame turntable at 1920x1080 for anything new.
+- Build every prop so it can be shown in all four states (wireframe, clay,
+  textured, lit) from the same file. The storm section needs them.
 - One fixed "hero" camera path in the Blender file, used for every lighting
   iteration, so iterations can be cut together later.
+- Two lighting setups for the video: night (storm) and 5:40 a.m. first light (dawn).
 - The site: a short headless screen recording (1920x1080 and 390x844) of each
   object once it works. The capture script from the first timelapse is in
   `video-local/scripts/capture.mjs`.
@@ -66,13 +78,13 @@ needs a reshoot of the process.
 
 ## How it gets made
 
-1. Owner records the piece (MIDI plus audio).
-2. Turn the MIDI into a beat map: bar start times, chord changes, note onsets
-   (JSON).
-3. In Blender, key the camera path and every object's build steps to the beat
-   map. Render the dawn shot with Cycles at 1920x1080, 24 or 30 fps.
+1. Owner records both excerpts (MIDI plus audio).
+2. Turn the MIDI into a beat map: bar start times, accented chords, note onsets
+   (JSON). The accents in the Presto are the build cues.
+3. In Blender, key the camera path, the build steps and the piano keys to the
+   beat map. Render with Cycles at 1920x1080, 24 or 30 fps.
 4. Composite the monitor's screen recordings onto the screen in the render.
-5. Mux the owner's audio with FFmpeg. Export the 16:9 master and the 9:16 cut.
+5. Mux the owner's audio with FFmpeg. Export the master, the phone cut and the teaser.
 
 Tools: Blender (needed for Phase 4 anyway; ask before installing), FFmpeg
 (installed 2026-10-21), the cached headless Chromium.
