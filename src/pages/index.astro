@@ -9,6 +9,14 @@ const posts = (await getPosts()).slice(0, 3);
 
 <Base title={site.name} description={site.description}>
   <script slot="head" is:inline>document.documentElement.classList.add('js')</script>
+  <script slot="head" type="importmap" is:inline>
+    {
+      "imports": {
+        "three": "/scene/vendor/three/three.module.js",
+        "three/addons/": "/scene/vendor/three/addons/"
+      }
+    }
+  </script>
   <main id="main" class="wrap">
     <div id="static">
       <h1>{site.name}</h1>
@@ -62,7 +70,7 @@ const posts = (await getPosts()).slice(0, 3);
     </div>
   </main>
 
-  <!-- The room hook. See docs/02-architecture.md. boot.js does nothing until Phase 3. -->
+  <!-- The room hook. See docs/02-architecture.md. boot.js starts the room only when the URL has ?room (Phase 3). -->
   <canvas id="room" hidden aria-hidden="true"></canvas>
   <script type="module" src="/scene/boot.js" is:inline></script>
 </Base>

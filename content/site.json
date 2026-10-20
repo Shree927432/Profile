@@ -11,6 +11,21 @@
       "label": "Posts screen. Arrow keys choose a post, Enter opens it."
     }
   },
+  "room": {
+    "loading": "Loading the room.",
+    "exit": "Plain page",
+    "tryAnyway": "Try anyway",
+    "reducedMotionNote": "Your device asks for less motion, so the room is off.",
+    "noWebglNote": "This browser cannot draw the room.",
+    "failedNote": "The room did not load. This is the plain page.",
+    "canvasLabel": "A 3D room with a desk and a monitor. Use the arrow keys to read the posts on the monitor.",
+    "debug": {
+      "fps": "fps",
+      "full": "Full",
+      "auto": "Auto",
+      "smooth": "Smooth"
+    }
+  },
   "notFound": {
     "title": "Page not found",
     "text": "There is nothing at this address. It may have moved, or the link may be wrong.",
