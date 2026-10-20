@@ -51,6 +51,9 @@ crawlers, slow phones and screen readers get. Not an apology page. -->
 room: the guitars, the upright piano that replaced the digital one, the desk where
 the models get trained, 5:40 a.m. The nine objects and what each one does.
 IMAGES: premise sketches, room sketch. -->
+<!-- NOTE 2026-10-21: the premise grew in Phase 4: the room became the evolution of
+music. Six guitars from Wes Montgomery to Tim Henson, the piano from Bach to Chopin,
+a studio desk for electronic music and K-pop. Copyright decided what each one plays. -->
 
 ## The first object: a screen
 
@@ -88,3 +91,6 @@ object at a time. -->
 
 <!-- 11. (100 words) The room in Blender, the instruments that play, the window that
 follows Pune's real time and weather. Link to the room. -->
+<!-- NOTE 2026-10-21: Phase 4 began with a list of names, not a model: 88 piano keys
+named by note so the code can play them, because names are the only thing the
+Blender file and the website share. -->

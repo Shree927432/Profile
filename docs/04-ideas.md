@@ -39,5 +39,7 @@ waits. One fully working crazy idea beats twelve half-working ones.
 
 ## Our current pick (confirmed 2026-10-19)
 Big bet: the instruments really play. Piano keys and guitar strings make real notes.
+Updated 2026-10-21: they play through the eras. Piano: Baroque to Romantic. Guitars:
+1950s jazz to today. Studio desk: electronic music and K-pop. See docs/00-vision.md.
 Small surprise 1: the window follows the real time and weather in Pune.
 Small surprise 2: the plant grows a leaf each time you come back.

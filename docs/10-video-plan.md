@@ -41,14 +41,18 @@ Recording:
 | 0:00 | Silence | Black. A small REC counter fades in, the date of the first commit. |
 | 0:02 | Presto, first phrases | Night. The empty shell of the room in wireframe: floor, walls, the window as a dark frame. The camera rides each arpeggio upward. |
 | ~0:10 | Accented chords | The desk, then the monitor snap in: wireframe, clay, lit, in the length of one chord pair. The monitor plays the site's history as screen recordings (Phases 1 to 3). |
-| ~0:25 | Presto continues | Speakers, the mic on its arm, the bookshelf with the picture frames, the bed. One object per chord pair. |
-| ~0:40 | Rising intensity | The guitar wall: one guitar per accent, each lifting off its hook for a moment. |
-| ~0:55 | The phrase's peak | The upright piano last. Its keys play the Presto notes in sync. |
+| ~0:25 | Presto continues | The studio desk (console, the two studio monitors, the K-pop lightstick), the mic on its arm, the bookshelf with the picture frames, the bed. One object per chord pair. |
+| ~0:40 | Rising intensity | The guitar wall, left to right through the eras: archtop, white Strat-style, worn sunburst, flame-top single-cut, Explorer-style, modern mauve. One guitar per accent, each lifting off its hook for a moment. |
+| ~0:55 | The phrase's peak | The upright piano last. The top lid opens, the hammers strike, the keys play the Presto notes in sync. |
 | ~1:10 | Silence, about 1 s | Hard cut. The room is complete and still. The REC counter jumps to 05:40. |
 | ~1:11 | Adagio, opening triplets | Slow drift from the bed toward the window. First light rises, the plant on the sill catches it, the piano keys move with the triplets. |
 | ~1:45 | Adagio fades | The camera settles on the monitor. The live site is on it. End on the REC counter showing shrikantpawade.pages.dev. |
 
 No slides, no captions. The only overlay is the small REC counter, in the room's style.
+
+The room's theme since 2026-10-21 is the evolution of music (docs/00-vision.md). The
+video keeps the Moonlight Sonata for its soundtrack; the guitars and the studio desk
+appear in the build but do not play over it.
 
 ## Three outputs
 
@@ -70,7 +74,9 @@ needs a reshoot of the process.
   textured, lit) from the same file. The storm section needs them.
 - One fixed "hero" camera path in the Blender file, used for every lighting
   iteration, so iterations can be cut together later.
-- Two lighting setups for the video: night (storm) and 5:40 a.m. first light (dawn).
+- Three lighting setups: night (storm), 5:40 a.m. blue hour (the default room bake),
+  and a full sunrise (`lights_sunrise` in scene/objects/MESHES.md) used only for the
+  video's dawn section.
 - The site: a short headless screen recording (1920x1080 and 390x844) of each
   object once it works. The capture script from the first timelapse is in
   `video-local/scripts/capture.mjs`.

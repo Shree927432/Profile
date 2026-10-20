@@ -53,7 +53,7 @@ Time: 2 to 4 sessions.
 ## Phase 4: the room model
 
 - [ ] Blender via Python scripts, one script per group of props
-- [ ] Every interactive mesh named per a list in docs/05-decisions.md
+- [x] Every interactive mesh named per a list (scene/objects/MESHES.md, 2026-10-21)
 - [ ] Bake lighting with Cycles into atlases, export GLTF
 - [ ] Load in the shell. Look at it on a phone. Iterate on stills first.
 - [ ] Save footage at every step for the making-of video (docs/10-video-plan.md)
