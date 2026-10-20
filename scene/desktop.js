@@ -5,6 +5,7 @@
 //   constants          camera, orbit, bloom numbers in one place
 //   start()            wires everything; resolves after the first frame is drawn
 //     renderer / composer    setPixelRatio() is the one place pixel ratio changes
+//     quality                quality.js decides pixel ratio and bloom; applyQuality() applies it
 //     scene                  lights + buildPlaceholderRoom() (Phase 4: GLB loader instead)
 //     camera + controls      frame() fits the monitor to the aspect on every resize
 //     screen                 monitor-posts.js on an offscreen canvas -> CanvasTexture
@@ -12,7 +13,8 @@
 //
 // Input (all on the canvas): pick.js holds the pick map; taps raycast it, the wheel and a
 // one-finger drag that starts on the screen scroll the list, keys go to the screen.
-// Next step plugs in at the TODO marker: quality ladder + ?debug.
+// Quality ladder (quality.js): full / auto / smooth. With ?debug a small panel in the overlay
+// shows fps and the pixel ratio and switches the mode.
 //
 // Every word shown comes from content.site.room / content.site.screens.
 
@@ -25,6 +27,7 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { buildPlaceholderRoom } from "./placeholder-room.js";
 import monitorPosts from "./objects/monitor-posts.js";
 import { createPickMap } from "./pick.js";
+import { createQuality, MODES } from "./quality.js";
 
 const deg = THREE.MathUtils.degToRad;
 
@@ -77,13 +80,20 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
-  let pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-  // The one place that changes resolution. TODO(quality ladder): call this with other ratios.
+  let needsRender = true;
+  // The one place that changes resolution. Both resize their buffers at the current size.
   function setPixelRatio(pr) {
-    pixelRatio = pr;
     renderer.setPixelRatio(pr);
     composer.setPixelRatio(pr);
+    needsRender = true;
   }
+  // Called by the quality ladder at start and on every change. With bloom off the pass is
+  // skipped; the screen keeps its colour (OutputPass tone-maps either way), it only loses the glow.
+  function applyQuality({ pixelRatio, bloom: bloomOn }) {
+    bloom.enabled = bloomOn;
+    setPixelRatio(pixelRatio);
+  }
+  const quality = createQuality({ dpr: window.devicePixelRatio || 1, reduce, apply: applyQuality });
 
   // ---- scene ----
   scene.add(new THREE.HemisphereLight(0xcdd5e6, 0x3e281a, 1.1));
@@ -147,7 +157,6 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   controls.maxPolarAngle = START_POLAR + POLAR_BAND;
 
   let fitDistance = 0;
-  let needsRender = true;
 
   // Distance at which the whole monitor fits both ways, with margins.
   function fittedDistance() {
@@ -179,7 +188,6 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     needsRender = true;
   }
 
-  setPixelRatio(pixelRatio);
   resize();
   window.addEventListener("resize", resize);
   window.addEventListener("orientationchange", resize);
@@ -306,10 +314,45 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     if (screenHandle.input({ type: "key", key: e.key })) e.preventDefault();
   });
 
-  // TODO(quality ladder + ?debug): fps meter in overlay, full / auto / smooth via setPixelRatio.
+  // ---- ?debug panel ----
+  // Numbers refresh about twice a second. Not a live region, so screen readers stay quiet.
+  let updateDebug = null;
+  if (params.has("debug")) {
+    const labels = text.debug;
+    const panel = document.createElement("div");
+    panel.className = "room-debug";
+    const fpsEl = document.createElement("span");
+    fpsEl.className = "room-debug-fps";
+    const ratioEl = document.createElement("span");
+    ratioEl.className = "room-debug-ratio";
+    const buttons = MODES.map((mode) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "room-debug-mode";
+      b.textContent = labels[mode];
+      b.addEventListener("click", () => { quality.set(mode); refreshDebug(); });
+      return [mode, b];
+    });
+    panel.append(fpsEl, ratioEl, ...buttons.map(([, b]) => b));
+    overlay.append(panel);
+
+    function refreshDebug() {
+      fpsEl.textContent = labels.fps + " " + Math.round(quality.fps);
+      ratioEl.textContent = quality.rung.pixelRatio + "\u00d7";
+      for (const [mode, b] of buttons) b.setAttribute("aria-pressed", String(mode === quality.mode));
+    }
+    let nextDebug = 0;
+    updateDebug = (t) => {
+      if (t < nextDebug) return;
+      nextDebug = t + 500;
+      refreshDebug();
+    };
+    refreshDebug();
+  }
 
   // ---- loop ----
-  let last = 0;
+  let last = 0; // time of the previous loop tick
+  let lastDrawn = 0; // time of the previous drawn frame, for the quality ladder
   function renderFrame(t) {
     const dt = last ? t - last : 0;
     last = t;
@@ -320,10 +363,13 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     if (!reduce || needsRender) {
       composer.render();
       needsRender = false;
+      if (lastDrawn) quality.frame(t - lastDrawn);
+      lastDrawn = t;
     }
+    if (updateDebug) updateDebug(t);
   }
-  function run() { last = 0; renderer.setAnimationLoop(renderFrame); }
-  function stop() { renderer.setAnimationLoop(null); }
+  function run() { last = 0; lastDrawn = 0; quality.resume(); renderer.setAnimationLoop(renderFrame); }
+  function stop() { renderer.setAnimationLoop(null); quality.pause(); }
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
 
   renderFrame(performance.now()); // first frame, drawn before start() resolves

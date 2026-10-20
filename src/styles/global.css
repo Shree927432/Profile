@@ -392,6 +392,34 @@ html.room-on #room { touch-action: none; }
 .room-loading { color: var(--fg-muted); }
 .room-loading[hidden] { display: none; }
 
+/* ?debug panel: fps, pixel ratio, three mode buttons. Wraps under the exit link on phones. */
+.room-debug {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+.room-debug-fps { min-width: 7ch; font-variant-numeric: tabular-nums; }
+.room-debug-ratio { color: var(--fg-muted); }
+.room-debug-mode {
+  min-height: 2rem;
+  padding: 0.15rem 0.6rem;
+  font: inherit;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.room-debug-mode[aria-pressed="true"] {
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.room-debug-mode:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
 /* Note on the plain page when the room is off or failed (quiet, like .small / .muted). */
 .room-note { margin: 0 0 1.5rem; }
 
