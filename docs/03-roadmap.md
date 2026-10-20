@@ -3,7 +3,7 @@
 Each phase ends with something online. Never skip ahead more than one phase.
 Update the status line when a phase changes.
 
-**Current phase: 2** (site live on Cloudflare Pages, custom domain deferred. Premise and objects confirmed. Phase 2 done and live. Phase 3 paused on branch phase-3-room-shell, see handover/phase-3-brief.md.)
+**Current phase: 4, not started** (site live on Cloudflare Pages, custom domain deferred. Phases 2 and 3 done. The Phase 3 room shell is on main behind `?room`, see handover/phase-3-brief.md.)
 
 ## Phase 0: plan and content (now)
 
@@ -41,10 +41,10 @@ Time: 2 to 3 sessions.
 
 ## Phase 3: the room shell
 
-- [ ] Three.js scene: a box with the Phase 2 canvas as its texture
-- [ ] Camera with tight orbit limits, bloom pass, resize handling
-- [ ] Pick map + raycaster, one clickable thing
-- [ ] Quality ladder scaffold: full / auto / smooth, fps meter in debug
+- [x] Three.js scene: a box with the Phase 2 canvas as its texture (placeholder desk and monitor, 2026-10-21)
+- [x] Camera with tight orbit limits, bloom pass, resize handling
+- [x] Pick map + raycaster, one clickable thing (`scene/pick.js`, the monitor screen)
+- [x] Quality ladder scaffold: full / auto / smooth, fps meter in debug (`scene/quality.js`, `?room&debug`)
 - [ ] Replace the box with the real room GLB when it exists (Phase 4)
 
 Done when: clicking the box screen opens a post.

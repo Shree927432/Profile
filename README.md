@@ -23,10 +23,10 @@ Clone this folder (it is a git repository). Open it with any agent. Tell it:
 "Read CLAUDE.md and docs/03-roadmap.md, then continue the current phase."
 Everything an agent needs to know is in the files, not in anyone's chat history.
 
-## Status (2026-10-19)
+## Status (2026-10-21)
 
 Phases 1 and 2 are done and live at https://shrikantpawade.pages.dev. Phase 3,
-the Three.js room shell, is paused on a branch. Lighthouse mobile scored 100 on
+the Three.js room shell, is done on main and shows only at `/?room`. Lighthouse mobile scored 100 on
 performance, accessibility, best practices and SEO in Phase 1.
 
 Run it:
@@ -48,10 +48,12 @@ Done:
   fine-tune (in progress). Example project and post deleted.
 - Live on Cloudflare Pages at https://shrikantpawade.pages.dev. Every push to
   main redeploys.
+- Phase 3 room shell (2026-10-21): `/?room` shows a placeholder desk and monitor
+  with the posts screen; click, tap or Enter opens a post. `/?room&debug` shows
+  fps and the quality buttons.
 
 Next, in this order:
-1. Resume Phase 3, the Three.js room shell, on the branch `phase-3-room-shell`.
-   Follow `handover/phase-3-brief.md`.
+1. Check the room's fps on a real phone at `/?room&debug`.
 2. Phase 4: the real room model in Blender.
 3. Custom domain, whenever one is bought: add it in Cloudflare Pages, then set
    `site` in `astro.config.mjs`.

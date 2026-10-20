@@ -50,6 +50,7 @@ Plain markdown. Who you are, what you do, what you are into. First person.
       "intro": "Two or three sentences for the home page",
       "description": "One sentence for search engines and link previews",
       "screens": { "posts": { "title": "", "hint": "", "empty": "", "label": "" } },
+      "room": { "loading": "", "exit": "", "tryAnyway": "", "reducedMotionNote": "", "noWebglNote": "", "failedNote": "", "canvasLabel": "", "debug": { "fps": "", "full": "", "auto": "", "smooth": "" } },
       "notFound": { "title": "", "text": "", "link": "" }
     }
 
@@ -58,3 +59,11 @@ Plain markdown. Who you are, what you do, what you are into. First person.
 `screens.posts` is the text on the desk monitor, the only words on it that are not
 post data: `title` (header), `hint` (bottom line), `empty` (no posts), `label`
 (accessible name of the canvas, read by screen readers).
+
+`room` is every visible word of the 3D room and its overlay (Phase 3). Only used when
+the URL has `?room`: `loading` (line shown while the room loads), `exit` (link back to
+the plain page), `tryAnyway` (link shown next to `reducedMotionNote`), `reducedMotionNote`
+(shown on the plain page when the device asks for less motion), `noWebglNote` (no WebGL2),
+`failedNote` (the room failed to load, so the plain page is shown), `canvasLabel`
+(accessible name of the room canvas), `debug` (labels for the `?debug` panel: `fps`, and
+the three quality levels `full`, `auto`, `smooth`).
