@@ -16,9 +16,17 @@ Read these before doing anything, in this order:
 Then check docs/05-decisions.md again before finishing: if you made a decision the
 owner agreed to, append it there with the date.
 
-Also before finishing: if the work changed the site or the room, add a short dated
-entry to docs/build-journal.md (facts, numbers, what the owner said, what broke).
-In Phase 4 and 5, save footage as docs/10-video-plan.md describes.
+Also before finishing, keep the story files current. They feed the making-of blog
+post and video, so record the misses, not only the wins:
+- docs/build-journal.md: a short dated entry for any work that changed the site or
+  the room, any decision, any iteration the owner asked for, and anything that went
+  wrong (what broke, why, how it was found, what fixed it). Quote the owner's own
+  words when they gave feedback.
+- docs/10-video-plan.md: update it when a decision changes the video (music, shots,
+  footage needs). In Phase 4 and 5, save footage as it describes.
+- docs/drafts/making-of-post.md: when something happens that the post should tell,
+  add a one-line note under the matching section's comment. Do not write the prose;
+  the owner writes it at launch.
 
 ## Hard rules
 
