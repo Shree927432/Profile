@@ -132,3 +132,13 @@ site or the room. Keep each entry short. No polishing; the post does that.
   (Polyphia for Henson). Those need licenses, so the guitars play original licks in
   each era's style; the piano plays real public-domain pieces.
 - Light: 5:40 a.m. stays, as blue pre-dawn. Pune's sun never rises before about 5:58.
+
+## 2026-10-21: three on the wall, three on a rack, and a DJ controller
+
+- Six guitars in one row needed about 3 m of the wall the piano is on. The owner
+  answered with two photos and one line: "we can put 3 guitar on wall and 3 on rack,
+  and can we also dj console to desk, so it can play edm music."
+- Wall: Wes Montgomery, Hendrix, Stevie Ray Vaughan, holding the projects. Floor rack
+  beside the desk: Slash, Hetfield, Tim Henson.
+- The 4x4 pad console became a generic two-deck DJ controller; the pan knob moved to a
+  small audio interface next to it. Still one object, still 9 in the room.

@@ -41,8 +41,8 @@ Recording:
 | 0:00 | Silence | Black. A small REC counter fades in, the date of the first commit. |
 | 0:02 | Presto, first phrases | Night. The empty shell of the room in wireframe: floor, walls, the window as a dark frame. The camera rides each arpeggio upward. |
 | ~0:10 | Accented chords | The desk, then the monitor snap in: wireframe, clay, lit, in the length of one chord pair. The monitor plays the site's history as screen recordings (Phases 1 to 3). |
-| ~0:25 | Presto continues | The studio desk (console, the two studio monitors, the K-pop lightstick), the mic on its arm, the bookshelf with the picture frames, the bed. One object per chord pair. |
-| ~0:40 | Rising intensity | The guitar wall, left to right through the eras: archtop, white Strat-style, worn sunburst, flame-top single-cut, Explorer-style, modern mauve. One guitar per accent, each lifting off its hook for a moment. |
+| ~0:25 | Presto continues | The studio desk (the two studio monitors, the DJ controller with its pads flashing on the accents, the K-pop lightstick), the mic on its arm, the bookshelf with the picture frames, the bed. One object per chord pair. |
+| ~0:40 | Rising intensity | The guitars through the eras: on the wall the archtop, the white Strat-style and the worn sunburst, each lifting off its hook for a moment; then the floor rack fills: flame-top single-cut, Explorer-style, modern mauve, one dropping into the rack per accent. |
 | ~0:55 | The phrase's peak | The upright piano last. The top lid opens, the hammers strike, the keys play the Presto notes in sync. |
 | ~1:10 | Silence, about 1 s | Hard cut. The room is complete and still. The REC counter jumps to 05:40. |
 | ~1:11 | Adagio, opening triplets | Slow drift from the bed toward the window. First light rises, the plant on the sill catches it, the piano keys move with the triplets. |

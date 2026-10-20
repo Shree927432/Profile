@@ -50,10 +50,13 @@ it before finishing. Re-opening a decision needs the owner's say-so.
 | 2026-10-21 | Frames: three (GitHub, LinkedIn, X). | Owner left it to us. |
 | 2026-10-21 | Light: 5:40 a.m. blue pre-dawn, no sunbeam in the default bake. The window follows Pune's real time and weather; warm light only when the real sun is up. The video may show a full sunrise. | Pune's sun never rises before about 5:58. Owner left the time to us. |
 | 2026-10-21 | Mesh names: `scene/objects/MESHES.md` is the list Blender scripts and room code both follow (conventions, one `obj_*` root per object, pivots, screen UV rule, lights and cameras). 9 object roots, 185 names, 88 of them piano keys. Piano hammers are one static mesh for now (one per key would cost 88 draw calls). | Drafted by the designer agent, reviewed here, counts and covers set by the owner's answers. Closes the open question on mesh naming. |
+| 2026-10-21 | Guitars split: three on the wall (Wes Montgomery, Hendrix, Stevie Ray Vaughan; they carry the projects) and three on a floor rack beside the desk (Slash, Hetfield, Tim Henson; era cards and licks only). The timeline reads wall, then rack. | Owner's choice, from a reference photo of a desk with a guitar rack. Solves the wall-space question: six in a row needed about 3 m beside the piano. |
+| 2026-10-21 | The studio desk's 4x4 pad console becomes a generic two-deck DJ controller (jog wheels, 8 pads per deck, play and cue, tempo, EQ and filter, channel faders, crossfader). Each deck plays an original EDM track. The pan and volume knobs move to a small audio interface beside it. Still one object. | Owner's request, from a reference photo of a two-deck controller. No brand, logos or printed text on the model. |
+| 2026-10-21 | Mesh list updated for the rack and the DJ controller: 204 names the code relies on (88 piano keys), DJ parts prefixed `studio_dj_1_`, `studio_dj_2_`, rack guitars pivot at the bottom cradle, the rack and interface join static meshes at export. About 101 draw calls in the room view; if a mid-range phone can't hold 60 fps, the code merges pads, knobs and faders at load (about 69) without renaming anything. | Designer agent's update, reviewed here. Measure before merging. |
 
 ## Open questions (move to the table when answered)
 
 - Domain.
 - Video recording: MIDI keyboard plus audio, or audio only?
-- Guitar wall layout: staggered row (recommended), one straight row with the piano
-  moved, or two rows of three. Decide from Blender stills (scene/objects/MESHES.md).
+- Which side of the desk the guitar rack stands on: by the right studio monitor
+  (recommended, keeps all six guitars on one side) or the left. Decide from Blender stills.

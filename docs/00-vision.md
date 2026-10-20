@@ -41,8 +41,8 @@ day, the weather, the mood, and the sound.
 **Premise:** My room in Pune, a bedroom that became a music studio: a wall of
 guitars, an upright piano, and the desk where the models get trained.
 **Theme (added 2026-10-21):** the room tells the evolution of music through its
-instruments: the piano carries Baroque, Classical and Romantic; the guitar wall runs
-from 1950s jazz to today; the studio desk covers electronic music and K-pop.
+instruments: the piano carries Baroque, Classical and Romantic; the guitars run from
+1950s jazz to today (three on the wall, three on a floor rack); the studio desk covers electronic music and K-pop.
 **Time and weather:** 5:40 a.m., blue pre-dawn light, the two hours before the day
 starts. No sunbeam: in Pune the sun rises between about 5:58 (June) and 7:10
 (January). The window follows the real time and weather in Pune, so warm light
@@ -50,7 +50,7 @@ appears only when the real sun is up.
 **Mood in three words:** Quiet, focused, lived-in.
 **What you hear:** Birds outside, the computer's fan, and whichever instrument you
 touch: a piano piece from its era, a guitar lick from its era, a loop from the
-console, panned between the two studio monitors.
+DJ controller, panned between the two studio monitors.
 
 Reference: the owner's chosen photo, `docs/moodboard/local/chosen-room-guitar-wall-bedroom-studio.jpg`
 (local only, not in git), with its digital piano swapped for an upright. Our
@@ -69,21 +69,22 @@ content it shows. Fewer objects that fully work beat many that half work.
 | Object | On click | Content it shows |
 |---|---|---|
 | Upright piano | All 88 keys play: notes, chords, and real Baroque, Classical and Romantic pieces with the keys moving. The key cover opens for a close-up; the top lid opens to show the strings and hammers. | About (`content/about.md`) on the music rest |
-| Guitar wall | Six guitars, one per era. A guitar lifts off its hook and floats up; a click plays a lick in its era's style. | Its era card, and a project by `order` (`content/projects`) |
+| Guitars | Six guitars, one per era: three on the wall, three on a floor rack beside the desk. A guitar lifts off its hook or out of the rack and floats up; a click plays a lick in its era's style. | Its era card. The three wall guitars also show a project each, by `order` (`content/projects`) |
 | Desk monitor | Camera moves in. The screen lists posts, keyboard works. | `content/posts` (this is the Phase 2 screen) |
 | Mic on its arm | Camera moves in. | Email (`content/links.json`). Later, the talk-to-me agent |
 | Picture frames | A frame tilts forward. | GitHub, LinkedIn, X (`content/links.json`) |
-| Studio desk | A console beside the computer: pads start original house, techno and trance loops; a pan knob moves sound between the two studio monitors; volume. A K-pop lightstick glows, plays a K-pop-style hook and pulses the room light. | None, it is the sound |
+| Studio desk | A two-deck DJ controller beside the computer: each deck plays an original EDM track, pads trigger loops and one-shots, jog wheels nudge and scratch, EQ and faders shape and blend, the crossfader mixes the decks. A small audio interface holds the pan knob (sound moves between the two studio monitors) and volume. A K-pop lightstick glows, plays a K-pop-style hook and pulses the room light. | None, it is the sound |
 | Ceiling light | Toggles the room light. | None, a mood toggle. First object in Phase 5 |
 | Window | Nothing. Light and sky follow real Pune time and weather. | None, live data |
 | Plant on the sill | Water it. It grows a leaf on each return visit. | None, a delight |
 
-Nine objects, under the limit of ten. The console, the studio monitors and the
-lightstick count as one object, the studio desk.
+Nine objects, under the limit of ten. The DJ controller, the audio interface, the
+studio monitors and the lightstick count as one object, the studio desk.
 
 ## The instruments and their eras (decided 2026-10-21)
 
-Guitar wall, left to right as a timeline. Each guitar is modelled in the style of
+Guitars, as a timeline: the wall left to right (1 to 3), then the floor rack beside
+the desk left to right (4 to 6). Each guitar is modelled in the style of
 one player's famous instrument, without logos, brand names or trademarked graphics.
 
 | # | Era | After | Style |
@@ -98,12 +99,13 @@ one player's famous instrument, without logos, brand names or trademarked graphi
 Piano: Baroque, Classical and Romantic pieces (the list is chosen later; for
 example Bach's Prelude in C, Mozart's K. 545, Beethoven's Für Elise and Moonlight
 Sonata, Chopin's Nocturne Op. 9 No. 2).
-Studio desk: electronic music (house, techno, trance) and K-pop.
+Studio desk: electronic music on a generic two-deck DJ controller (house, techno,
+trance and more) and K-pop.
 
 What the instruments play:
 - Piano: real pieces. Their compositions are public domain. Recordings or
   performances come from the owner, never from a commercial recording.
-- Guitars, console and lightstick: original phrases and loops written in each
+- Guitars, DJ controller and lightstick: original phrases and loops written in each
   era's style. Famous songs from these eras are copyrighted (including Polyphia's),
   so the site never plays them. Each era card names the style and the player who
   inspired it.
