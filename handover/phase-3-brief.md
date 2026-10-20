@@ -1,7 +1,8 @@
-# Phase 3 brief (paused 2026-10-19)
+# Phase 3 brief (done 2026-10-21)
 
-Status: paused at the owner's request. Work so far is on the branch
-`phase-3-room-shell` (not merged, not reviewed). The live site is Phase 2.
+Status: done. Built in four steps by the builder agent, reviewed, tested and merged
+into main on 2026-10-21. The room shows only with `?room`; `/` is still Phase 2.
+The rest of this file is the brief as it was written, kept for reference.
 
 ## Context to read first
 
