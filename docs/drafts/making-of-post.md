@@ -109,3 +109,7 @@ assembling itself is in the footage folder. -->
 <!-- NOTE 2026-10-22: I chose the black piano "with some polyphia style". Before any
 modelling, a sheet showed the same piano three times with more and more gold ornament
 (light, medium, full), our own branching scroll-vine instead of copying the band's art. -->
+<!-- NOTE 2026-10-22: before I picked a level I sent two tribal tattoo designs and asked for
+"this kind of art work on my piano in silver". The tall tattoo had to be turned on its
+side to fit a wide piano: the centre emblem went to the key cover, the two arms behind
+the music. -->

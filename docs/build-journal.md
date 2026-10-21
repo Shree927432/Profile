@@ -315,3 +315,34 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Before picking a level, the owner sent two tribal tattoo designs (one with a
   skull-spider centre, one with a heart): "i want this kind of art work on my piano in
   silver". The scroll-vine in gold is dropped; a new sheet in tribal silver follows.
+
+## 2026-10-22: the tribal sheet, silver instead of gold
+
+- Follows the owner's "i want this kind of art work on my piano in silver", with two
+  tribal tattoo designs (local only). A new 2D sheet, same front elevation and scale as
+  before: `blender/design/piano_tribal_sheet.py` (the scroll-vine script is untouched),
+  output `video-local/footage/2026-10-22-piano-quality-test/piano-tribal-sheet.png`.
+- Our own strokes from four parts: a tapering blade, a hook, a flame point, a teardrop
+  cut-out, mirrored about the piano's centreline, every needle pointing away from the
+  emblem. Nothing traced from the references.
+- The main question was placement: the references stand tall, the piano is wide. The
+  axis turns 90°: the emblem drops to the fallboard's face, two arms open sideways
+  from behind the music across the upper panel. The centre cannot sit above the music
+  line: the sheet's top (126 cm) is higher than the case (119.5 cm).
+- Three emblems for the owner: a clean skull (no spider), a heart, and a tuning fork
+  (ours; a treble clef was ruled out because it cannot be mirrored). Two levels:
+  Medium (sweep, emblem, lower corners, chrome hardware; about +0.4k triangles,
+  +0.5 MB) and Full (plus consoles, cheeks, lid edge, bench, silver key fronts;
+  about +1.1 MB). Recommended: Medium with the tuning fork. Owner to choose.
+- Silver spec: brushed sterling silver inlay #b7bbc2 under the clear coat, flat in
+  the bake; hardware polished chrome #d4d7dc, nickel #cbc4b6 shown as the warmer
+  option. Texture, not relief.
+- Went wrong on the way: the first render's strokes were too thin, closer to barbed
+  wire than tattoo work, and the teardrop cut-outs were too small to see. Widths about
+  1.6x fixed it. Then each stroke had its own gradient, so wherever two strokes
+  overlapped (flame roots, the skull's cheekbones) a seam showed. One page-wide
+  silver sheen fixed that. Also cut: brow points on the skull that read as ears,
+  and a cheek motif first drawn across the cheek cap; it moved to the flat front
+  below the nose.
+- The owner picked from the tribal sheet: "fork ,full". Tuning-fork emblem, Full level,
+  against the designer's Medium recommendation. Next: the 3D rebuild on Fable.
