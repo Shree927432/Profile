@@ -277,3 +277,14 @@ site or the room. Keep each entry short. No polishing; the post does that.
   of the action; a brighter interior fill or a camera from further right would help.
   The hinge barrels sit on the lid's back corner with the lid overhanging 8 mm, which
   is right from the front and odd from behind (never seen in the room).
+
+## 2026-10-22, 02:00: the owner checks the piano and changes the design
+
+- The owner woke to the quality test, opened the .blend in Blender ("can first check
+  this piano") and then asked "can we use different design". A sheet of five styles
+  from reference photos (modern black, satin mahogany, Victorian walnut, carved cabinet
+  grand, a design grand) was made in about ten minutes; its first render had the wrong
+  photos on one card (a nameplate and a loose moulding instead of the piano), fixed.
+- Choice: "i'll choose option A with some polyphia style". So the black studio upright
+  stays, dressed in Polyphia's black-and-gold ornament language. Next: a 2D sheet with
+  three ornament levels, then the 3D rebuild.
