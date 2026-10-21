@@ -288,3 +288,30 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Choice: "i'll choose option A with some polyphia style". So the black studio upright
   stays, dressed in Polyphia's black-and-gold ornament language. Next: a 2D sheet with
   three ornament levels, then the 3D rebuild.
+
+## 2026-10-22: the ornament sheet, three levels of Polyphia style
+
+- Follows the owner's "i'll choose option A with some polyphia style". A 2D sheet,
+  before any 3D: the same front elevation three times at one scale (reused from
+  `piano_design_sheet.py`, so proportions match the approved sheet), a 2.4x close-up
+  of the fallboard and music rest for each, a strip of the motif language, and a
+  recommendation. Script `blender/design/piano_ornament_sheet.py`; output
+  `video-local/footage/2026-10-22-piano-quality-test/piano-ornament-sheet.png`.
+- The motif is our own: a Baroque scroll-vine that branches like a family tree (the
+  room's evolution of music), black and gold with pearl accents. No copied artwork, no
+  text, no logos. Every ornament is drawn in the piano's metres and tagged geometry,
+  texture or material.
+- Light: gold hardware, a 2.5 mm pinstripe, the seed motif on the fallboard. Medium:
+  plus corner filigree, a pierced music rest backed with dark mauve silk, gold cheek
+  caps, a running scroll on the lid edge. Full: plus a big branch across the upper
+  panel, relief on the cheeks and consoles, engraved pedals, pearl key fronts, the
+  bench. Recommended: Medium. Owner to choose.
+- Went wrong on the way: the first render had the Full column's text running into the
+  bottom panels, the motif cells' gold lines spilling outside their boxes, the cheek
+  caps drawn as heavy gold bars, and the running scroll reading as a zigzag with
+  tiny hooks. Fixed by a taller page, clipped cells, thinner caps and bigger curls.
+- Noticed: the bench's dimensions live only in `blender/props/obj_piano.py`, not in
+  `constants.py`; the sheet copies them with a comment.
+- Before picking a level, the owner sent two tribal tattoo designs (one with a
+  skull-spider centre, one with a heart): "i want this kind of art work on my piano in
+  silver". The scroll-vine in gold is dropped; a new sheet in tribal silver follows.

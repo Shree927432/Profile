@@ -106,3 +106,6 @@ hammers inside, black lacquer that reflects the blue window. The first box test 
 100 boxes; this one is 143 parts and 50k triangles. Renders took about a minute each.
 Blender ran with its window open so the build could be watched, and the clip of it
 assembling itself is in the footage folder. -->
+<!-- NOTE 2026-10-22: I chose the black piano "with some polyphia style". Before any
+modelling, a sheet showed the same piano three times with more and more gold ornament
+(light, medium, full), our own branching scroll-vine instead of copying the band's art. -->
