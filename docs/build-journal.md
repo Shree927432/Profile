@@ -165,3 +165,11 @@ site or the room. Keep each entry short. No polishing; the post does that.
   rerun in the background with a log file, it worked. In the render, two blocks
   overlap at the key cheeks and leave black slivers, and the music rest was placed
   inside the case. Fine for a test; the real scripts check for both.
+- The owner watched the test footage: "it does not have building video". Stills and a
+  turntable show a finished thing, not the making. So a build sequence was added: the
+  piano assembles itself in glowing blue wireframe (case, keybed, legs, pedals, then
+  all 88 keys sweeping from A0 to C8 like a glissando, then the bench), crossfades to
+  clay, then to lit, and a C major chord presses. The video plan now asks for one of
+  these at every step.
+- Went wrong on the way: a shell loop passed all three arguments as one, so the first
+  three test renders failed at once; fixed and rerun.

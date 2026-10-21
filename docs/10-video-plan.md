@@ -70,6 +70,13 @@ needs a reshoot of the process.
 - Where: `video-local/footage/<YYYY-MM-DD>-<step>/` (git ignores `video-local/`).
 - Blender: for each prop group, a still at wireframe, clay, textured and lit;
   plus a 120-frame turntable at 1920x1080 for anything new.
+- A build sequence for each prop group (added 2026-10-21, owner's request): the
+  parts appear in build order while the camera pushes in, rendered as glowing
+  wireframe, then crossfading to clay, then to lit, MP4 at 1920x1080 30 fps. The
+  first one is the piano test in `video-local/footage/2026-10-21-blender-test/`,
+  made by `video-local/blender-test/build_sequence.py`; reuse its approach (parts
+  scale in with a slight overshoot, keys sweep low to high). These clips are the raw
+  material for the storm section.
 - Build every prop so it can be shown in all four states (wireframe, clay,
   textured, lit) from the same file. The storm section needs them.
 - One fixed "hero" camera path in the Blender file, used for every lighting
