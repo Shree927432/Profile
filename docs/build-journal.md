@@ -216,3 +216,64 @@ site or the room. Keep each entry short. No polishing; the post does that.
   recommended, warm dark walnut the alternative).
 - The owner approved the 2D sheet and chose polished black: "Approved. Go with A, polished
   black. Start the 3D piano on Fable with the Blender window open."
+
+## 2026-10-22, night: the piano in 3D, the quality test
+
+- The owner approved the 2D sheet and chose polished black, then went to sleep with a
+  cut-off of 03:45. Fable 5.1 (designer agent) built the piano in Blender from the
+  sheet's numbers: `blender/props/obj_piano.py` reads `blender/lib/constants.py`, and
+  the layout maths the sheet used (key offsets, cheek and console curves, fallboard, lid,
+  sheet line) moved into `blender/lib/piano_layout.py` so the drawing and the model
+  share one source. The sheet rerun came out byte-for-byte identical after the move.
+- What changed from the box test (about 100 boxes, flat colours): 143 parts in the
+  .blend, every edge bevelled (1.2 mm on keys, 4 to 8 mm on the case), the side panel
+  and key cheek are one profile so the arm has no seam, raised fields on both panels,
+  a U-shaped crown moulding, three brass butt hinges with five knuckles and screws,
+  brass castors in dark cups, flared pedals coming out of a felt slot, the music rest
+  with lip and brackets, 88 notched white and tapered black keys on the real offsets,
+  a red felt strip behind the keys, the fallboard open at 95 degrees on its hinge,
+  the sheet music (a generated image of two pages of staves) leaning on the lid's
+  front edge, and an interior: gold plate with struts, 230 tuning pins, pressure bar,
+  bridges, 230 strings (copper bass crossing in front of the steel trichords), 88
+  hammers with felt tips, 68 dampers, the hammer rail. Plus a bench. Materials are
+  procedural: lacquer with a clear coat and a faint orange-peel ripple, ivory with a
+  little subsurface, ebony, brass with uneven roughness, felt with sheen, oak boards.
+- Builds in 1.8 s with the window open. The helpers written the day before
+  (`names.py`, `geo.py`, `materials.py`) ran first time in Blender 5.2; two additions
+  were needed (multi-cylinder meshes and joins for the pins, strings, hammers; a colour
+  attribute so one material can tint the joined interior, since a mesh the code
+  touches may have only one material).
+- Watching it build: the window version drives the build and the renders from a
+  Blender timer (one group of parts per tick, renders started with INVOKE so they
+  show in the render window and are polled until the job ends). The viewport is set
+  to material preview through the hero camera before the first part appears. Fallback
+  for headless is the same generator run straight through.
+- Render times, Cycles on the M2 Pro GPU at 1920x1080, denoised: hero 37 s (320
+  samples), keys close-up 64 s (384, f/2 depth of field), lid open 76 s, clay 25 s,
+  wireframe 1 s (EEVEE). The first quick render of the test scene was too bright and
+  grey for 5:40 a.m.; the world light went from 0.35 to 0.14, exposure from +0.35 to
+  0, the window light from 420 W to 300 W, and the hero camera stepped back so the
+  castors and the bench legs were no longer cut off.
+- GLB of `obj_piano` with the statics joined into `piano_static`: 1.86 MB, 51.5k
+  triangles, 96 meshes, 101 nodes, all 99 MESHES.md names present. A "lite" export
+  without the small bevels on keys and hammers: 1.75 MB, 39.5k triangles. The size is
+  mostly vertex data (normals, float vertex colours, the 1024x724 sheet image); the
+  triangles are mostly bevel segments on the case (20k in `piano_static`), 156 per key,
+  and the pins, strings and hammers (16.6k together).
+- Went wrong on the way: the first builder named each hinge's barrel, each castor's
+  wheel and each hammer's shank with the same temporary name, so Blender silently
+  added `.001` and the name check (which exists for exactly this) failed; unique
+  temporary names fixed it, and they vanish when the parts are joined. The hammer
+  heads were first placed through the strings (a sign error in front-to-back); laid
+  out again with explicit y values. The generated sheet image came out upside down
+  in the first quick render because the screen helper writes V = 0 on the top edge
+  for the web; the image is now written top row first for Blender.
+- The build clip (13 s, 390 frames at 30 fps, EEVEE at 32 samples): wireframe 42 s,
+  clay 188 s, lit 199 s, then FFmpeg crossfades (1 s each) and the frames deleted.
+  Whole run, build to quit, 639 s with the window open; disk peaked well under 1 GB.
+  EEVEE's lit look still shows speckle on the wall by the warm lamp (soft shadows at
+  32 samples); more samples or Cycles for the final video.
+- Open for the owner: the inside still is dark and the sheet music hides the middle
+  of the action; a brighter interior fill or a camera from further right would help.
+  The hinge barrels sit on the lid's back corner with the lid overhanging 8 mm, which
+  is right from the front and odd from behind (never seen in the room).

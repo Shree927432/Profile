@@ -107,3 +107,8 @@ Tools: Blender (needed for Phase 4 anyway; ask before installing), FFmpeg
 - `video-local/build-timelapse-2026-10-21.mp4`: a 59 s card-style timelapse of
   Phases 0 to 3. The owner found it too much like a slideshow. That feedback
   is the reason this plan exists.
+- `video-local/footage/2026-10-22-piano-quality-test/`: the first prop at the real
+  quality bar: five Cycles stills of the upright piano (hero, keys close-up, lid open,
+  clay, wireframe) and `piano-build.mp4`, a 13 s build sequence from
+  `blender/tests/piano_quality.py` (wireframe, clay, lit; keys sweep, fallboard folds
+  open, C major chord). Raw material for the piano's accent in the storm section.

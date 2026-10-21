@@ -117,6 +117,44 @@ def cylinder(name, r, p0, p1, segments=16, **kw):
     return from_bmesh(name, bm, **kw)
 
 
+def cylinders(name, specs, segments=8, **kw):
+    """Many closed cylinders in one mesh. specs: iterable of (r, p0, p1)."""
+    bm = bmesh.new()
+    for r, p0, p1 in specs:
+        p0, p1 = Vector(p0), Vector(p1)
+        d = p1 - p0
+        res = bmesh.ops.create_cone(bm, cap_ends=True, segments=segments, radius1=r, radius2=r,
+                                    depth=d.length)
+        rot = Vector((0, 0, 1)).rotation_difference(d.normalized()).to_matrix().to_4x4()
+        bmesh.ops.transform(bm, matrix=rot, verts=res["verts"])
+        bmesh.ops.translate(bm, vec=(p0 + p1) / 2, verts=res["verts"])
+    return from_bmesh(name, bm, **kw)
+
+
+def join(objs, name):
+    """Join `objs` into one object named `name` (the first object's data survives).
+    Transforms are applied into the geometry relative to the first object."""
+    objs = list(objs)
+    first = objs[0]
+    with bpy.context.temp_override(active_object=first, selected_editable_objects=objs):
+        bpy.ops.object.join()
+    names.set_name(first, name)
+    return first
+
+
+def tint(obj, colour, metallic=0.0):
+    """Colour attribute `tint` for the shared `tinted` material: rgb is the base
+    colour, alpha the metallic value. colour is an sRGB hex string."""
+    from . import materials
+    me = obj.data
+    ca = me.color_attributes.get("tint") or me.color_attributes.new(name="tint", type="FLOAT_COLOR",
+                                                                     domain="CORNER")
+    rgb = materials.srgb(colour)
+    for d in ca.data:
+        d.color = (*rgb, metallic)
+    return obj
+
+
 def bevel(obj, width, segments=3, angle=35, profile=0.5):
     m = obj.modifiers.new("bevel", "BEVEL")
     m.width = width

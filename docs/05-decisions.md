@@ -57,10 +57,20 @@ it before finishing. Re-opening a decision needs the owner's say-so.
 | 2026-10-22 | Piano design approved from the 2D sheet (`video-local/footage/2026-10-22-piano-quality-test/piano-design-sheet.png`, drawn by `blender/design/piano_design_sheet.py`): 153 cm wide, 121.7 cm to the lid top, 60 cm deep at the toe blocks, white key tops at 73.5 cm, 88 keys over 122.2 cm, curved cheeks, brass castors, three brass pedals. All numbers live in `blender/lib/constants.py`, which both the sheet and the 3D build read. The sheet music sticks up past the lid and leans on its front edge, as on a real 121 cm upright. | Owner approved. The sheet caught two clashes before modelling (music rest through the moulding, fallboard into the front panel). |
 | 2026-10-22 | Piano finish: polished black lacquer under a clear coat, ivory keys, ebony sharps, brass hardware, red felt. In the browser the case needs a small reflection map, since reflections cannot be baked. | Owner's choice of option A. It reflects the blue window and stands apart from the oak floor and the wood guitars. |
 | 2026-10-22 | 2D design sheets come before 3D modelling for each major prop, drawn from the same constants the Blender scripts use. | Owner asked to see the design before modelling. Cheaper to fix on paper. |
+| 2026-10-22 | Blender script layout: prop builders in `blender/props/` (one per `obj_*`/`set_*` root), test scenes in `blender/tests/`, 2D sheets in `blender/design/`, shared maths and helpers in `blender/lib/` (the sheet and the 3D model read one layout module). Static parts stay separate in the .blend and are joined into `<root>_static` only at export. Output (.blend, GLB) in `blender/out/`, which git ignores. | Mechanics, decided while building the piano test. One source for the 2D sheet and the 3D model. |
+| 2026-10-22 | Blender runs with its window open (driven by a timer, renders in the render window), `-b` headless as the fallback. The .blend is saved before rendering. | Owner asked to watch Blender live; it also records the process for the video. |
+| 2026-10-22 | The piano quality test (Fable 5.1, 2026-10-22 night) is the reference for how the test is judged: hero and keys stills in `video-local/footage/2026-10-22-piano-quality-test/`. Whether it sets the bar for every room prop is the owner's call (open question). | Built from the approved sheet; whole run 11 minutes on the M2 Pro. |
 
 ## Open questions (move to the table when answered)
 
 - Domain.
+- Does the piano quality test set the bar for every room prop (bevels on every edge,
+  procedural materials, Cycles stills at about 320 samples)? Owner to say after seeing it.
+- Web export of the piano: the rich model is 1.86 MB and 51k triangles, too heavy
+  for a phone next to the rest of the room. Proposed: a lite export (fewer bevel
+  segments, simpler pins, strings and hammers, about 15k triangles) for the site,
+  the rich one for renders. Also whether to add Draco or meshopt compression (a
+  decoder dependency, about 5x smaller files).
 - Video recording: MIDI keyboard plus audio, or audio only?
 - Which side of the desk the guitar rack stands on: by the right studio monitor
   (recommended, keeps all six guitars on one side) or the left. Decide from Blender stills.

@@ -1,8 +1,11 @@
 # Phase 4 brief (the room model in Blender)
 
-Last updated: 2026-10-21, end of day. Planning is done and committed. No modelling
-yet: the first modelling step was briefed and stopped at the owner's request before
-any file was written. Start tomorrow with Step 1 below.
+Last updated: 2026-10-22, 02:00. Planning is done. A quality test of the upright
+piano is done too (2D sheet approved, 3D model, five stills, a build clip; see
+`video-local/footage/2026-10-22-piano-quality-test/` and the 2026-10-22 journal
+entry). The scripts in `blender/` are the start of the real build. Next: the owner
+judges the quality bar and the web-export question (docs/05-decisions.md, open
+questions), then Step 1 below.
 
 ## Context to read first
 

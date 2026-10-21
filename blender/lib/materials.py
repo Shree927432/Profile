@@ -182,17 +182,16 @@ def brass(name):
     return m
 
 
-def tinted(name, rough=0.35):
+def tinted(name, rough=0.35, coat=0.0):
     """One material for a mesh made of several kinds of parts (MESHES.md: a mesh the
     code touches has exactly one material). Colour comes from the colour attribute
-    `tint`; its alpha is the metallic value."""
+    `tint` (geo.tint writes it); its alpha is the metallic value."""
     m, nt, b = _new(name)
-    a = nt.nodes.new("ShaderNodeAttribute")
-    a.attribute_type = "GEOMETRY"
-    a.attribute_name = "tint"
+    a = nt.nodes.new("ShaderNodeVertexColor")   # the glTF exporter carries this one as COLOR_0
+    a.layer_name = "tint"
     nt.links.new(a.outputs["Color"], b.inputs["Base Color"])
     nt.links.new(a.outputs["Alpha"], b.inputs["Metallic"])
-    _set(b, rough=rough)
+    _set(b, rough=rough, coat=coat, coat_rough=0.1)
     m.diffuse_color = (0.5, 0.4, 0.2, 1)
     return m
 

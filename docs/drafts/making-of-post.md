@@ -100,3 +100,9 @@ rendered clay and finished on the laptop's GPU; the names survived the export. -
 for the design on paper first: a to-scale 2D sheet of the upright (front, side
 section, keyboard, details, two finishes) drawn from the same numbers the 3D model
 will use, before any modelling. -->
+<!-- NOTE 2026-10-22: the quality test. One object, the upright piano, built properly
+from the approved sheet: bevels, curved cheeks, brass hinges, 88 real keys, strings and
+hammers inside, black lacquer that reflects the blue window. The first box test was
+100 boxes; this one is 143 parts and 50k triangles. Renders took about a minute each.
+Blender ran with its window open so the build could be watched, and the clip of it
+assembling itself is in the footage folder. -->

@@ -21,3 +21,6 @@ video-local/
 
 # Blender output: .blend files and test GLBs (the scripts in blender/ are the source)
 blender/out/
+
+# Python bytecode from the Blender scripts
+__pycache__/
