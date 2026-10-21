@@ -18,3 +18,6 @@ docs/moodboard/local/
 
 # Build timelapse videos and the scripts that make them. Local only.
 video-local/
+
+# Blender output: .blend files and test GLBs (the scripts in blender/ are the source)
+blender/out/

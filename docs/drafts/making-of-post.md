@@ -96,3 +96,7 @@ named by note so the code can play them, because names are the only thing the
 Blender file and the website share. -->
 <!-- NOTE 2026-10-21: the first Blender test was a small piano, 88 keys named by note,
 rendered clay and finished on the laptop's GPU; the names survived the export. -->
+<!-- NOTE 2026-10-22: after comparing the box-piano test with Felix's making-of, I asked
+for the design on paper first: a to-scale 2D sheet of the upright (front, side
+section, keyboard, details, two finishes) drawn from the same numbers the 3D model
+will use, before any modelling. -->

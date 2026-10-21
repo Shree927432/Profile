@@ -185,3 +185,34 @@ site or the room. Keep each entry short. No polishing; the post does that.
   is drawing a to-scale 2D sheet first (front, side, keyboard, details, two finishes).
 - Model: asked which model gives the best results, the owner said "you can use fable
   if you want". 3D modelling moves to Claude Fable 5.1; the 2D sheet stays on Opus.
+
+## 2026-10-22: the piano on paper before the piano in 3D
+
+- The owner compared the first Blender test (about 100 plain boxes, flat colours) with
+  Felix's making-of video and found ours far behind. The box test proved the pipeline,
+  not the look. So the next step was one object, the upright piano, at the quality the
+  final room needs.
+- Started on the 3D side: shared Blender helpers in `blender/lib/` (name checks that
+  read MESHES.md, geometry with bevels, procedural materials: black lacquer under a
+  clear coat, walnut veneer, ivory, felt, brass, oak planks). None of it has run in
+  Blender yet.
+- Mid-task the owner asked for two things: to watch Blender build live on their screen,
+  and then, before any modelling, to see 2D designs of the piano first. Modelling
+  stopped there.
+- All the piano's dimensions now live in one place, `blender/lib/constants.py`: 153 cm
+  wide, 121.7 cm to the top of the lid, 60 cm deep, white keys at 73.5 cm, 88 keys
+  spanning 122.2 cm. A plain Python script (`blender/design/piano_design_sheet.py`)
+  draws the sheet from those numbers as SVG and screenshots it with headless Chromium,
+  so the drawing and the later model cannot drift apart.
+- The first draft of the sheet caught a real design mistake: an A4 music page leaning
+  on the rest would have passed through the top moulding. Real 121 cm uprights have the
+  same problem; the music sticks up past the lid and leans on its front edge. The rest
+  moved forward and the sheet now leans there. The open fallboard also hit the front
+  panel by 7 mm, so the panel moved back 1 cm.
+- Went wrong on the way: labels ran off the panels and over each other in the first
+  render, and one callout drew past its box. Fixed in a second and third render.
+- Sheet: `video-local/footage/2026-10-22-piano-quality-test/piano-design-sheet.png`.
+  Waiting on the owner: approve the proportions and pick the finish (polished black
+  recommended, warm dark walnut the alternative).
+- The owner approved the 2D sheet and chose polished black: "Approved. Go with A, polished
+  black. Start the 3D piano on Fable with the Blender window open."
