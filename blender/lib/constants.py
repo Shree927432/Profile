@@ -95,6 +95,9 @@ PIANO = dict(
     hinge_x=(-0.550, 0.0, 0.550), hinge_r=0.0045, hinge_len=0.060,
 )
 
+# Piano bench (obj_piano build_bench and the ornament sheet share these). Metres.
+BENCH = dict(w=0.80, d=0.34, h=0.49, t=0.045, apron=0.075, leg_x=0.35, cy=-1.03)
+
 # The two finish options for the owner (sRGB). Room context colours are in COL.
 FINISHES = {
     "black": dict(label="Polished black", material="mat_piano_case",

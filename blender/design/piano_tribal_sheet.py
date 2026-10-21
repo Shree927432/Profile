@@ -26,7 +26,6 @@ sys.path.insert(0, os.path.join(HERE, ".."))
 import piano_design_sheet as D  # noqa: E402  (front elevation, View, text helpers)
 import piano_ornament_sheet as O  # noqa: E402  (sheet clip, wrap, fields, bench)
 from lib import constants as C  # noqa: E402
-from lib.piano_layout import fallboard_profile  # noqa: E402
 
 P, KT = C.PIANO, C.KT
 OUT = D.OUT
@@ -34,180 +33,14 @@ W_PX, H_PX = 2400, 2900
 add, text, wrap = D.add, D.text, O.wrap
 INK, MUTED, ACC, PAPER = D.INK, D.MUTED, D.ACC, D.PAPER
 
-# Colours (sRGB). Inlay: brushed sterling silver under the clear coat. Hardware:
-# polished chrome. Nickel is the warmer alternative, shown for the owner.
-SILVER = "#b7bbc2"
-SILVER_HI, SILVER_LO = "#dfe2e7", "#8d929b"
-CHROME = "#d4d7dc"
-NICKEL = "#cbc4b6"
+# The strokes, the emblems, the metals and the placements live in lib/piano_ornament.py
+# (one source: the 3D build rasterises the same geometry into its silver masks).
+from lib.piano_ornament import (  # noqa: E402
+    SILVER, SILVER_HI, SILVER_LO, CHROME, NICKEL, FIELD_LO, CHEEK_IN, FB_MID, UP_MID, LID_Z, BENCH_MID,
+    arc, turn, wave, plus, thorn, spindle, blade, Piece, place, arm, wing, EMBLEMS, layout, emit)
+
 LACQ = C.COL["lacquer_black"]
 DARK = dict(O.DARK, brass="url(#chrome)")
-
-FIELD_UP, FIELD_LO = O.FIELD_UP, O.FIELD_LO
-CHEEK_IN = O.CHEEK_IN
-_fz = [z for _, z in fallboard_profile(P["fall_open_deg"])]
-FB_TOP = max(_fz)                                  # top of the open fallboard's face
-FB_MID = (KT + 0.024 + FB_TOP) / 2                 # middle of the part seen above the felt
-UP_MID = (FIELD_UP[2] + FIELD_UP[3]) / 2
-
-
-# ---------------------------------------------------------------------------
-# stroke engine: centrelines, blades, flame points, teardrop cut-outs (metres)
-# ---------------------------------------------------------------------------
-def arc(x, y, h_deg, L, dh=None, n=120):
-    """Centreline from (x, y) along h_deg for length L. dh(t) is the heading rate in
-    radians per unit t, so its integral over 0..1 is the total turn. [(x, y, heading)]"""
-    pts, h = [], math.radians(h_deg)
-    for i in range(n + 1):
-        t = i / n
-        pts.append((x, y, h))
-        h += (dh(t) if dh else 0.0) / n
-        x += math.cos(h) * L / n
-        y += math.sin(h) * L / n
-    return pts
-
-
-def turn(deg, curl=0.0):
-    """Total turn of deg, concentrated toward the tip as curl grows (0 = an even arc)."""
-    k = math.radians(deg) * (curl + 1)
-    return lambda t: k * t ** curl
-
-
-def wave(deg):
-    """Heading rises by deg at the middle and comes back: a gentle S."""
-    return lambda t: math.radians(deg) * math.pi * math.sin(2 * math.pi * t)
-
-
-def plus(*fs):
-    return lambda t: sum(f(t) for f in fs)
-
-
-def spline(ctrl, n=120):
-    """Catmull-Rom through ctrl points, resampled evenly by length. [(x, y, heading)]"""
-    Q = [ctrl[0]] + list(ctrl) + [ctrl[-1]]
-    raw = []
-    for i in range(len(Q) - 3):
-        p0, p1, p2, p3 = Q[i:i + 4]
-        for j in range(30):
-            u = j / 30
-            raw.append(tuple(0.5 * (2 * p1[k] + (-p0[k] + p2[k]) * u + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * u * u
-                                    + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * u ** 3) for k in (0, 1)))
-    raw.append(tuple(ctrl[-1]))
-    acc = [0.0]
-    for a, b in zip(raw, raw[1:]):
-        acc.append(acc[-1] + math.dist(a, b))
-    out, j = [], 0
-    for i in range(n + 1):
-        s = acc[-1] * i / n
-        while j < len(acc) - 2 and acc[j + 1] < s:
-            j += 1
-        u = (s - acc[j]) / max(acc[j + 1] - acc[j], 1e-12)
-        out.append((raw[j][0] + (raw[j + 1][0] - raw[j][0]) * u, raw[j][1] + (raw[j + 1][1] - raw[j][1]) * u))
-    res = []
-    for k, (x, y) in enumerate(out):
-        a, b = out[max(0, k - 1)], out[min(len(out) - 1, k + 1)]
-        res.append((x, y, math.atan2(b[1] - a[1], b[0] - a[0])))
-    return res
-
-
-def at(cl, t):
-    n = len(cl) - 1
-    f = min(max(t, 0.0), 1.0) * n
-    i = min(int(f), n - 1)
-    u = f - i
-    (x0, y0, h0), (x1, y1, h1) = cl[i], cl[i + 1]
-    return x0 + (x1 - x0) * u, y0 + (y1 - y0) * u, h0 + (h1 - h0) * u
-
-
-# width profiles: t runs 0 (root) to 1 (tip)
-def thorn(w0, p=1.3):
-    """Wide root, concave sides, needle tip."""
-    return lambda t: w0 * (1 - t) ** p
-
-
-def spindle(wmax, tm=0.35, a=0.85):
-    """Pointed at both ends, widest at tm."""
-    e = math.log(0.5) / math.log(tm)
-    return lambda t: wmax * math.sin(math.pi * t ** e) ** a
-
-
-def tear(wmax, p=1.5):
-    """Round head at t = 0, a tail that runs out to a point."""
-    tm = 1 / (1 + 2 * p)
-    fmax = math.sqrt(tm) * (1 - tm) ** p
-    return lambda t: wmax * math.sqrt(max(t, 0)) * (1 - t) ** p / fmax
-
-
-def tine(wmax):
-    """Even width, then a short sharp point (the fork's tines)."""
-    return lambda t: wmax * max(0.0, 1 - t ** 6) ** 0.7
-
-
-def blade(cl, wfn, bias=0.0):
-    """Polygon of a stroke: offsets the centreline by the width, bias > 0 fattens the left."""
-    n = len(cl) - 1
-    left, right = [], []
-    for i, (x, y, h) in enumerate(cl):
-        w = wfn(i / n)
-        nx, ny = -math.sin(h), math.cos(h)
-        wl, wr = w * (1 + bias) / 2, w * (1 - bias) / 2
-        left.append((x + nx * wl, y + ny * wl))
-        right.append((x - nx * wr, y - ny * wr))
-    return left + right[::-1]
-
-
-class Piece:
-    """One stroke group in local metres: silver polygons and teardrop cut-outs."""
-
-    def __init__(self):
-        self.solid, self.holes = [], []
-
-    def stroke(self, cl, wfn, bias=0.0):
-        self.solid.append(blade(cl, wfn, bias))
-        return cl
-
-    def flame(self, spine, wfn, t, side, ang, L, bend, wfrac=0.78, curl=1.2, p=1.1, inset=0.0):
-        """A flame point out of the spine's side (+1 left of its direction, -1 right),
-        leaving at ang degrees and bending back toward the flow by bend degrees."""
-        x, y, h = at(spine, t)
-        w = wfn(t)
-        nx, ny = -math.sin(h), math.cos(h)
-        cl = arc(x + nx * side * w * inset, y + ny * side * w * inset, math.degrees(h) + side * ang, L,
-                 turn(-side * bend, curl), n=48)
-        self.solid.append(blade(cl, thorn(w * wfrac, p)))
-        return cl
-
-    def cut(self, spine, wfn, t0, t1, size=0.46, off=0.0):
-        """A teardrop cut-out inside the spine from t0 (round head) to t1 (tail)."""
-        cl = []
-        for i in range(31):
-            t = t0 + (t1 - t0) * i / 30
-            x, y, h = at(spine, t)
-            w = wfn(t)
-            cl.append((x - math.sin(h) * off * w, y + math.cos(h) * off * w, h))
-        wm = size * min(wfn(t0 + (t1 - t0) * 0.25), wfn((t0 + t1) / 2) * 1.3)
-        self.holes.append(blade(cl, tear(wm)))
-
-    def cut_free(self, cl, wmax):
-        self.holes.append(blade(cl, tear(wmax)))
-
-    def emit(self, layer, v, T):
-        for poly in self.solid:
-            layer.solid.append([v.p(*T(x, y)) for x, y in poly])
-        for poly in self.holes:
-            layer.holes.append([v.p(*T(x, y)) for x, y in poly])
-
-    def both(self, layer, v, T):
-        """Emit, and emit again mirrored about the piano's centreline (world x = 0)."""
-        self.emit(layer, v, T)
-        self.emit(layer, v, lambda x, y: (-T(x, y)[0], T(x, y)[1]))
-
-
-def place(dx=0.0, dz=0.0, s=1.0, rot=0.0, mx=1, my=1):
-    c, sn = math.cos(math.radians(rot)), math.sin(math.radians(rot))
-    return lambda x, y: (dx + s * (c * x * mx - sn * y * my), dz + s * (sn * x * mx + c * y * my))
-
-
 MASK_N = [0]
 
 
@@ -232,183 +65,6 @@ class Layer:
         add(f'<g mask="url(#{mid})" fill="{fill}">'
             + "".join(f'<polygon points="{pts(p)}"/>' for p in self.solid) + "</g>")
         self.solid, self.holes = [], []
-
-
-# ---------------------------------------------------------------------------
-# the motifs (local metres; every composition is drawn as its right half)
-# ---------------------------------------------------------------------------
-def arm(L=0.46, wmax=0.017, rise=-3.0, sway=8.0, flames=None, cuts=None, tm=0.33):
-    """The long sweep: a spine that swells and runs out to a needle, flame points
-    leaving both sides and bending outward, a chain of teardrops in its belly.
-    Root at (0, 0) toward +x."""
-    m = Piece()
-    spine = arc(0, 0, rise, L, plus(wave(sway), turn(-4, 2)), n=220)
-    wfn = spindle(wmax, tm)
-    m.stroke(spine, wfn)
-    for t, side, ang, l, bend in flames or ():
-        m.flame(spine, wfn, t, side, ang, L * l, bend)
-    for t0, t1, size, off in cuts or ():
-        m.cut(spine, wfn, t0, t1, size, off)
-    return m, spine, wfn
-
-
-def upper_arm():
-    """Upper panel, right of the music: root hidden behind the sheet."""
-    fl = [(0.17, 1, 62, 0.14, 70), (0.30, 1, 56, 0.17, 72), (0.45, 1, 50, 0.14, 64), (0.61, 1, 42, 0.10, 52),
-          (0.76, 1, 34, 0.06, 40),
-          (0.23, -1, 60, 0.12, 66), (0.37, -1, 54, 0.14, 68), (0.53, -1, 46, 0.11, 58), (0.69, -1, 38, 0.07, 44)]
-    ct = [(0.10, 0.19, 0.52, 0.04), (0.20, 0.29, 0.56, -0.07), (0.30, 0.39, 0.56, 0.06), (0.40, 0.48, 0.52, -0.05),
-          (0.49, 0.56, 0.48, 0.05), (0.57, 0.63, 0.42, -0.03), (0.645, 0.70, 0.36, 0.02)]
-    m, spine, wfn = arm(0.46, 0.031, rise=-4, sway=8, flames=fl, cuts=ct)
-    # a hook off the first upper flame, curling back toward the centre
-    x, y, h = at(spine, 0.10)
-    m.stroke(arc(x, y, 118, 0.050, turn(70, 1.6), n=48), thorn(0.016, 1.1))
-    return m
-
-
-def wing():
-    """The emblem's wings on the fallboard: a short arm plus two framing hooks."""
-    fl = [(0.28, 1, 56, 0.26, 66), (0.50, 1, 46, 0.20, 54), (0.70, 1, 36, 0.12, 40),
-          (0.36, -1, 54, 0.22, 62), (0.60, -1, 42, 0.15, 48)]
-    ct = [(0.10, 0.24, 0.52, 0.0), (0.27, 0.40, 0.54, 0.05), (0.43, 0.54, 0.48, -0.04), (0.57, 0.66, 0.40, 0.02)]
-    m, spine, wfn = arm(0.175, 0.021, rise=-6, sway=10, flames=fl, cuts=ct, tm=0.30)
-    m.stroke(arc(0.002, 0.012, 72, 0.062, turn(-66, 1.0), n=60), thorn(0.012, 1.15))
-    m.stroke(arc(0.002, -0.012, -74, 0.052, turn(62, 1.0), n=60), thorn(0.011, 1.15))
-    return m
-
-
-def corner():
-    """Lower panel corner: two blades along the field edges and a hook on the
-    diagonal. Corner at (0, 0), the field toward +x, +y."""
-    m = Piece()
-    r = (0.014, 0.014)
-    wa, wb = thorn(0.024, 1.15), thorn(0.020, 1.15)
-    a = m.stroke(arc(*r, 4, 0.150, turn(10, 1.5), n=80), wa)
-    b = m.stroke(arc(*r, 86, 0.105, turn(-10, 1.5), n=80), wb)
-    m.stroke(arc(r[0] + 0.006, r[1] + 0.006, 45, 0.068, turn(-160, 1.7), n=80), thorn(0.017, 1.05))
-    m.flame(a, wa, 0.34, 1, 50, 0.042, 46)
-    m.flame(b, wb, 0.36, -1, 50, 0.032, 46)
-    m.cut(a, wa, 0.12, 0.36, 0.50, 0.0)
-    m.cut(b, wb, 0.14, 0.38, 0.48, 0.0)
-    return m
-
-
-def lid_band():
-    """Lid front edge: a thin running sweep, needle at the outer end, small points
-    alternating up and down (fits 1.4 cm of the 2.2 cm edge)."""
-    fl = [(0.08 + 0.10 * k, 1 if k % 2 == 0 else -1, 30, 0.036 - 0.002 * k, 30) for k in range(8)]
-    ct = [(0.05 + 0.10 * k, 0.12 + 0.10 * k, 0.40, 0.0) for k in range(6)]
-    m, spine, wfn = arm(0.52, 0.0095, rise=0, sway=0, flames=fl, cuts=ct, tm=0.18)
-    return m
-
-
-def console():
-    """Console face: the references' own vertical sweep, root under the cheek."""
-    fl = [(0.12 + 0.11 * k, 1 if k % 2 == 0 else -1, 40, 0.055 - 0.004 * k, 44) for k in range(7)]
-    ct = [(0.05 + 0.11 * k, 0.13 + 0.11 * k, 0.46, 0.0) for k in range(6)]
-    m, spine, wfn = arm(0.50, 0.018, rise=-90, sway=0, flames=fl, cuts=ct, tm=0.22)
-    return m
-
-
-def cheek_hook():
-    """Key cheek front, below the nose: a short sweep outward and a hook curling under."""
-    m = Piece()
-    w = thorn(0.020, 1.1)
-    s = m.stroke(arc(0.0, 0.0, 4, 0.125, turn(-10, 1.5), n=90), w)
-    m.stroke(arc(0.004, -0.004, -60, 0.050, turn(170, 1.6), n=90), thorn(0.013, 1.1))
-    m.flame(s, w, 0.30, 1, 48, 0.034, 46)
-    m.flame(s, w, 0.46, -1, 44, 0.026, 40)
-    m.cut(s, w, 0.08, 0.34, 0.48, 0.0)
-    return m
-
-
-# --- the three centre emblems (centred on (0, 0), about 10 cm tall) ----------
-def mirror_pts(right):
-    """Right-half outline from top centre to bottom centre, closed with its mirror."""
-    return right + [(-x, y) for x, y in reversed(right[1:-1])]
-
-
-def skull():
-    m = Piece()
-    half = [(0, 0.050), (0.019, 0.047), (0.032, 0.036), (0.037, 0.019), (0.036, 0.004), (0.033, -0.007),
-            (0.025, -0.015), (0.023, -0.029), (0.015, -0.041), (0, -0.045)]
-    outline = [(x, y) for x, y, _ in spline(mirror_pts(half) + [half[0]], 200)]
-    m.solid.append(outline)
-    for sx in (1, -1):
-        f = (lambda x, y, sx=sx: (sx * x, y))
-        # cheekbone hooks sweeping out and down
-        cb = arc(0.024, -0.002, -14, 0.042, turn(-80, 1.4), n=50)
-        m.solid.append([f(x, y) for x, y in blade(cb, thorn(0.012, 1.3))])
-        # eye: round at the outer corner, pointed in and up toward the brow
-        eye = arc(0.0225, -0.001, 150, 0.022, turn(18, 1), n=40)
-        m.holes.append([f(x, y) for x, y in blade(eye, tear(0.0140, 1.3))])
-        # nose: two small teardrops, an inverted heart
-        nose = arc(0.0032, -0.0215, 98, 0.011, turn(-25, 1), n=30)
-        m.holes.append([f(x, y) for x, y in blade(nose, tear(0.0046))])
-    # forehead flame and the teeth (gaps left between the cut-outs are the teeth)
-    m.holes.append(blade(arc(0, 0.043, -90, 0.017, n=30), tear(0.0062)))
-    for k in range(-2, 3):
-        x0 = k * 0.0058
-        y0 = -0.0325 + 0.0007 * k * k
-        m.holes.append(blade(arc(x0, y0 - 0.0045, 90, 0.009, n=24), spindle(0.0034, 0.5, 0.8)))
-    return m
-
-
-def heart():
-    m = Piece()
-    pts = [(0.0, -0.050), (0.017, -0.030), (0.034, -0.007), (0.040, 0.014), (0.033, 0.033), (0.019, 0.039),
-           (0.008, 0.032), (0.004, 0.021), (0.006, 0.013)]
-    for sx in (1, -1):
-        f = (lambda x, y, sx=sx: (sx * x, y))
-        cl = spline(pts, 160)
-        wfn = spindle(0.0125, 0.40, 0.8)
-        m.solid.append([f(x, y) for x, y in blade(cl, wfn, bias=-0.15)])
-        tmp = Piece()
-        tmp.flame(cl, wfn, 0.66, -1, 46, 0.030, 58)
-        tmp.flame(cl, wfn, 0.47, -1, 52, 0.024, 50)
-        tmp.flame(cl, wfn, 0.25, -1, 50, 0.018, 44)
-        tmp.cut(cl, wfn, 0.28, 0.48, 0.50, 0.02)
-        tmp.cut(cl, wfn, 0.53, 0.66, 0.42, 0.0)
-        m.solid += [[f(x, y) for x, y in p] for p in tmp.solid]
-        m.holes += [[f(x, y) for x, y in p] for p in tmp.holes]
-    m.solid.append(blade(arc(0, -0.044, -90, 0.020, n=30), thorn(0.0065, 1.2)))
-    return m
-
-
-def fork():
-    m = Piece()
-    tine_pts = [(0.0, -0.013), (0.008, -0.0105), (0.0122, -0.003), (0.0128, 0.012), (0.0128, 0.034),
-                (0.0118, 0.050), (0.0090, 0.060)]
-    for sx in (1, -1):
-        f = (lambda x, y, sx=sx: (sx * x, y))
-        cl = spline(tine_pts, 160)
-        wfn = tine(0.0068)
-        tmp = Piece()
-        tmp.stroke(cl, wfn)
-        tmp.flame(cl, wfn, 0.50, -1, 50, 0.020, 58, wfrac=0.8)
-        tmp.flame(cl, wfn, 0.30, -1, 52, 0.014, 50, wfrac=0.8)
-        tmp.cut(cl, wfn, 0.48, 0.80, 0.42, 0.0)
-        # shoulder hook, curling down beside the stem
-        tmp.stroke(arc(0.002, -0.017, -8, 0.030, turn(-150, 1.5), n=60), thorn(0.0072, 1.2))
-        m.solid += [[f(x, y) for x, y in p] for p in tmp.solid]
-        m.holes += [[f(x, y) for x, y in p] for p in tmp.holes]
-    stem = arc(0, -0.009, -90, 0.054, n=80)
-    m.stroke(stem, thorn(0.0082, 0.9))
-    m.cut(stem, thorn(0.0082, 0.9), 0.22, 0.52, 0.44, 0.0)
-    return m
-
-
-EMBLEMS = [
-    dict(key="skull", name="Skull", fn=skull, root=0.034,
-         note="The owner's first reference, done cleanly: no spider. The cheekbones run out into hooks; "
-              "the teeth are what is left between five cuts."),
-    dict(key="heart", name="Heart", fn=heart, root=0.040,
-         note="The second reference: two mirrored blades that meet at the point and roll into hooks at the "
-              "cleft. The middle stays open lacquer."),
-    dict(key="fork", name="Tuning fork", fn=fork, root=0.017,
-         note="Ours, and musical: a fork's two tines and stem, with flame points and shoulder hooks. "
-              "A treble clef cannot be mirrored, so the fork keeps the symmetry rule."),
-]
 
 
 # ---------------------------------------------------------------------------
@@ -441,10 +97,8 @@ def cheek_caps(v):
 def orn_behind(v, lvl):
     """Everything the music sheet covers: the upper sweep and the lid edge."""
     L = Layer()
-    upper_arm().both(L, v, place(0.165, UP_MID - 0.004))
-    if lvl >= 3:
-        lz = P["case_top"] + P["lid_t"] / 2
-        lid_band().both(L, v, place(0.215, lz))
+    lay = layout(lvl, REC_EMB)
+    emit(lay["upper"] + lay["lid"], L, v)
     L.flush()
 
 
@@ -453,19 +107,8 @@ def orn_front(v, lvl, emb):
     hw, lz0, lz1 = P["ledge_half_w"], P["ledge_z"], P["ledge_lip_top"]
     v.rect(-hw, hw, lz0, lz1, DARK["case"], DARK["stroke"], DARK["sw"], rx=2)
     L = Layer()
-    E = EMBLEMS[emb]
-    E["fn"]().emit(L, v, place(0, FB_MID))
-    wing().both(L, v, place(E["root"], FB_MID - 0.004))
-    x0, x1, z0, z1 = FIELD_LO
-    for sx in (-1, 1):
-        for sz in (-1, 1):
-            cx = x0 if sx < 0 else x1
-            cz = z0 if sz < 0 else z1
-            corner().emit(L, v, place(cx, cz, mx=-sx, my=-sz))
-    if lvl >= 3:
-        cb = P["cheek_bottom"]
-        cheek_hook().both(L, v, place(CHEEK_IN + 0.012, (P["cheek_bottom"] + P["cheek_nose"]) / 2 - 0.006))
-        console().both(L, v, place(P["toe_x"], cb - 0.012))
+    lay = layout(lvl, emb)
+    emit(lay["fall"] + lay["lower"] + lay["cheek"] + lay["console"], L, v)
     L.flush()
     lock_plate(v, 0, KT - 0.045)
     cheek_caps(v)
@@ -532,12 +175,8 @@ def draw_bench(v, lvl, emb):
     v.rect(-B["leg_x"], B["leg_x"], B["h"] - B["t"] - B["apron"], B["h"] - B["t"], DARK["recess"], st, sw)
     v.rect(-hw, hw, B["h"] - B["t"], B["h"], DARK["case"], st, sw, rx=3)
     if lvl >= 3:
-        mid = B["h"] - B["t"] - B["apron"] / 2
-        s = 0.52
         L = Layer()
-        E = EMBLEMS[emb]
-        E["fn"]().emit(L, v, place(0, mid, s))
-        wing().both(L, v, place(E["root"] * s, mid - 0.002, s))
+        emit(layout(lvl, emb)["bench"], L, v)
         L.flush()
 
 

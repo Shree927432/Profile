@@ -63,10 +63,18 @@ it before finishing. Re-opening a decision needs the owner's say-so.
 | 2026-10-22 | Piano style: A, the modern studio upright in polished black, with Polyphia-style ornament (black and gold, filigree, a branch or tree inlay motif, in the spirit of Tim Henson's guitars and the band's artwork; our own designs, no copies). The amount of ornament is chosen from a 2D sheet with three levels. Alternatives shown and declined: satin mahogany, Victorian walnut, carved cabinet grand, a design grand (sheet in `docs/moodboard/local/piano-style-references.png`). | Owner's choice after reviewing the quality test: "i'll choose option A with some polyphia style". Ties the piano to the Henson guitar on the rack. |
 | 2026-10-22 | Piano ornament language changed before the level was picked: tribal tattoo-style artwork in silver on the black lacquer (sharp symmetric strokes, flame-like points, a centre emblem), instead of the Baroque scroll-vine in gold. Our own strokes in that style; the two owner-supplied references are local only (`docs/moodboard/local/piano-tribal-reference-*.jpg`). Level and centre emblem chosen from a new 2D sheet. | Owner: "i want this kind of art work on my piano in silver", with two tattoo designs. The scroll-vine sheet stays as footage. |
 | 2026-10-22 | Piano ornament, final: tribal strokes in brushed silver (#b7bbc2) under the clear coat, the tuning-fork emblem on the fallboard, Full level (the upper-panel sweep, lower-panel corners, blades down the consoles and cheeks, the lid's front edge, the bench apron, silver fronts on the white keys), polished chrome hardware (#d4d7dc). Sheet: `video-local/footage/2026-10-22-piano-quality-test/piano-tribal-sheet.png`, script `blender/design/piano_tribal_sheet.py`. About +1.1 MB of textures, no new meshes or names. The Henson guitar's fretboard inlay will use the same language, vertical, emblem at the 12th fret. | Owner's choice: "fork ,full". The designer had recommended Medium; the silver key fronts are the first thing to re-check once lit. |
+| 2026-10-22 | Ornament textures: the sheet's stroke geometry lives once in `blender/lib/piano_ornament.py`, shared by the 2D sheet and the 3D build, and is rasterised into mask images (a 4096x1024 front atlas on the case material, a 2048x96 strip on the lid). RGB is lacquer or silver, alpha the silver mask; one image per material; bevel faces map to a blank margin so no stroke crosses an edge. Texture, not relief, so the GLB carries it without a bake. | Mechanics, as the tribal sheet specified. Right first time in a 42 s headless check. |
+| 2026-10-22 | Chrome hardware by material swap, plus a pointed lock plate with keyhole and two cheek caps (+1.6k triangles, joined into `piano_static`). | As drawn on the sheet. |
+| 2026-10-22 | Build clips render in EEVEE at 64 samples (wall speckle still faintly visible); the final video uses Cycles. | 32 samples speckled; 64 halves it at about 2x the time. |
 
 ## Open questions (move to the table when answered)
 
 - Domain.
+- Piano key fronts: silver (as chosen with Full) or ivory (the designer recommends ivory;
+  lit, the silver fronts turn the keyboard's front into a grey-blue bar). Compare
+  `piano-hero-tribal.png` with `piano-hero-ivory-fronts-tribal.png`. One line switches it.
+- Two strokes to shorten slightly, if the owner agrees: the cheek hook bends over the
+  bevel groove, and the console flame tips are clipped at the console's edge.
 - Does the piano quality test set the bar for every room prop (bevels on every edge,
   procedural materials, Cycles stills at about 320 samples)? Owner to say after seeing it.
 - Web export of the piano: the rich model is 1.86 MB and 51k triangles, too heavy

@@ -9,7 +9,9 @@ GLBs go to `blender/out/`, which git ignores.
     lib/names.py         name checks against scene/objects/MESHES.md
     lib/geo.py           boxes, extruded profiles, lofts, cylinders, bevels, joins, tints,
                          screen planes
-    lib/materials.py     procedural materials (lacquer, walnut, ivory, felt, brass, oak, wall)
+    lib/materials.py     procedural materials (lacquer, walnut, ivory, felt, chrome, oak, wall)
+    lib/piano_ornament.py the tribal ornament: stroke engine, motifs, emblems, placements,
+                         the silver-mask rasteriser and the UV mapper (sheet and model share it)
     design/              2D design sheets drawn from the same constants
     props/               one script per prop: props/obj_piano.py
     tests/               test scenes with renders and exports: tests/piano_quality.py
@@ -37,11 +39,25 @@ deletes the clip frames and quits. Takes about 45 minutes on the M2 Pro.
 Outputs land in `video-local/footage/2026-10-22-piano-quality-test/` with a
 `piano-quality-report.json` (build time, render times, GLB sizes and triangle counts).
 
-Options after `--`: a stage (`build`, `stills`, `export`, `clip`; the last three open
-the saved .blend) and `--quick` (half size, few samples, a handful of clip frames, no
+Options after `--`: a stage (`build`, `stills`, `export`, `clip`, or several joined with
+commas such as `build,stills,export`; anything without `build` opens the saved .blend)
+and `--quick` (half size, few samples, a handful of clip frames, no
 MP4) for checking changes in about half a minute:
 
     .../Blender -b --factory-startup --python blender/tests/piano_quality.py -- all --quick
+
+## Piano with the tribal ornament (2026-10-22, second run)
+
+Same command. `props/obj_piano.py` now rasterises the approved silver strokes
+(`lib/piano_ornament.py`, the geometry the 2D sheet draws) into two mask images in
+`out/` (`piano_tribal_front.png` 4096x1024 for the fields, fallboard, cheeks, consoles
+and bench apron; `piano_tribal_lid.png` 2048x96 for the lid's front edge), maps the
+UVs of those parts onto them and mixes brushed silver into the lacquer by the mask.
+Hardware is chrome; the white keys get silver fronts by vertex colour. Outputs carry
+`-tribal` in their names (`piano-hero-tribal.png`, `piano-build-tribal.mp4`,
+`piano-quality-report-tribal.json`), plus `piano-fallboard-tribal.png` (the emblem
+straight on) and `piano-hero-ivory-fronts-tribal.png` (key fronts in ivory, for the
+owner to compare).
 
 Layout rules for every prop script: build in the prop's own frame under its `obj_*`
 root, names and pivots from scene/objects/MESHES.md, dimensions from `lib/constants.py`,

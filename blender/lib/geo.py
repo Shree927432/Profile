@@ -155,6 +155,22 @@ def tint(obj, colour, metallic=0.0):
     return obj
 
 
+def tint_faces(obj, colour, metallic, select, rest=None):
+    """Colour attribute `tint` on the faces `select(polygon)` picks: rgb the colour,
+    alpha the metallic value; other faces get `rest` (default: white, alpha 0)."""
+    from . import materials
+    me = obj.data
+    ca = me.color_attributes.get("tint") or me.color_attributes.new(name="tint", type="FLOAT_COLOR",
+                                                                     domain="CORNER")
+    on = (*materials.srgb(colour), metallic)
+    off = rest or (1.0, 1.0, 1.0, 0.0)
+    for poly in me.polygons:
+        c = on if select(poly) else off
+        for li in poly.loop_indices:
+            ca.data[li].color = c
+    return obj
+
+
 def bevel(obj, width, segments=3, angle=35, profile=0.5):
     m = obj.modifiers.new("bevel", "BEVEL")
     m.width = width

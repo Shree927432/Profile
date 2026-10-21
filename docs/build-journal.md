@@ -346,3 +346,61 @@ site or the room. Keep each entry short. No polishing; the post does that.
   below the nose.
 - The owner picked from the tribal sheet: "fork ,full". Tuning-fork emblem, Full level,
   against the designer's Medium recommendation. Next: the 3D rebuild on Fable.
+
+## 2026-10-22, 03:00: the 3D rebuild with the tribal ornament (Fable 5.1, designer)
+
+- Follows the owner's "fork ,full". The quality-test piano rebuilt with the approved
+  ornament: tuning-fork emblem, Full level, brushed silver #b7bbc2 under the clear
+  coat, polished chrome #d4d7dc hardware. Dimensions unchanged. Owner's deadline:
+  stop by 04:00, so the run went hero first, fallboard close-up and the ivory-fronts
+  alternate next, the other stills, the GLBs, the clip last.
+- One source for the strokes: the engine, motifs, emblems and placements moved from
+  `blender/design/piano_tribal_sheet.py` into `blender/lib/piano_ornament.py`; the
+  sheet now imports them and its HTML output is byte-identical to before (checked by
+  diff). The same module rasterises the strokes into the silver masks (numpy, a
+  non-zero-winding scanline fill on a 4x4 sub-grid, box-filtered: no new dependency)
+  and writes the UVs: each ornamented face is a rectangle of the front elevation
+  packed into a 4096x1024 atlas (upper field and fallboard at 1.6 px/mm, lower field
+  1.4, cheeks 2.4, consoles 2.0 turned on their side, bench apron 2.0) plus a
+  2048x96 strip for the lid's front edge. The mask is the image's alpha; its RGB is
+  lacquer or silver, so one image per material drives base colour, metallic and
+  roughness, and the glTF exporter carries it (checked first with a three-plane
+  test: alpha into Metallic becomes a metallicRoughness texture in the GLB).
+- The UV rule that kept the bevels clean: front faces project onto their region;
+  side, top, bottom and back faces snap to a blank 8 px margin ring just outside it.
+  A bevel strip between a front face and a neighbour then only ever crosses blank
+  texels. Without this the fallboard's outer face (the top when closed) would have
+  carried a mirror of the emblem, and the 4 mm bevels would have smeared whole
+  regions along the edges. Worked out on paper before the first render; the quick
+  headless check (42 s) came out right first time, emblem upright, nothing on the
+  back faces.
+- Also built: chrome caps over the cheek noses, a pointed lock plate with its keyhole
+  on the key slip (about +0.4k triangles, as the sheet said), pedals, castors and
+  hinges swapped to chrome, silver fronts on the 52 white keys by a colour attribute
+  in the ivory material (a Value node `key_silver` switches them off for the
+  comparison render). The bench's dimensions moved to `constants.BENCH`. Materials
+  13 (was 12: `mat_piano_lid` has the lid strip; `mat_piano_chrome` replaces brass).
+- The lid-open still: a 90 W fill over the open lid, on only for that still, and the
+  camera moved to the right of the sheet. Strings, hammers and dampers now read.
+- Times, Cycles GPU 1920x1080 denoised, window open: build 3.9 s (the masks take
+  about 2 s of it); hero 45 s, fallboard 45 s, ivory-fronts hero 46 s, keys 109 s,
+  inside 90 s, clay 27 s, wire 1 s. GLB rich 2462 KB and 53.1k triangles (was 1862
+  KB, 51.5k), lite 2294 KB and 41.1k; of the growth, 300 KB is the five PNGs the
+  exporter embeds (the atlas twice: base colour 161 KB and the derived
+  metallic-roughness 120 KB; the lid strip 11 + 9 KB; the sheet 29 KB), the rest UVs
+  on `piano_static` and the key colours. Atlas on disk 165 KB as PNG; as KTX2 about
+  512 KB (ETC1S) or 4 MB (UASTC), so ETC1S for the mask.
+- The silver key fronts, seen lit: from the hero distance they turn the keyboard's
+  front into a dark grey-blue bar (brushed metal reflecting a dim room) and the
+  ivory loses its warmth; straight on they read as cool grey bars under the keys,
+  not as silver. The ivory alternate keeps the keyboard reading as a keyboard.
+  Designer's view: ivory fronts; the owner decides from the two heroes.
+- Went wrong on the way: nothing in the model; the run itself was clean. Two
+  things to watch: the cheek hook crosses the 6 mm bevel groove between the cheek
+  block and the side panel (as drawn on the sheet, both parts share the region, so
+  the stroke is continuous but bends over the groove); and the console flames reach
+  the console's edges, so their tips are clipped by the face.
+- The build clip (13 s, 390 frames, EEVEE at 64 samples instead of 32): wireframe 78
+  s, clay 357 s, lit 383 s, FFmpeg crossfades, frames deleted (44 MB at peak). The
+  silver appears in the lit phase. Whole run, build to quit, 1195 s (20 min) with
+  the window open; done 03:28, inside the owner's 04:00 deadline.

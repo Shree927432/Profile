@@ -113,3 +113,8 @@ modelling, a sheet showed the same piano three times with more and more gold orn
 "this kind of art work on my piano in silver". The tall tattoo had to be turned on its
 side to fit a wide piano: the centre emblem went to the key cover, the two arms behind
 the music. -->
+<!-- NOTE 2026-10-22: the rebuild with the silver. The same stroke geometry that drew the
+sheet was rasterised into the texture, so what I approved on paper is what sits on the
+lacquer; the first lit render came out right. The silver key fronts I had asked for
+looked like a dark metal bar from across the room, so the agent rendered the ivory
+alternative beside it for me to choose. -->

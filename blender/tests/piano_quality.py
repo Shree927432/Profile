@@ -4,7 +4,8 @@ stills, GLB export and the build clip. One command (see blender/README.md):
     /Applications/Blender.app/Contents/MacOS/Blender --factory-startup \\
         --python blender/tests/piano_quality.py -- [stage] [--quick]
 
-stage: all (default) | build | stills | export | clip. `build` saves
+stage: all (default) | build | stills | export | clip, or several joined with commas
+(`build,stills,export`). `build` saves
 blender/out/piano-quality.blend; the other stages open it. With the window open
 (no -b) the scene appears as it is built and renders show in the render window; the
 script quits Blender when done. `--quick` renders small and fast for checking.
@@ -29,7 +30,9 @@ from props import obj_piano  # noqa: E402
 
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 STAGE = next((a for a in ARGS if not a.startswith("--")), "all")
+STAGES = {"build", "stills", "export", "clip"} if STAGE == "all" else set(STAGE.split(","))
 QUICK = "--quick" in ARGS
+SUFFIX = "-tribal"       # 2026-10-22 rebuild with the ornament; the first set keeps its names
 FOOTAGE = os.path.join(C.FOOTAGE, "2026-10-22-piano-quality-test")
 BLEND = os.path.join(C.OUT, "piano-quality.blend")
 FFMPEG = shutil.which("ffmpeg") or "/opt/homebrew/bin/ffmpeg"
@@ -111,6 +114,11 @@ def build_lights():
     # one small warm lamp so the lacquer shows a highlight
     light("lt_lamp", "POINT", (1.42, -1.6, 1.28), energy=24, color=M.srgb(C.COL["lamp_warm"]),
           shadow_soft_size=0.07)
+    # a fill over the open lid, on only for the inside still (the first set was too dark)
+    fill = light("lt_inside_fill", "AREA", (0.45, -0.85, 2.35), shape="RECTANGLE", size=0.9, size_y=0.5,
+                 energy=90, color=M.srgb("#dfe8ff"))
+    aim(fill, (0.0, -0.10, 1.05))
+    fill.hide_render = True
     return coll
 
 
@@ -138,7 +146,8 @@ def build_cameras():
     cams = {
         "hero": camera("still_cam_hero", (-2.30, -2.75, 1.35), (0.10, -0.35, 0.68), lens=35),
         "keys": camera("still_cam_keys", (0.42, -1.00, 0.98), (0.02, -0.50, 0.745), lens=60, fstop=2.0),
-        "inside": camera("still_cam_inside", (0.70, -1.40, 2.00), (0.0, -0.12, 1.08), lens=40),
+        "inside": camera("still_cam_inside", (1.05, -1.35, 2.05), (0.05, -0.10, 1.05), lens=40),
+        "fall": camera("still_cam_fall", (0.0, -1.95, 0.95), (0.0, -0.40, 0.95), lens=40),
     }
     return cams
 
@@ -170,7 +179,7 @@ def setup_render(engine="CYCLES", samples=320):
         scene.cycles.caustics_refractive = False
     else:
         ev = scene.eevee
-        ev.taa_render_samples = 8 if QUICK else 32
+        ev.taa_render_samples = 8 if QUICK else 64
         try:
             ev.use_raytracing = True
             ev.use_shadows = True
@@ -290,7 +299,7 @@ def stage_stills():
     def still(name, cam, samples):
         scene.camera = objs[cam]
         scene.cycles.samples = 48 if QUICK else samples
-        path = os.path.join(FOOTAGE, f"piano-{name}.png")
+        path = os.path.join(FOOTAGE, f"piano-{name}{SUFFIX}.png")
         scene.render.image_settings.file_format = "PNG"
         scene.render.image_settings.color_mode = "RGB"
         log(f"still {name}: rendering ({scene.cycles.samples} samples)")
@@ -298,11 +307,19 @@ def stage_stills():
         times[name] = round(dt)
         log(f"still {name} rendered in {round(dt)} s: {path}")
 
+    # in the owner's priority order: hero, fallboard close-up, the ivory-fronts alternate
     yield from still("hero", "still_cam_hero", 320)
+    yield from still("fallboard", "still_cam_fall", 320)
+    key_silver = bpy.data.materials["mat_piano_ivory"].node_tree.nodes["key_silver"].outputs[0]
+    key_silver.default_value = 0.0
+    yield from still("hero-ivory-fronts", "still_cam_hero", 320)
+    key_silver.default_value = 1.0
     yield from still("keys", "still_cam_keys", 384)
     lid = objs["piano_lid"]
     lid.rotation_euler.x = math.radians(-C.PIANO["lid_open_deg"])
+    objs["lt_inside_fill"].hide_render = False
     yield from still("inside", "still_cam_inside", 320)
+    objs["lt_inside_fill"].hide_render = True
     lid.rotation_euler.x = 0.0
     # clay: one grey material over everything
     bpy.context.view_layer.material_override = M.clay()
@@ -312,7 +329,7 @@ def stage_stills():
     undo = wire_look()
     setup_render("BLENDER_EEVEE")
     scene.camera = objs["still_cam_hero"]
-    path = os.path.join(FOOTAGE, "piano-wire.png")
+    path = os.path.join(FOOTAGE, f"piano-wire{SUFFIX}.png")
     log("still wire: rendering")
     dt = yield from render_to(path)
     times["wire"] = round(dt)
@@ -375,10 +392,12 @@ def glb_stats(path):
     tris = sum(per.values())
     keys = sum(v for k, v in per.items() if k.startswith("piano_key_"))
     top = sorted(((v, k) for k, v in per.items() if not k.startswith("piano_key_")), reverse=True)[:8]
+    imgs = [f"{i.get('name', '?')} {i.get('mimeType', '')} {round(doc['bufferViews'][i['bufferView']]['byteLength'] / 1024)} KB"
+            for i in doc.get("images", []) if "bufferView" in i]
     return {"bytes": os.path.getsize(path), "kb": round(os.path.getsize(path) / 1024),
             "meshes": len(doc["meshes"]), "nodes": len(doc["nodes"]), "triangles": tris,
             "materials": len(doc.get("materials", [])), "images": len(doc.get("images", [])),
-            "keys_triangles": keys, "biggest": [f"{k} {v}" for v, k in top]}
+            "image_sizes": imgs, "keys_triangles": keys, "biggest": [f"{k} {v}" for v, k in top]}
 
 
 def stage_export():
@@ -447,7 +466,8 @@ def clip_schedule():
                 g = "panels"
             elif n.startswith(("piano_toe_", "piano_console")):
                 g = "toes"
-            elif n in ("piano_keybed", "piano_cheek_l", "piano_cheek_r", "piano_slip"):
+            elif n in ("piano_keybed", "piano_cheek_l", "piano_cheek_r", "piano_slip", "piano_cheek_cap_l",
+                       "piano_cheek_cap_r", "piano_lock_plate", "piano_lock_keyhole"):
                 g = "keybed"
             elif n.startswith("piano_field") or n == "piano_rest":
                 g = "fields"
@@ -565,7 +585,7 @@ def stage_clip():
     if QUICK:
         log("quick mode: frames left in " + frames_dir)
         return
-    out = os.path.join(FOOTAGE, "piano-build.mp4")
+    out = os.path.join(FOOTAGE, f"piano-build{SUFFIX}.mp4")
     w0, c0, f0 = LOOKS["wire"][0], LOOKS["clay"][0], LOOKS["final"][0]
     off1 = (c0 - w0) / FPS
     off2 = (f0 - w0) / FPS
@@ -587,28 +607,43 @@ def stage_clip():
     yield
 
 
+def texture_report():
+    """The ornament masks as PNG (what the GLB carries now) and a KTX2 estimate."""
+    from lib import piano_ornament as ORN
+    out = {}
+    for spec in (ORN.ATLAS, ORN.LID):
+        path = os.path.join(C.OUT, spec["name"] + ".png")
+        w, h = spec["size"]
+        kb = round(os.path.getsize(path) / 1024) if os.path.exists(path) else None
+        # KTX2: ETC1S at about 1 bit per texel with its supercompression, UASTC at 8
+        out[spec["name"]] = {"px": [w, h], "png_kb": kb, "ktx2_etc1s_kb_est": round(w * h / 8 / 1024),
+                             "ktx2_uastc_kb_est": round(w * h / 1024)}
+    return out
+
+
 def write_report():
     REPORT["total_s"] = round(time.time() - T0)
     REPORT["stage"] = STAGE
     REPORT["quick"] = QUICK
     os.makedirs(FOOTAGE, exist_ok=True)
-    with open(os.path.join(FOOTAGE, "piano-quality-report.json"), "w") as f:
+    REPORT["textures"] = texture_report()
+    with open(os.path.join(FOOTAGE, f"piano-quality-report{SUFFIX}.json"), "w") as f:
         json.dump(REPORT, f, indent=2)
     print(json.dumps(REPORT, indent=2), flush=True)
 
 
 def job():
-    if STAGE in ("all", "build"):
+    if "build" in STAGES:
         yield from stage_build()
     else:
         open_blend()
         show_in_viewport()
         yield
-    if STAGE in ("all", "stills"):
+    if "stills" in STAGES:
         yield from stage_stills()
-    if STAGE in ("all", "export"):
+    if "export" in STAGES:
         yield from stage_export()
-    if STAGE in ("all", "clip"):
+    if "clip" in STAGES:
         yield from stage_clip()
     write_report()
     log(f"done: stage {STAGE} in {REPORT['total_s']} s, quitting Blender")

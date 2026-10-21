@@ -90,20 +90,33 @@ def _bump(nt, b, height, strength, distance=0.001, socket="Normal"):
     return bm
 
 
-def _math(nt, op, a, bval):
+def _math(nt, op, a, bval, cval=None):
     m = nt.nodes.new("ShaderNodeMath")
     m.operation = op
     nt.links.new(a, m.inputs[0])
     m.inputs[1].default_value = bval
+    if cval is not None:
+        m.inputs[2].default_value = cval
     return m.outputs[0]
 
 
-def lacquer_black(name):
+def lacquer_black(name, image=None, silver_rough=0.35):
     """Polished ebony lacquer: near-black base under a mirror clear coat, a faint
-    orange-peel ripple in the coat so reflections are not CG-perfect."""
+    orange-peel ripple in the coat so reflections are not CG-perfect. With `image`
+    (RGB lacquer or silver, alpha the silver mask) the mask drives the base colour,
+    metallic and roughness: a brushed silver inlay flat under the same coat. Wired
+    so the glTF exporter carries it (base colour texture, alpha into Metallic)."""
     m, nt, b = _new(name)
     _set(b, base=C.COL["lacquer_black"], rough=0.32, coat=1.0, coat_rough=0.03,
          coat_ior=1.52, spec=0.5)
+    if image is not None:
+        t = nt.nodes.new("ShaderNodeTexImage")
+        t.image = image
+        t.interpolation = "Cubic"
+        t.location = (-500, 0)
+        nt.links.new(t.outputs["Color"], b.inputs["Base Color"])
+        nt.links.new(t.outputs["Alpha"], b.inputs["Metallic"])
+        nt.links.new(_math(nt, "MULTIPLY_ADD", t.outputs["Alpha"], silver_rough - 0.32, 0.32), b.inputs["Roughness"])
     peel = _noise(nt, _coords(nt), 900, detail=2)
     _bump(nt, b, peel, 0.02, 0.0002, socket="Coat Normal")
     m.diffuse_color = (0.02, 0.02, 0.02, 1)
@@ -147,12 +160,33 @@ def walnut(name, grain="Z", gloss=True):
     return m
 
 
-def ivory(name):
-    """Ivory-white key tops (acrylic, as on modern pianos): warm, slightly translucent."""
+def ivory(name, fronts=False):
+    """Ivory-white key tops (acrylic, as on modern pianos): warm, slightly translucent.
+    With `fronts`, the colour attribute `tint` (rgb silver, alpha 1 on the key's
+    front face, geo.tint_faces) turns that face into brushed silver; the Value node
+    `key_silver` (1 or 0) switches the silver off for a comparison render."""
     m, nt, b = _new(name)
     _set(b, base=C.COL["ivory"], rough=0.3, sss=0.12, sss_scale=0.004, coat=0.35, coat_rough=0.12)
     tint = _noise(nt, _coords(nt), 40, detail=3)
     col = _ramp(nt, tint, [(0.35, "#e6dcc6"), (0.65, "#efe8d8")])
+    if fronts:
+        a = nt.nodes.new("ShaderNodeVertexColor")
+        a.layer_name = "tint"
+        sw = nt.nodes.new("ShaderNodeValue")
+        sw.name = sw.label = "key_silver"
+        sw.outputs[0].default_value = 1.0
+        fac = nt.nodes.new("ShaderNodeMath")
+        fac.operation = "MULTIPLY"
+        nt.links.new(a.outputs["Alpha"], fac.inputs[0])
+        nt.links.new(sw.outputs[0], fac.inputs[1])
+        mix = nt.nodes.new("ShaderNodeMix")
+        mix.data_type = "RGBA"
+        nt.links.new(fac.outputs[0], mix.inputs["Factor"])
+        nt.links.new(col, mix.inputs[6])
+        nt.links.new(a.outputs["Color"], mix.inputs[7])
+        col = mix.outputs[2]
+        nt.links.new(fac.outputs[0], b.inputs["Metallic"])
+        nt.links.new(_math(nt, "MULTIPLY_ADD", fac.outputs[0], 0.05, 0.3), b.inputs["Roughness"])
     nt.links.new(col, b.inputs["Base Color"])
     m.diffuse_color = rgba(C.COL["ivory"])
     return m
@@ -179,6 +213,12 @@ def brass(name):
     rr = _ramp(nt, r, [(0.3, (0.16, 0.16, 0.16, 1)), (0.7, (0.32, 0.32, 0.32, 1))])
     nt.links.new(rr, b.inputs["Roughness"])
     m.diffuse_color = rgba(C.COL["brass"])
+    return m
+
+
+def chrome(name, colour="#d4d7dc", rough=0.06):
+    """Polished chrome hardware: the sheet's #d4d7dc, metallic, near-mirror."""
+    m = principled(name, base=colour, metal=1.0, rough=rough)
     return m
 
 

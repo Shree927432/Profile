@@ -12,7 +12,11 @@ on x = 0) under the empty `obj_piano`; the test scene places the root.
                     (MESHES.md export rule), returns the objects to export and an undo()
 
 Finish A (decisions 2026-10-22): black lacquer under a clear coat, ivory keys,
-ebony sharps, brass, red felt. Interior: iron plate, pin block, strings, hammers.
+ebony sharps, red felt. Interior: iron plate, pin block, strings, hammers.
+Ornament (decided the same day, lib/piano_ornament.py): tribal strokes in brushed
+silver as a mask texture under the lacquer's coat on the fields, fallboard, cheeks,
+consoles, lid edge and bench apron; polished chrome hardware with a pointed lock
+plate and cheek caps; silver fronts on the white keys by vertex colour.
 """
 import math
 import random
@@ -20,7 +24,7 @@ import random
 import bpy
 from mathutils import Vector
 
-from lib import constants as C, geo, materials as M, names, piano_layout as L
+from lib import constants as C, geo, materials as M, names, piano_layout as L, piano_ornament as ORN
 
 P, KT = C.PIANO, C.KT
 HW = P["width"] / 2
@@ -53,16 +57,20 @@ def _obj(name, builder, *args, mat=None, bev=None, seg=3, **kw):
     o = builder(name, *args, collection=_coll, parent=_root, material=_mats[mat] if mat else None, **kw)
     if bev:
         geo.bevel(o, bev, segments=seg)
+    ORN.uv_map(o)          # only parts listed in piano_ornament.PART_REGIONS get UVs
     return o
 
 
 def materials():
     """Create (or refresh) every material the piano uses."""
     _mats.clear()
-    _mats["case"] = M.lacquer_black("mat_piano_case")
-    _mats["ivory"] = M.ivory("mat_piano_ivory")
+    imgs = ORN.build_images()
+    _mats["images"] = imgs["files"]
+    _mats["case"] = M.lacquer_black("mat_piano_case", image=imgs["front"], silver_rough=ORN.SILVER_ROUGH)
+    _mats["lid"] = M.lacquer_black("mat_piano_lid", image=imgs["lid"], silver_rough=ORN.SILVER_ROUGH)
+    _mats["ivory"] = M.ivory("mat_piano_ivory", fronts=True)
     _mats["ebony"] = M.ebony("mat_piano_ebony")
-    _mats["brass"] = M.brass("mat_piano_brass")
+    _mats["brass"] = M.chrome("mat_piano_chrome", ORN.CHROME, ORN.CHROME_ROUGH)   # "brass" slot: chrome now
     _mats["felt"] = M.felt("mat_piano_felt", C.COL["felt_red"])
     _mats["slot"] = M.felt("mat_piano_slot", "#17120f")
     _mats["rubber"] = M.principled("mat_piano_cup", base="#1a1816", rough=0.55, spec=0.3)
@@ -165,7 +173,26 @@ def build_case():
               for x, xr in (("l", (-INNER - 0.001, -ARM_IN)), ("r", (ARM_IN, INNER + 0.001)))]
     slip = _obj("piano_slip", geo.box, -ARM_IN, ARM_IN, P["slip_front_y"], P["slip_back_y"],
                 P["cheek_bottom"], P["slip_top"], mat="case", bev=0.004)
-    _step("keybed", [bed] + cheeks + [slip])
+    # chrome: a cap over each cheek's nose, a pointed lock plate (two blades base to
+    # base) with its keyhole on the key slip
+    nz, fy = P["cheek_nose"], P["cheek_front_y"]
+    caps = [_obj(f"piano_cheek_cap_{x}", geo.box, *sorted((s * (ARM_IN + 0.010), s * (HW - 0.010))),
+                 fy - 0.002, fy + 0.010, nz - 0.006, nz + 0.006, mat="brass", bev=0.0018, seg=3)
+            for s, x in ((-1, "l"), (1, "r"))]
+    lw, lh, lz, ly = 0.020, 0.040, KT - 0.045, P["slip_front_y"]
+    pts = []
+    for i in range(48):
+        t = 2 * math.pi * i / 48
+        yy = math.sin(t)
+        pw = lw / 2 * (1 - abs(yy) ** 1.6) ** 1.1
+        pts.append((math.copysign(pw, math.cos(t)), lz + yy * lh / 2))
+    plate = _obj("piano_lock_plate", geo.prism, pts, "Y", ly - 0.0015, ly + 0.004, mat="brass", bev=0.0008, seg=2)
+    hole = _obj("piano_lock_hole_tmp", geo.cylinder, 0.0026, (0, ly - 0.0018, lz + 0.004), (0, ly - 0.001, lz + 0.004),
+                segments=12, mat="slot")
+    slot_ = _obj("piano_lock_slot_tmp", geo.prism, [(-0.0011, lz + 0.003), (0.0011, lz + 0.003), (0.0019, lz - 0.007),
+                                                    (-0.0019, lz - 0.007)], "Y", ly - 0.0018, ly - 0.001, mat="slot")
+    keyhole = geo.join([hole, slot_], "piano_lock_keyhole")
+    _step("keybed", [bed] + cheeks + [slip] + caps + [plate, keyhole])
 
     pr = P["inset_proud"]
     f1 = _obj("piano_field_upper", geo.box, -P["inset_half_w"], P["inset_half_w"],
@@ -192,8 +219,9 @@ def build_lid():
     ct, t = P["case_top"], P["lid_t"]
     lid = _obj("piano_lid", geo.box, -HW - P["lid_over_side"], HW + P["lid_over_side"],
                -(P["side_depth"] + P["lid_over_front"]), P["lid_over_back"], ct, ct + t,
-               mat="case", bev=0.008, seg=5)
+               mat="lid", bev=0.008, seg=5)
     geo.set_origin(lid, (0, P["lid_over_back"], ct + t))
+    ORN.uv_map(lid)        # after the origin move: the UVs read the part's frame
     hinges = []
     for i, hx in enumerate(P["hinge_x"]):
         n = 5
@@ -276,6 +304,10 @@ def build_keys():
                 pts += [(xl, yb)]
             k = _obj(name, geo.prism, pts, "Z", z0, KT, mat="ivory", bev=0.0012, seg=2)
             geo.set_origin(k, ((xl + xr) / 2, yb, z0))
+            # silver front (the face at the key's front end): vertex colour, one material
+            yfront = min(v.co.y for v in k.data.vertices)
+            geo.tint_faces(k, ORN.SILVER, 1.0,
+                           lambda poly, me=k.data, yf=yfront: poly.normal.y < -0.9 and me.vertices[poly.vertices[0]].co.y < yf + 1e-5)
         else:
             cx = (xl + xr) / 2
             tw = P["black_top_w"] / 2
@@ -304,6 +336,8 @@ def build_sheet_and_fallboard():
               mat="case", bev=0.004, seg=4)
     geo.set_origin(fb, (0.0, P["fall_pivot_y"], P["fall_pivot_z"]))
     fb.rotation_euler.x = math.radians(-P["fall_open_deg"])   # open: negative about +X
+    bpy.context.view_layer.update()
+    ORN.uv_map(fb)         # the emblem goes on the face seen when open (the inner face)
     _step("fallboard", [fb])
 
 
@@ -450,8 +484,8 @@ def build_interior():
 
 
 def build_bench():
-    w, d, h, t = 0.80, 0.34, 0.49, 0.045
-    cy = -1.03
+    Bn = C.BENCH
+    w, d, h, t, cy = Bn["w"], Bn["d"], Bn["h"], Bn["t"], Bn["cy"]
     top = _obj("piano_bench_top", geo.box, -w / 2, w / 2, cy - d / 2, cy + d / 2, h - t, h,
                mat="case", bev=0.008, seg=4)
     legs, aprons = [], []
