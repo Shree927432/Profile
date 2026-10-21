@@ -11,7 +11,8 @@ task, not per message. A cheap model that needs three retries is not cheap.
 | 1 | Astro static site | builder | Sonnet | medium |
 | 2 | First 2D screen module | builder | Sonnet | medium |
 | 3 | Three.js shell, pick map, quality ladder | builder | Sonnet | high |
-| 4 | Blender room, lighting, look | designer | Opus | high |
+| 4 | Blender room, lighting, look | designer | Fable 5.1 (since 2026-10-22) | high |
+| 4 | 2D design sheets, briefs, simple stills | designer | Opus | high |
 | 5 | Simple objects (lamp, coffee, clock) | builder | Sonnet | medium |
 | 5 | Close-ups, floating objects, audio | designer | Opus | high |
 | 6 | Sound, performance tuning, accessibility | builder | Sonnet | high |
@@ -41,7 +42,8 @@ task, not per message. A cheap model that needs three retries is not cheap.
 ## Agents in .claude/agents/
 
 - builder: Sonnet, medium. Mechanical building per the docs.
-- designer: Opus, high. Taste, 3D, lighting, polish, cutting.
+- designer: Opus, high. Taste, 3D, lighting, polish, cutting. Its file says Opus; for Phase 4 modelling,
+  launch it with the model set to Fable 5.1 (`model: "fable"` on the agent call).
 - quick: Haiku, low. Small edits only.
 
 Ask for one by name: "use the builder agent to do Phase 2".

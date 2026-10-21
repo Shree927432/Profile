@@ -173,3 +173,15 @@ site or the room. Keep each entry short. No polishing; the post does that.
   these at every step.
 - Went wrong on the way: a shell loop passed all three arguments as one, so the first
   three test renders failed at once; fixed and rerun.
+
+## 2026-10-22: quality test, 2D first, and a model change
+
+- The owner compared the box-piano test with Felix's video ("but have seen relix
+  viedeo") and asked for a quality test before Phase 4: "i want to do a quality test
+  before". The designer agent started a properly modelled upright piano.
+- The owner asked to watch Blender live, so the designer now runs Blender with its
+  window open instead of headless, and saves the .blend before rendering.
+- Then: "can i see 2d designs before it starts 3d modelling". The designer paused and
+  is drawing a to-scale 2D sheet first (front, side, keyboard, details, two finishes).
+- Model: asked which model gives the best results, the owner said "you can use fable
+  if you want". 3D modelling moves to Claude Fable 5.1; the 2D sheet stays on Opus.
