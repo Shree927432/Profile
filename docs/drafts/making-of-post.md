@@ -94,3 +94,5 @@ follows Pune's real time and weather. Link to the room. -->
 <!-- NOTE 2026-10-21: Phase 4 began with a list of names, not a model: 88 piano keys
 named by note so the code can play them, because names are the only thing the
 Blender file and the website share. -->
+<!-- NOTE 2026-10-21: the first Blender test was a small piano, 88 keys named by note,
+rendered clay and finished on the laptop's GPU; the names survived the export. -->

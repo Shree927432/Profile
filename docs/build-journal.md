@@ -150,3 +150,18 @@ site or the room. Keep each entry short. No polishing; the post does that.
   the screen loads upright in the website) was briefed to the designer agent. The
   owner said "can stop for now"; it was stopped before any file was written.
 - Everything needed to start tomorrow is in handover/phase-4-brief.md.
+
+## 2026-10-21, evening: first Blender test
+
+- The owner: "i want to test blender, can create a small model just for testing",
+  then "will it be recorded for our video". Yes: stills, a turntable and a note
+  are in video-local/footage/2026-10-21-blender-test/.
+- A Python script built a small upright piano with all 88 keys named by note, each
+  key's pivot at its back hinge, a C major chord pressed. Rendered with Cycles on
+  the M2 Pro GPU: about 75 s for the finished still, 20 s more for clay.
+- Exported as a 150 KB GLB: all 88 key names came through exactly, no ".001"
+  suffixes. The pipeline from Blender names to code names works.
+- What went wrong: the first run returned no output at all and produced nothing;
+  rerun in the background with a log file, it worked. In the render, two blocks
+  overlap at the key cheeks and leave black slivers, and the music rest was placed
+  inside the case. Fine for a test; the real scripts check for both.
