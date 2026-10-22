@@ -131,3 +131,6 @@ lightning, a top-down camera that saw only the ceiling. All found by looking at 
 Then I watched the first 25-second clip, found the camera too static, and stopped the other
 five: half an hour a clip was too much for footage of stand-in boxes. The big shoot moved
 to the end. -->
+<!-- NOTE 2026-10-23: the "left-handed guitar" that is not mirrored: Hendrix turned a right-handed
+Strat upside down in its own plane, so on a wall it reads right-handed. A museum photo settled it;
+the first outline drawn from memory looked wrong until the real photo was measured. -->

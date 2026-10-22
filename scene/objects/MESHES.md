@@ -65,7 +65,7 @@ Materials: `mat_<thing>`.
 
 **Units and axes.**
 - Metres. Scene unit scale 1.0. Scale applied (1, 1, 1) on everything exported.
-  A mirrored part (`guitar_02`) is mirrored in its geometry and applied, normals
+  (No guitar is mirrored any more: `guitar_02` is the real right-handed guitar, restrung; see its row.) A mirrored part, if one is ever needed, is mirrored in its geometry and applied, normals
   recalculated; never a negative scale on an exported object.
 - Blender is Z up. Export as GLB with the default "+Y Up". In three.js that gives y up.
 - The room faces the same way as the placeholder: **back wall (window, desk,
@@ -170,7 +170,7 @@ the sound; the era text on the site comes from content, never from the name.
 | Guitar | Where | Era (note) | After (note) | Body shape (Blender script key) | Look |
 |---|---|---|---|---|---|
 | `guitar_01` | wall | Jazz, 1950s–60s | Wes Montgomery | `archtop`: hollow, single cutaway, about 8 cm deep | L-5 CES style. Carved top in sunburst, f-holes, bound body, one neck pickup, floating bridge, gold tailpiece |
-| `guitar_02` | wall | Rock, 1960s | Jimi Hendrix | `offset_double_cut` (Strat-style), mirrored | White, maple neck and board, white pickguard. A right-handed guitar flipped and strung left-handed: build it right-handed, mirror the whole guitar on its width axis and apply, then reverse the string order across the neck. Tuners and controls end up on the other side, the bridge pickup slants the other way |
+| `guitar_02` | wall | Rock, 1960s | Jimi Hendrix | `offset_double_cut` (Strat), exact replica, not mirrored | The 1968 Woodstock Stratocaster, exact from `blender/lib/guitar_specs.py` GUITAR_02 (blueprint approved 2026-10-23). A right-handed guitar turned 180 degrees in its own plane and restrung: on the wall it reads right-handed; strings reversed (thin E on the left), reversed saddle intonation, re-slotted nut, the string tree on A and low E, an extra strap button on the short horn. Lifted off the hook it turns a quarter so the controls show on top, his playing view. Aged a year (Woodstock 1969). No logos, decals or serials |
 | `guitar_03` | wall | Blues rock, 1980s | Stevie Ray Vaughan | `offset_double_cut` (Strat-style) | "Number One" look. Three-colour sunburst worn to bare wood on the forearm, belly and edges; black pickguard, no initials; rosewood board. The wear is in the texture, not the geometry |
 | `guitar_04` | rack | Hard rock, late 1980s | Slash | `single_cut_carved` (Les Paul style) | Flame-maple top in amber sunburst, cream binding, two humbuckers, amber knobs |
 | `guitar_05` | rack | Metal, late 1980s | James Hetfield | `angular` (Explorer-style) | Off-white, black hardware, one plain tape strip with no text. The widest silhouette, about 47 cm |

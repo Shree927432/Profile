@@ -515,3 +515,19 @@ site or the room. Keep each entry short. No polishing; the post does that.
   grade camera movement". Tonight's clips stay as they are; from the next step every
   shot is directed (push-ins, reveals, cranes, focus pulls, on the beat), with a shot
   list and a low-resolution animatic approved before the full render.
+
+## 2026-10-23: the first exact guitar, on paper
+
+- The owner asked for "exact and very high quality copies of original guitars", without
+  logos, starting with the Hendrix Woodstock Strat, and asked to see the original photos first.
+- 2026-10-23: guitar_02 blueprint drawn from real specs (two measured vintage Strats, the Custom
+  Shop tribute specs, the MoPOP photo). First outline was drawn from memory and read wrong (spiky horns,
+  a bulging treble shoulder); found by looking at the render; fixed by measuring the silhouette of the
+  real guitar in the approved museum photo. The same photo moved the bridge 18 mm towards the tail and
+  made the large headstock 208 long, not 193.
+- Research found that a flipped guitar hung on a wall is not a mirror image: the turn is in its own
+  plane. The brief and MESHES.md assumed a mirror. Sheet offers A exact, B mirrored, C lifted.
+- The brief said one-piece neck; the original is two-piece (no skunk stripe on the back).
+- Labels first sat on top of the body; switched to numbered balloons with a legend.
+- Approved: "Approved with the recommended choices" (ageing A, hangs as A, C when lifted,
+  no cigarette burns). Next: the 3D replica on Opus.
