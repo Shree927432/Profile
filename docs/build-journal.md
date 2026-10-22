@@ -449,3 +449,13 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Small changes proposed for the owner: cut the nightstand, the ceiling light becomes a
   pendant 50 cm behind the centre so it is in the hero frame, the bench rests pushed in
   22 cm so the rack guitars show, the switch on the left wall by the door.
+
+## 2026-10-22, afternoon: the room plan and the desk designs
+
+- The room plan sheet (440 x 420 x 300 cm, the walls, the hero camera) was drawn on
+  Opus; the internet dropped halfway and the agent was resumed from its last step.
+- The owner approved rack A and asked "before that what models you are going to use
+  for studio monitors, monitor screen and dj console". A reference sheet showed three
+  options each. The owner: "use adam audio studio monitors, which model you are
+  choosing let me know, for rest you can use recommended options". Chosen: the A7V
+  style, the thin aluminium monitor, the compact two-deck controller.
