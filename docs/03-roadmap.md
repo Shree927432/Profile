@@ -56,7 +56,7 @@ Time: 2 to 4 sessions.
 - [x] Every interactive mesh named per a list (scene/objects/MESHES.md, 2026-10-21)
 - [ ] Bake lighting with Cycles into atlases, export GLTF
 - [ ] Load in the shell. Look at it on a phone. Iterate on stills first.
-- [ ] Save footage at every step for the making-of video (docs/10-video-plan.md)
+- [ ] Save a light process record at every step: stills and a quick preview (docs/10-video-plan.md)
 
 Done when: the room loads in under 3 seconds on 4G and looks like the premise.
 Time: the long one. 10 to 30 iterations. 1 to 3 weeks of evenings.
@@ -86,7 +86,7 @@ Time: 1 to 2 sessions per object.
 Two weeks of nothing new. Look, fix, remove. Cut anything that is not fully
 working. Then launch.
 
-- [ ] The making-of video: one dawn shot cut to the owner's piano, plus a 30 s phone cut (docs/10-video-plan.md)
+- [ ] The making-of video: one directed, multi-camera shoot of the finished room, timed to the owner's Moonlight Sonata recording, plus a 30 s phone cut (docs/10-video-plan.md)
 
 ## Later (see docs/04-ideas.md)
 

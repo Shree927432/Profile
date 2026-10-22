@@ -64,6 +64,20 @@ appear in the build but do not play over it.
 
 ## Footage to capture during Phase 4 and 5
 
+**Changed 2026-10-23 (owner's decision): light captures now, one directed shoot at the
+end.** Everything in the room is built by scripts, so any shot can be re-rendered at
+any time. Polished footage is therefore made once, in Phase 7, when the room is
+finished, the camera direction is settled and the owner's Moonlight Sonata recording
+sets the timing. During Phase 4 and 5 each build step keeps only a process record:
+- a few Cycles stills of the new part (clay, wireframe, lit), and
+- one quick, low-resolution build preview (EEVEE, low samples, a single camera,
+  minutes not hours), plus
+- the commit the scripts were at, written in the folder's NOTE.md, so any step can be
+  re-rendered later from its own version.
+The multi-camera, camera-direction and Moonlight sections below describe the final
+shoot, not each step. The room-shell hero clip of 2026-10-22 is kept as the first
+example of that look.
+
 Every agent working on the room saves footage as it goes, so the video never
 needs a reshoot of the process.
 
