@@ -66,18 +66,14 @@ it before finishing. Re-opening a decision needs the owner's say-so.
 | 2026-10-22 | Ornament textures: the sheet's stroke geometry lives once in `blender/lib/piano_ornament.py`, shared by the 2D sheet and the 3D build, and is rasterised into mask images (a 4096x1024 front atlas on the case material, a 2048x96 strip on the lid). RGB is lacquer or silver, alpha the silver mask; one image per material; bevel faces map to a blank margin so no stroke crosses an edge. Texture, not relief, so the GLB carries it without a bake. | Mechanics, as the tribal sheet specified. Right first time in a 42 s headless check. |
 | 2026-10-22 | Chrome hardware by material swap, plus a pointed lock plate with keyhole and two cheek caps (+1.6k triangles, joined into `piano_static`). | As drawn on the sheet. |
 | 2026-10-22 | Build clips render in EEVEE at 64 samples (wall speckle still faintly visible); the final video uses Cycles. | 32 samples speckled; 64 halves it at about 2x the time. |
+| 2026-10-22 | The piano is approved as the quality bar for every room prop: real proportions from a 2D sheet, bevels on every edge light can catch, procedural materials (lacquer with a clear coat, brushed and polished metals, ivory), Cycles stills at about 320 samples, one build clip per prop. Key fronts stay ivory; the cheek hook and console flames are shortened so no stroke crosses a groove or an edge. | Owner: "Ivory key fronts, and shorten the two clipped strokes. Then this piano is approved". Closes the quality-bar question. |
+| 2026-10-22 | Model: stop using Fable 5.1. Phase 4 modelling goes back to the designer agent on Opus. | Owner's instruction, after the usage limit ran out during the piano work: "now don't use fable". |
 
 ## Open questions (move to the table when answered)
 
 - Domain.
-- Piano key fronts: silver (as chosen with Full) or ivory (the designer recommends ivory;
-  lit, the silver fronts turn the keyboard's front into a grey-blue bar). Compare
-  `piano-hero-tribal.png` with `piano-hero-ivory-fronts-tribal.png`. One line switches it.
-- Two strokes to shorten slightly, if the owner agrees: the cheek hook bends over the
-  bevel groove, and the console flame tips are clipped at the console's edge.
-- Does the piano quality test set the bar for every room prop (bevels on every edge,
-  procedural materials, Cycles stills at about 320 samples)? Owner to say after seeing it.
-- Web export of the piano: the rich model is 1.86 MB and 51k triangles, too heavy
+- Web export of the piano: the rich model is 2.46 MB and 53k triangles (with the
+  ornament textures), too heavy
   for a phone next to the rest of the room. Proposed: a lite export (fewer bevel
   segments, simpler pins, strings and hammers, about 15k triangles) for the site,
   the rich one for renders. Also whether to add Draco or meshopt compression (a

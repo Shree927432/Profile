@@ -43,6 +43,7 @@ INT = dict(
     damper_z=(1.012, 1.036), damper_notes=68, damper_y=(-0.120, -0.104),
 )
 
+KEY_FRONTS_SILVER = False   # owner, 2026-10-22, after comparing the two heroes: ivory fronts
 BUILD_ORDER = []        # [(label, [object names])], filled while building
 _coll = None
 _root = None
@@ -68,7 +69,7 @@ def materials():
     _mats["images"] = imgs["files"]
     _mats["case"] = M.lacquer_black("mat_piano_case", image=imgs["front"], silver_rough=ORN.SILVER_ROUGH)
     _mats["lid"] = M.lacquer_black("mat_piano_lid", image=imgs["lid"], silver_rough=ORN.SILVER_ROUGH)
-    _mats["ivory"] = M.ivory("mat_piano_ivory", fronts=True)
+    _mats["ivory"] = M.ivory("mat_piano_ivory", fronts=KEY_FRONTS_SILVER)
     _mats["ebony"] = M.ebony("mat_piano_ebony")
     _mats["brass"] = M.chrome("mat_piano_chrome", ORN.CHROME, ORN.CHROME_ROUGH)   # "brass" slot: chrome now
     _mats["felt"] = M.felt("mat_piano_felt", C.COL["felt_red"])
@@ -304,10 +305,10 @@ def build_keys():
                 pts += [(xl, yb)]
             k = _obj(name, geo.prism, pts, "Z", z0, KT, mat="ivory", bev=0.0012, seg=2)
             geo.set_origin(k, ((xl + xr) / 2, yb, z0))
-            # silver front (the face at the key's front end): vertex colour, one material
-            yfront = min(v.co.y for v in k.data.vertices)
-            geo.tint_faces(k, ORN.SILVER, 1.0,
-                           lambda poly, me=k.data, yf=yfront: poly.normal.y < -0.9 and me.vertices[poly.vertices[0]].co.y < yf + 1e-5)
+            if KEY_FRONTS_SILVER:   # silver front (the face at the key's front end): vertex colour, one material
+                yfront = min(v.co.y for v in k.data.vertices)
+                geo.tint_faces(k, ORN.SILVER, 1.0,
+                               lambda poly, me=k.data, yf=yfront: poly.normal.y < -0.9 and me.vertices[poly.vertices[0]].co.y < yf + 1e-5)
         else:
             cx = (xl + xr) / 2
             tw = P["black_top_w"] / 2

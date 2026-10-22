@@ -277,18 +277,22 @@ def lid_band():
 
 
 def console():
-    """Console face: the references' own vertical sweep, root under the cheek."""
-    fl = [(0.12 + 0.11 * k, 1 if k % 2 == 0 else -1, 40, 0.055 - 0.004 * k, 44) for k in range(7)]
+    """Console face: the references' own vertical sweep, root under the cheek.
+    The face is 4.8 cm wide, so the flames are short and steep enough that their tips
+    stay inside it (owner, 2026-10-22: they were 5.5 cm at 40 degrees and got clipped)."""
+    fl = [(0.12 + 0.11 * k, 1 if k % 2 == 0 else -1, 28, 0.026 - 0.002 * k, 34) for k in range(7)]
     ct = [(0.05 + 0.11 * k, 0.13 + 0.11 * k, 0.46, 0.0) for k in range(6)]
     m, spine, wfn = arm(0.50, 0.018, rise=-90, sway=0, flames=fl, cuts=ct, tm=0.22)
     return m
 
 
 def cheek_hook():
-    """Key cheek front, below the nose: a short sweep outward and a hook curling under."""
+    """Key cheek front, below the nose: a short sweep outward and a hook curling under.
+    The sweep stops 10 mm short of the groove between the cheek block and the side
+    panel (owner, 2026-10-22, after the first lit renders; it was 12.5 cm)."""
     m = Piece()
     w = thorn(0.020, 1.1)
-    s = m.stroke(arc(0.0, 0.0, 4, 0.125, turn(-10, 1.5), n=90), w)
+    s = m.stroke(arc(0.0, 0.0, 4, 0.100, turn(-10, 1.5), n=90), w)
     m.stroke(arc(0.004, -0.004, -60, 0.050, turn(170, 1.6), n=90), thorn(0.013, 1.1))
     m.flame(s, w, 0.30, 1, 48, 0.034, 46)
     m.flame(s, w, 0.46, -1, 44, 0.026, 40)

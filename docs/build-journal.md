@@ -404,3 +404,15 @@ site or the room. Keep each entry short. No polishing; the post does that.
   s, clay 357 s, lit 383 s, FFmpeg crossfades, frames deleted (44 MB at peak). The
   silver appears in the lit phase. Whole run, build to quit, 1195 s (20 min) with
   the window open; done 03:28, inside the owner's 04:00 deadline.
+- The owner chose ivory key fronts and asked to shorten the two clipped strokes: "Ivory
+  key fronts, and shorten the two clipped strokes. Then this piano is approved". The
+  designer agent (Fable) switched the fronts and shortened the cheek hook, re-rendered
+  the hero and the sheet, then stopped when the owner's usage limit ran out at about
+  03:35, before the console flames, the other stills and the exports. Finished the
+  next day on Opus: the console flames were 5.5 cm at 40 degrees on a 4.8 cm face, now
+  2.6 cm at 28 degrees; the hero, key cover and keys stills and both GLBs re-made
+  headless in 204 s (rich 2.36 MB, lite 2.25 MB). The piano is approved as the
+  quality bar for the room.
+- The owner moved off Fable: "now don't use fable", then "you can use other model with
+  right effort". Back to the model guide: designer on Opus, builder on Sonnet, quick
+  on Haiku.

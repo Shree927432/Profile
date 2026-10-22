@@ -5,7 +5,7 @@ stills, GLB export and the build clip. One command (see blender/README.md):
         --python blender/tests/piano_quality.py -- [stage] [--quick]
 
 stage: all (default) | build | stills | export | clip, or several joined with commas
-(`build,stills,export`). `build` saves
+(`build,stills,export`); `--stills=hero,keys` renders only those. `build` saves
 blender/out/piano-quality.blend; the other stages open it. With the window open
 (no -b) the scene appears as it is built and renders show in the render window; the
 script quits Blender when done. `--quick` renders small and fast for checking.
@@ -32,6 +32,8 @@ ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 STAGE = next((a for a in ARGS if not a.startswith("--")), "all")
 STAGES = {"build", "stills", "export", "clip"} if STAGE == "all" else set(STAGE.split(","))
 QUICK = "--quick" in ARGS
+_only = next((a for a in ARGS if a.startswith("--stills=")), None)
+STILLS = set(_only[len("--stills="):].split(",")) if _only else None    # None: every still
 SUFFIX = "-tribal"       # 2026-10-22 rebuild with the ornament; the first set keeps its names
 FOOTAGE = os.path.join(C.FOOTAGE, "2026-10-22-piano-quality-test")
 BLEND = os.path.join(C.OUT, "piano-quality.blend")
@@ -297,6 +299,8 @@ def stage_stills():
     times = REPORT.setdefault("stills_s", {})
 
     def still(name, cam, samples):
+        if STILLS is not None and name not in STILLS:
+            return
         scene.camera = objs[cam]
         scene.cycles.samples = 48 if QUICK else samples
         path = os.path.join(FOOTAGE, f"piano-{name}{SUFFIX}.png")
@@ -310,10 +314,11 @@ def stage_stills():
     # in the owner's priority order: hero, fallboard close-up, the ivory-fronts alternate
     yield from still("hero", "still_cam_hero", 320)
     yield from still("fallboard", "still_cam_fall", 320)
-    key_silver = bpy.data.materials["mat_piano_ivory"].node_tree.nodes["key_silver"].outputs[0]
-    key_silver.default_value = 0.0
-    yield from still("hero-ivory-fronts", "still_cam_hero", 320)
-    key_silver.default_value = 1.0
+    sw = bpy.data.materials["mat_piano_ivory"].node_tree.nodes.get("key_silver")
+    if sw is not None:      # only while the key fronts are silver (obj_piano.KEY_FRONTS_SILVER)
+        sw.outputs[0].default_value = 0.0
+        yield from still("hero-ivory-fronts", "still_cam_hero", 320)
+        sw.outputs[0].default_value = 1.0
     yield from still("keys", "still_cam_keys", 384)
     lid = objs["piano_lid"]
     lid.rotation_euler.x = math.radians(-C.PIANO["lid_open_deg"])
@@ -326,6 +331,8 @@ def stage_stills():
     yield from still("clay", "still_cam_hero", 160)
     bpy.context.view_layer.material_override = None
     # wireframe: glowing lines on navy, EEVEE
+    if STILLS is not None and "wire" not in STILLS:
+        return
     undo = wire_look()
     setup_render("BLENDER_EEVEE")
     scene.camera = objs["still_cam_hero"]
