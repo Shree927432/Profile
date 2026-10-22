@@ -576,3 +576,11 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Mistake: running `room_plan_sheet.py` to check it after the WALL_GUITARS change rewrote the local
   room-plan PNG (only guitar_02's length and hook moved, by millimetres). The script is the source.
 - Light process record only, as planned: seven Cycles stills, two in the room, a 7 s EEVEE preview.
+
+## 2026-10-23, 03:00: the room changes what it says
+
+- Looking at the room, the owner: "the room looks more like a musicians room, where as
+  i'm a musican but i'm some one who is going to lead frontier and currently i'm a ai
+  engineer". Then two photos of a white L-shaped tech desk: "we can remove the bed and
+  table and turn the other half into this". The room becomes half music studio, half AI
+  lab. A new room plan sheet comes first.
