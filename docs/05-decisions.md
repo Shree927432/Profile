@@ -68,6 +68,7 @@ it before finishing. Re-opening a decision needs the owner's say-so.
 | 2026-10-22 | Build clips render in EEVEE at 64 samples (wall speckle still faintly visible); the final video uses Cycles. | 32 samples speckled; 64 halves it at about 2x the time. |
 | 2026-10-22 | The piano is approved as the quality bar for every room prop: real proportions from a 2D sheet, bevels on every edge light can catch, procedural materials (lacquer with a clear coat, brushed and polished metals, ivory), Cycles stills at about 320 samples, one build clip per prop. Key fronts stay ivory; the cheek hook and console flames are shortened so no stroke crosses a groove or an edge. | Owner: "Ivory key fronts, and shorten the two clipped strokes. Then this piano is approved". Closes the quality-bar question. |
 | 2026-10-22 | Model: stop using Fable 5.1. Phase 4 modelling goes back to the designer agent on Opus. | Owner's instruction, after the usage limit ran out during the piano work: "now don't use fable". |
+| 2026-10-22 | Guitar rack: option A, between the desk and the piano, so all six guitars stand on the right side of the room. | Owner: "approve rack A". Option B would put the rack in front of the bed and split the timeline. |
 
 ## Open questions (move to the table when answered)
 
@@ -79,5 +80,3 @@ it before finishing. Re-opening a decision needs the owner's say-so.
   the rich one for renders. Also whether to add Draco or meshopt compression (a
   decoder dependency, about 5x smaller files).
 - Video recording: MIDI keyboard plus audio, or audio only?
-- Which side of the desk the guitar rack stands on: by the right studio monitor
-  (recommended, keeps all six guitars on one side) or the left. Decide from Blender stills.
