@@ -66,24 +66,30 @@ def spline(points, closed=True, n=12):
 # ---------------------------------------------------------------------------
 _SCALE = 647.7                     # 25.5 in
 _NUT_V = 786.0                     # tail edge to nut: saddle line 138 from the tail (MoPOP photo) + scale
+_HEAD_L = 190.5                     # nut to headstock tip (r3, small headstock; the large one was 208)
 
 GUITAR_02 = dict(
-    scale=_SCALE, frets=21, v_nut=_NUT_V, overall=994.0, v_tip=_NUT_V + 208.0,
+    scale=_SCALE, frets=21, v_nut=_NUT_V, overall=_NUT_V + _HEAD_L, v_tip=_NUT_V + _HEAD_L,
     v_saddle=_NUT_V - _SCALE,      # 138.3: the scale line, before saddle compensation
 
     # body: alder, 44.5 thick, edge roundover, late-60s contours (shallower than 1950s)
     body_t=44.5, edge_r=6.4,
     body=[  # (u, v), counter-clockwise from the tail, measured from the MoPOP photo and
-            # scaled to 457 long, 322 wide; the stretch under the neck heel is the pocket floor
+            # scaled to 457 long, 322 wide; the stretch under the neck heel is the pocket floor.
+            # Revised 2026-10-23 (3D build, r2): the upper bout was 271.5 wide, a vintage Strat's
+            # is about 0.88 of its lower bout (275.5 now); the treble horn ended at the 17th fret,
+            # a frontal photo of a 1970 Strat (perspective-corrected on its fret dots) puts it at
+            # the 15th to 16th (396.5 now); both horn tips narrower, as on the real body.
         (0, 0.3), (25, 1.5), (65, 8), (108, 17), (132, 30), (147, 48), (156, 66), (161, 95),
-        (159, 130), (150, 156), (138, 186), (124, 212), (115, 236), (113, 262), (117, 282),
-        (125, 305), (129.5, 330), (128, 355), (121, 374), (108, 383.5), (96, 380), (88, 368),
-        (84, 352), (76, 339), (62, 332), (45, 329), (31, 330.5), (29, 334), (29, 384),
+        (159, 130), (150, 156), (138, 186), (124, 212), (115, 236), (113.5, 262), (118, 281),
+        (125.5, 301), (131, 322), (134, 344), (133, 364), (127.5, 381), (118.5, 392.5),
+        (108, 396.5), (99, 393), (93, 383), (88.5, 368), (82.5, 351), (73, 339), (59, 332),
+        (45, 329.5), (31, 330.5), (29, 334), (29, 384),
         (26, 388), (0, 388.5), (-26, 388), (-29, 388), (-38, 381), (-52, 376.5), (-68, 382),
-        (-80, 393), (-87, 410), (-90, 430), (-93, 448), (-106, 456), (-118, 451.5),
-        (-128, 442), (-137, 425), (-142, 395), (-140, 370), (-130, 337), (-118, 303),
-        (-114.5, 270), (-122, 238), (-137, 205), (-152, 166), (-160, 135), (-161, 95),
-        (-157, 62), (-147, 41), (-130, 22), (-96, 8), (-25, 0)],
+        (-80, 393), (-87, 410), (-90, 428), (-93, 444), (-98, 452.5), (-106, 456.5),
+        (-114.5, 455), (-124, 450.5), (-133.5, 442.5), (-138.5, 431.5), (-141, 418), (-141.5, 400),
+        (-141, 381), (-137, 357), (-129, 337), (-118.5, 303), (-115.5, 270), (-122, 238), (-137, 205), (-152, 166),
+        (-160, 135), (-161, 95), (-157, 62), (-147, 41), (-130, 22), (-96, 8), (-25, 0)],
     forearm=dict(depth=12.0, width=60.0, region=[   # front face, bass lower bout (clip to body)
         (-150, 42), (-118, 85), (-104, 130), (-103, 180), (-110, 222), (-120, 250),
         (-126, 252), (-140, 205), (-156, 166), (-165, 135), (-166, 95), (-161, 60)]),
@@ -102,18 +108,36 @@ GUITAR_02 = dict(
     fret_wire=(2.1, 1.1), dot_d=6.35, dots=(3, 5, 7, 9, 12, 15, 17, 19, 21),
     dot12_offset=11.0,                    # the two 12th-fret dots, each side of centre
 
-    # headstock: the large late-60s shape, flat (no tilt), face 6.4 below the fretboard
+    # headstock (r3, owner's choice 2026-10-23): the small 1950s/early-60s Strat outline, traced from
+    # the owner's square-on photo (docs/moodboard/local/strat-owner-ref-8.jpg, local only), rectified by a
+    # homography on the nut ends, the ends of frets 1-3, the 3rd-fret dot and the six post bushings on one
+    # line at 25.4 pitch (residual 0.45 mm rms, 1.4 max), smoothed (2 mm; 0.8 mm at most from the trace)
+    # and sampled every 5 mm;
+    # checked against the small headstock of the Commons comparison photo (median 1.3 mm apart).
+    # Flat, face 6.4 below the fretboard; no logo, decal or text.
     head_t=14.3, head_step=6.4, head_angle_deg=0.0,
     headstock=[  # (a, b), open curve from the nut's right end, over the tip, to its left end
-        (21, 0), (21.3, 19.4), (22.5, 43.1), (25.5, 67.9), (31, 91.6), (39, 112.1),
-        (48.5, 131.5), (56, 147.6), (58.5, 162.7), (55, 177.8), (45, 188.6), (31, 195.6),
-        (16, 201.5), (0, 206.4), (-16, 208), (-27, 204.2), (-33, 195.1), (-33.6, 181.1),
-        (-31.8, 161.7), (-31, 129.3), (-31.2, 86.2), (-30.8, 45.3), (-28.5, 30.2), (-24, 18.3),
-        (-21.6, 8.6), (-21, 0)],
-    tuner_a=-20.0, tuner_b0=44.0, tuner_pitch=25.4, post_d=6.3, bushing_d=9.0, post_h=16.0,
-    tuner_key=dict(a=-47.5, w=14.0, h=17.0, z=-17.0, t=5.0),   # oval metal keys, beyond the left edge
+        (20.65, 0), (21.9, 5.9), (22.3, 10.6), (22.7, 15.4), (23.6, 20), (24.9, 24.5), (26.6, 28.8),
+        (28.7, 33), (31.6, 36.9), (35, 40.4), (38.7, 43.4), (42.7, 46), (46.7, 48.3), (49.2, 51.9),
+        (49.1, 56.5), (48.6, 61.3), (47.9, 66), (47.2, 70.7), (46.3, 75.2), (45.3, 79.8), (44.1, 84.3),
+        (42.9, 88.8), (41.8, 93.4), (40.6, 97.9), (39.4, 102.4), (38.3, 106.9), (37.4, 111.4), (36.6, 115.9),
+        (35.8, 120.7), (35.3, 125.4), (35.3, 130.1), (37, 134.4), (40.7, 137.4), (44.7, 139.9), (48.5, 142.9),
+        (51.8, 146.3), (54.4, 150.3), (56.4, 154.5), (57.5, 159.1), (57.9, 163.8), (57.6, 168.5), (56.7, 173.1),
+        (55, 177.5), (52.5, 181.5), (49.1, 184.9), (45.1, 187.5), (40.8, 189.3), (36.3, 190.4), (31.6, 190.5),
+        (27, 189.6), (22.6, 188.1), (18.5, 185.8), (14.6, 183), (11.3, 179.5), (8.6, 175.6), (6.2, 171.6),
+        (4.3, 167.3), (3.3, 162.8), (2, 158.3), (0.6, 153.9), (-0.8, 149.4), (-2.5, 145.1), (-3.6, 140.6),
+        (-4.7, 136.1), (-6, 131.6), (-7.3, 127.1), (-9, 122.7), (-10.2, 118.3), (-11.2, 113.7), (-12.5, 109.2),
+        (-13.8, 104.7), (-15.4, 100.4), (-17, 96), (-17.9, 91.5), (-19.1, 87), (-20.4, 82.5), (-21.8, 78.2),
+        (-23.4, 73.8), (-24.5, 69.3), (-25.6, 64.8), (-27, 60.3), (-28.3, 55.8), (-29.9, 51.5), (-31.1, 47),
+        (-32.2, 42.5), (-33.6, 38), (-34.9, 33.5), (-35.9, 28.9), (-36, 24.2), (-34.2, 20), (-30.8, 16.5),
+        (-27, 13.8), (-23.8, 10.3), (-22.4, 5.9), (-20.65, 0)],
+    tuner_posts=[(-23.92, 40.09), (-16.2, 64.28), (-8.47, 88.48), (-0.75, 112.68), (6.97, 136.88), (14.69, 161.08)],   # (a, b): one line, 17.7 deg to the neck axis
+    tuner_line_deg=17.7, tuner_pitch=25.4, tuner_a=-23.92, tuner_b0=40.09,
+    post_d=6.3, bushing_d=9.0, post_h=16.0,
+    tuner_key=dict(gap=2.5, w=14.0, h=17.0, z=-17.0, t=5.0),   # vintage oval metal keys, shafts square to the
+                                                                # neck axis, each button 2.5 past the edge
     tuner_housing=dict(w=13.0, h=21.0, depth=12.0),            # on the back, plain (no stamp)
-    string_tree=dict(a=2.0, b=62.0, w=12.0, h=5.0, height=5.0, holds="A and low E"),
+    string_tree=dict(a=13.6, b=66.8, w=12.0, h=5.0, height=5.0, holds="A and low E"),   # r3: from the photo
     hook=dict(gap=46.0),       # inner gap of the wall hanger's two prongs
 
     # strings, left to right at the nut as it hangs (Hendrix's stringing)
@@ -123,7 +147,8 @@ GUITAR_02 = dict(
     saddle_back=(1.5, 2.5, 3.5, 3.0, 3.8, 4.8),          # mm behind the scale line, per string
 
     # pickups: three single coils, white covers, staggered poles as built (not turned)
-    pickup=dict(l=83.0, w=18.5, pole_d=4.9, pole_spread=52.4, screw_off=45.5),
+    pickup=dict(l=83.0, w=18.5, pole_d=4.9, pole_spread=52.4, screw_off=38.5),   # r2: screws through
+                                                                                   # the cover ends, 77 apart
     pickups_from_scale=(162.0, 102.0, 48.0),             # neck, middle, bridge centre, mm (photo)
     bridge_slant_deg=10.0,                               # treble (right) end towards the bridge
     pickup_top_z=(8.0, 7.5, 7.0),
@@ -135,7 +160,7 @@ GUITAR_02 = dict(
         (-101, 270), (-96, 245), (-84, 226), (-68, 210), (-57, 188), (-48, 170), (-42, 163.5),
         (-39.5, 162), (39.5, 162), (42, 158.5), (44, 140), (50, 118), (62, 98), (80, 85),
         (100, 81), (116, 86), (125, 104), (126, 130), (122, 165), (115, 200), (107, 235),
-        (104, 262), (107, 290), (110, 312), (100, 326), (84, 333), (70, 330.5), (55, 326.5),
+        (104, 262), (108, 290), (113, 314), (105, 328), (88, 334), (70, 330.5), (55, 326.5),
         (40, 325.5), (28, 326)],
     guard_screws=[
         (-53, 361), (-89, 333), (-95, 262), (-76, 222), (-47, 174), (50, 135),
@@ -157,8 +182,8 @@ GUITAR_02 = dict(
     jack=dict(u=106.0, v=60.0, l=56.0, w=26.0, angle_deg=-40.0, socket_d=12.5),
     strap_buttons=[  # (u, v, outward angle in degrees from +u, note)
         (0.0, 0.3, -90.0, "tail, original"),
-        (-105.0, 456.0, 100.0, "long horn tip, original"),
-        (108.0, 383.5, 75.0, "short horn, added by Hendrix"),
+        (-106.0, 456.5, 100.0, "long horn tip, original"),
+        (108.0, 396.5, 80.0, "short horn, added by Hendrix"),
     ],
     strap_button=dict(d=11.0, h=11.0),
 )

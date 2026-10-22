@@ -531,3 +531,48 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Labels first sat on top of the body; switched to numbered balloons with a legend.
 - Approved: "Approved with the recommended choices" (ageing A, hangs as A, C when lifted,
   no cigarette burns). Next: the 3D replica on Opus.
+
+## 2026-10-23, night: guitar_02 in 3D, the Woodstock Strat (01:25 to 03:05)
+
+- Built `blender/props/guitar_02.py`: every part in the spec's millimetres from `guitar_specs.GUITAR_02`
+  and the blueprint's own geometry functions, so sheet and model share every number. Body with a true
+  6.4 roundover, forearm and belly contours and a routed jack dish; two-piece maple neck on the
+  7.25 in radius, 21 frets, dots, bone nut; vintage tuners, butterfly tree, bent-steel saddles with
+  height screws, intonation screws and springs, the arm; 3-ply guard with the black line on the
+  bevel; covers with poles in the vintage stagger; knobs with 0 to 10 on the skirts; Hendrix's
+  stringing with wound strings and wraps on the posts. Ageing A by a `wear` attribute (horn tips,
+  forearm edge, frets 1 to 7) under procedural lacquer. The lite web model (about 7k triangles) bakes
+  colour, AO, roughness and metal from the same materials into one 1024 atlas and a 512 ORM.
+- `blender/build.py` now puts the guitar on its hanger in the room (rich in the .blend, lite in the
+  GLB); `room.glb` 521 -> 1,097 KB. `/?room&glb` shows it on the wall; posts and glide work; no
+  console errors; `npm run build` passes.
+- Went wrong, found by looking at renders:
+  - close-up cameras rendered the skirting and the floor: placed before the guitar's matrix updated;
+  - pickup covers streaked (a bevel on a tapered n-gon); rebuilt with a real roundover;
+  - saddles read as solid blocks and the arm rose through the high-E saddle; now bent steel strips,
+    the arm moved 4.5 mm out, saddle ends kept clear of the lip;
+  - the string tree's wings were built on the centre line, not at the tree (hidden while the tree sat
+    near the centre);
+  - the tuner keys rendered as dark blurry discs: flat paddles mirroring the room, 1 cm tarnish
+    blotches, f/5.6 on keys 20 mm behind the face. Domed keys, finer tarnish, f/11;
+  - the first lite export was 12k triangles; cut to 7k (no screws, simpler poles, keys, saddles).
+- The coordinator reviewed the first hero against the museum photos: horns short, upper bout narrow,
+  headstock a narrow blade, a stray chrome disc, keys too far out. An orthographic overlay showed the
+  model was exactly the approved blueprint, so the error was in the blueprint data. A homography on
+  a frontal 1970 Strat photo (fret dots plus the pickup screws) measured the treble horn and upper
+  bout too small; two rounds brought the body within 2 to 3 mm (`guitar-02-compare.png`). The same
+  check found the pickup screws drawn outside the covers (they go through the cover ends, 77 apart).
+  The disc was the hanger's chrome wall plate seen in parallax; now a small black base.
+- The headstock took three tries. r2 (the large CBS shape redrawn) drew the owner's "the headstock
+  design is really bad, keep original one". Tracing a real one needed a download, which needed the
+  owner's yes first; meanwhile the approved r1 outline went back. The owner then sent photos of a
+  small-headstock Strat: "use this design for headstock", and "use only headstock design for it, rest
+  you can keep it original". r3 is traced from that photo, rectified on the nut, frets 1 to 3, the
+  3rd-fret dot and the six posts (0.45 mm rms), and checked against the small head in the Commons
+  comparison photo (1.3 mm median). The museum photo used earlier rectified poorly beyond the frets
+  (hanger foam, no known geometry up there), which is why r2 could only be matched by eye.
+  New on the way: on the real guitar the tuner posts sit on a line 17.7 degrees to the neck, not
+  parallel to it as the blueprint had them.
+- Mistake: running `room_plan_sheet.py` to check it after the WALL_GUITARS change rewrote the local
+  room-plan PNG (only guitar_02's length and hook moved, by millimetres). The script is the source.
+- Light process record only, as planned: seven Cycles stills, two in the room, a 7 s EEVEE preview.

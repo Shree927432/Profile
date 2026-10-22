@@ -251,7 +251,13 @@ def strings_bridge():
 
 
 def posts():
-    return [(G["tuner_a"], VN + G["tuner_b0"] + G["tuner_pitch"] * k) for k in range(6)]
+    return [(a, VN + b) for a, b in G["tuner_posts"]]
+
+
+def keys():
+    """Key centres: each shaft square to the neck axis, the button `gap` past the bass-side edge."""
+    k = G["tuner_key"]
+    return [(head_width_at(pv - VN)[0] - k["gap"] - k["w"] / 2, pv) for _, pv in posts()]
 
 
 def pickups():
@@ -308,9 +314,9 @@ def draw_front(V, body_fill=COL["body"], wear=0, fine=True, strings=True, hook=T
         V.path(shape(rrect(3.2, sb["d"] + 2.5, 1.5), (cu, cv), ang), COL["chrome"], INK, sw * 0.9)
     # tuner keys and shafts (behind the headstock face)
     k = G["tuner_key"]
-    for pa, pv in posts():
-        V.line((pa, pv), (k["a"], pv), COL["chrome_d"], max(1.2, 3.0 * s * 0.5))
-        V.path(shape(ellipse(k["w"], k["h"]), (k["a"], pv)), COL["chrome"], INK, sw * 0.9)
+    for (pa, pv), (ka, _) in zip(posts(), keys()):
+        V.line((pa, pv), (ka, pv), COL["chrome_d"], max(1.2, 3.0 * s * 0.5))
+        V.path(shape(ellipse(k["w"], k["h"]), (ka, pv)), COL["chrome"], INK, sw * 0.9)
     # body
     V.path(BODY, body_fill, INK, sw * 1.2)
     if wear:
@@ -494,9 +500,9 @@ def draw_back(V):
     for u, v, ang, _ in G["strap_buttons"]:
         V.path(shape(rrect(sb["h"] * 2, sb["d"], 3), (u, v), ang), COL["chrome"], INK, sw * 0.9)
     k = G["tuner_key"]
-    for pa, pv in posts():
-        V.line((pa, pv), (k["a"], pv), COL["chrome_d"], 1.6)
-        V.path(shape(ellipse(k["w"], k["h"]), (k["a"], pv)), COL["chrome"], INK, sw * 0.9)
+    for (pa, pv), (ka, _) in zip(posts(), keys()):
+        V.line((pa, pv), (ka, pv), COL["chrome_d"], 1.6)
+        V.path(shape(ellipse(k["w"], k["h"]), (ka, pv)), COL["chrome"], INK, sw * 0.9)
     # neck back (one maple colour, no skunk stripe) drawn before the body so the body hides the heel
     V.path(NECK, COL["neck_back"], INK, sw)
     V.path(HEAD, COL["neck_back"], INK, sw)
@@ -699,8 +705,8 @@ def mini(V, mirror_geo=False, thick_right=True, label_strings=False):
     m = -1 if mirror_geo else 1
     f = lambda pts: [(m * u, v) for u, v in pts]  # noqa: E731
     k = G["tuner_key"]
-    for pa, pv in posts():
-        V.path(shape(ellipse(k["w"], k["h"]), (m * k["a"], pv)), COL["chrome"], INK, 0.7)
+    for ka, pv in keys():
+        V.path(shape(ellipse(k["w"], k["h"]), (m * ka, pv)), COL["chrome"], INK, 0.7)
     V.path(f(BODY), COL["body"], INK, 1.0)
     V.path(f(GUARD), COL["guard"], INK, 0.8)
     V.path(f(NECK), COL["maple"], INK, 0.8)
@@ -782,11 +788,12 @@ def build():
     LL, RR = [], []
     L = lambda u, v, y, lab, sub=None: LL.append([y, VF.p(u, v), lab, sub])  # noqa: E731
     R = lambda u, v, y, lab, sub=None: RR.append([y, VF.p(u, v), lab, sub])  # noqa: E731
-    L(G["tuner_key"]["a"], posts()[3][1], VF.p(0, posts()[3][1])[1] + 40, "6 tuners in line, metal oval keys",
-      "late-60s F-style, backs plain")
-    L(-31, VN + 120, VF.p(0, VN + 120)[1] + 150, "large late-60s headstock", "flat, no decal, no truss-rod nut")
+    L(keys()[3][0], posts()[3][1], VF.p(0, posts()[3][1])[1] + 40, "6 vintage tuners in line, metal oval keys",
+      f"posts on a line {G['tuner_line_deg']:.0f} deg to the neck, backs plain")
+    L(head_width_at(120)[0], VN + 120, VF.p(0, VN + 120)[1] + 150, "small headstock (owner's choice, r3)",
+      "traced from the owner's photo; flat, no decal")
     R(G["string_tree"]["a"] + 5, VN + G["string_tree"]["b"], VF.p(0, VN + 62)[1] + 30,
-      "one butterfly string tree", "same place; now holds A and low E")
+      "one butterfly string tree", "as on the photo; holds A and low E")
     R(17.5, VN + 2, VF.p(0, VN)[1] + 74, f"bone nut {mm(G['nut_w'])}, re-slotted for", "left-handed order: e B G D A E")
     L(0, VN + HOOK_B, VF.p(0, VN + HOOK_B)[1] + 84, f"pivot: hook contact, {mm(HOOK_B)} above the nut",
       f"{mm(G['v_tip'] - VN - HOOK_B)} below the tip; hanger gap {mm(G['hook']['gap'])}")
@@ -980,7 +987,8 @@ def build():
     pp = posts()
     x0, y0 = VH.p(pp[0][0], pp[0][1])
     x1, y1 = VH.p(pp[1][0], pp[1][1])
-    dim_v(px_ + 70, y1, y0, f"{mm(G['tuner_pitch'])} pitch", ext=[(x0 - 30, y0), (x0 - 30, y1)])
+    dim_v(px_ + 70, y1, y0, f"{mm(pp[1][1] - pp[0][1])} along the neck ({mm(G['tuner_pitch'])} on the post line)",
+          ext=[(x0 - 30, y0), (x0 - 30, y1)])
     _, yn = VH.p(0, VN)
     dim_v(px_ + 40, y0, yn, f"{mm(G['tuner_b0'])} nut to 1st post", ext=[(VH.p(-21, 0)[0], yn)])
     for i, nm in enumerate(("e", "B", "G", "D", "A", "E")):
@@ -989,8 +997,8 @@ def build():
     xq, yq = VH.p(G["string_tree"]["a"], VN + G["string_tree"]["b"])
     leader(xq + 20, yq, px_ + pw - 20, yq + 40, "butterfly tree", "end", "on a 5 spacer")
     note_box(px_ + 1, ry + rh - 92, pw - 2, 91)
-    para(px_ + 16, ry + rh - 70, "Post line 20 left of centre, 6.3 posts in 9 bushings. Keys stick out "
-         "about 16 past the edge. Burn marks from his cigarettes near the tip are left off by default.", 66)
+    para(px_ + 16, ry + rh - 70, f"r3: the small headstock, traced from the owner's photo. Posts on one line at "
+         f"{G['tuner_line_deg']:.0f} deg to the neck, 25.4 apart, 6.3 posts in 9 bushings; vintage keys 2.5 past the edge.", 66)
 
     # pickups 1.5x
     px_, pw = 660, 480
@@ -1159,12 +1167,12 @@ def build():
     ry4, rh4 = ry3 + rh3 + 24, 700
     px_, pw = 40, 560
     panel(px_, ry4, pw, rh4, "8 · Left out", "printing on the real guitar, shown as hatched areas only")
-    for i, (lab, dec) in enumerate((("the real 1968 face", True), ("ours", False))):
+    for i, (lab, dec) in enumerate((("a real face, printed", True), ("ours", False))):
         Vh = View(px_ + 160 + i * 250, ry4 + 430 + VN * 1.6, 1.6)
         k = G["tuner_key"]
-        for pa, pv in posts():
-            Vh.line((pa, pv), (k["a"], pv), COL["chrome_d"], 2)
-            Vh.path(shape(ellipse(k["w"], k["h"]), (k["a"], pv)), COL["chrome"], INK, 0.8)
+        for (pa, pv), (ka, _) in zip(posts(), keys()):
+            Vh.line((pa, pv), (ka, pv), COL["chrome_d"], 2)
+            Vh.path(shape(ellipse(k["w"], k["h"]), (ka, pv)), COL["chrome"], INK, 0.8)
         Vh.path(HEAD, COL["head"], INK, 1.1)
         Vh.path([(-21, VN), (-21, VN + 4.7), (21, VN + 4.7), (21, VN)], COL["nut"], INK, 0.8)
         for pa, pv in posts():
@@ -1198,7 +1206,7 @@ def build():
         ("Body length", f"{mm(BODY_L)}", "spec", "sources give 18.1 to 18.75 in; 18.0 fits the photo"),
         ("Overall length", "994, 1005 with button", "measured", "RetroFret 1966: 39 1/4 in, 1969: 39 3/4 in"),
         ("Saddle line from tail", "138", "reconstructed", "MoPOP photo, scaled by the body; neck end checks"),
-        ("Headstock", "208 x 92", "reconstructed", "overall minus nut position; outline from photos"),
+        ("Headstock", f"{mm(G['v_tip'] - VN)} x {mm(max(a for a, _ in HEAD) - min(a for a, _ in HEAD))}", "measured", "r3, small: owner's photo, rectified"),
         ("String spacing, bridge", "56.4 (2 7/32 in)", "spec", "Fender vintage bridge plate spec"),
         ("Pickguard", "3-ply W/B/W, 11 screws", "spec", "Fuzzfaced; vendor guard 279 x 228; ours 286 x 228"),
         ("Pickups from saddle line", "162 / 102 / 48, 10°", "reconstructed", "MoPOP photo; neck = 24th-fret node"),

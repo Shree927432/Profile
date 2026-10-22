@@ -543,7 +543,7 @@ def build_scene(rack=None):
         body, neck, head = guitar_outline(WG["length"][i], WG["width"][i], archtop=(i == 0))
         for part, col in ((neck, "#5b3a22"), (head, "#2a1d14"), (body, cols[i])):
             S.flat([(gx, y - u, WG["bottom"] + v) for u, v in part], col, "wall2")
-        hook_z = WG["bottom"] + WG["length"][i] - WG["hook_from_top"]
+        hook_z = WG["bottom"] + WG["length"][i] - WG["hook_from_top"][i]
         S.wall_lines.append(([(RX - 0.05, y, hook_z - 0.03), (gx, y, hook_z)], "#c8c8c8", 2.5))
     # bed
     bd = L["bed"]
@@ -1160,7 +1160,7 @@ def elevations(px, py, pw, ph, lid90, lid55):
         body, neck, head = guitar_outline(WG["length"][i], WG["width"][i], archtop=(i == 0))
         for part, col in ((neck, "#c9b59c"), (head, "#8c7a66"), (body, cols[i])):
             vr.poly([(U(y) + u, WG["bottom"] + vv) for u, vv in part], col, OBJ_LINE, 1.0)
-        hz = WG["bottom"] + WG["length"][i] - WG["hook_from_top"]
+        hz = WG["bottom"] + WG["length"][i] - WG["hook_from_top"][i]
         vr.rect(U(y) - 0.03, U(y) + 0.03, hz - 0.05, hz, "#9a9a9a", INK, 0.8)
         xg, yg = vr.p(U(y), WG["bottom"] + 0.20)
         text(xg, yg, f"0{i + 1}", 13, OBJ_LINE, "middle", weight=700)
@@ -1210,7 +1210,7 @@ def elevations(px, py, pw, ph, lid90, lid55):
     g_front = -WG["off_wall"] - 0.04
     vs.rect(g_front, g_front + 0.08, gb, gb + 0.46, OBJ_FILL, OBJ_LINE, 1.2)
     vs.rect(g_front + 0.02, g_front + 0.05, gb + 0.46, gb + WG["length"][0], OBJ_FILL, OBJ_LINE, 1.0)
-    hz = gb + WG["length"][0] - WG["hook_from_top"]
+    hz = gb + WG["length"][0] - WG["hook_from_top"][0]
     vs.path([(0, hz - 0.04), (-WG["off_wall"] + 0.01, hz - 0.01), (-WG["off_wall"] + 0.01, hz + 0.02)], INK, 2)
     xq = vs.p(-0.70, 0)[0]
     dim(xq, vs.p(0, 0)[1], xq, vs.p(0, lid90)[1], cm(lid90, 1), off=0, size=12)

@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.join(C.BLENDER_DIR, "design"))
 import room_plan_sheet as PLAN  # noqa: E402
 
 L, WG, WIN, H = C.LAYOUT, C.WALL_GUITARS, C.WINDOW, C.ROOM["height"]
+MODELLED = {"guitar_02"}        # built by its own prop script (props/guitar_02.py) with its hanger
 RX, RY = C.RX, C.RY
 TOP = L["desk"]["h"]
 ROOTS = []                      # (root name, [part objects]) in build order
@@ -295,12 +296,14 @@ def build_guitars():
     cols = ["#b5651d", "#f1efe8", "#8a4b1f"]
     hooks = []
     for i, y in enumerate(WG["y"]):
+        if f"guitar_{i + 1:02d}" in MODELLED:
+            continue
         g = _guitar(f"guitars_footprint_{i + 1:02d}", WG["length"][i], WG["width"][i], 0.08 if i == 0 else 0.045,
                     cols[i], kw, archtop=(i == 0))
         g.rotation_euler = (0, 0, math.radians(-90))      # face -X
         g.location = (gx, y, WG["bottom"])
         parts.append(g)
-        hz = WG["bottom"] + WG["length"][i] - WG["hook_from_top"]
+        hz = WG["bottom"] + WG["length"][i] - WG["hook_from_top"][i]
         hooks.append((0.006, (RX, y, hz), (gx + 0.01, y, hz + 0.02)))
     parts.append(geo.cylinders("guitars_footprint_hooks", hooks, segments=10, material=chrome, **kw))
     # floor rack (option A), from the sheet's rack geometry

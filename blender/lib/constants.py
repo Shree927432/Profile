@@ -170,10 +170,14 @@ LAYOUT = dict(
 )
 
 # Wall guitars (guitar_01 to _03, right wall, back to front = left to right from the
-# hero view). Bottoms in one line 8 cm above the piano lid opened fully to 90 degrees.
+# hero view). Bottoms (the body's tail) in one line 8 cm above the piano lid opened fully
+# to 90 degrees. guitar_02 at its real size from guitar_specs.GUITAR_02: 0.977 body to tip with
+# the small headstock (r3; its end strap button hangs 11 mm lower), 0.323 wide, caught by the
+# hook 0.180 below the tip (where the headstock first reaches the 46 mm hanger gap).
+# off_wall: wall to the body's centre plane.
 WALL_GUITARS = dict(
     y=(1.45, 0.95, 0.45), bottom=1.72, off_wall=0.10,
-    length=(1.07, 0.99, 0.99), width=(0.43, 0.32, 0.32), hook_from_top=0.18,
+    length=(1.07, 0.977, 0.99), width=(0.43, 0.323, 0.32), hook_from_top=(0.18, 0.180, 0.18),
 )
 
 # The hero camera: the room view the website opens on (room_view, room_view_target,

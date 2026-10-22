@@ -112,3 +112,27 @@ light captures now, the full shoot once at the end.
 `-- --test` renders a handful of half-size frames in a few seconds to check light and framing;
 `-- storm --cams=hero` renders one clip. Output and a NOTE in
 `video-local/footage/2026-10-22-room-shell/`.
+
+## guitar_02, the Woodstock Strat (Phase 4, 2026-10-23)
+
+    /Applications/Blender.app/Contents/MacOS/Blender --factory-startup --python blender/tests/guitar_02_quality.py
+
+`props/guitar_02.py` builds the exact replica from `lib/guitar_specs.py` GUITAR_02 and the
+geometry functions of the approved 2D blueprint (`design/guitar_02_blueprint.py`: outlines,
+neck width, string lines, posts, pickups, the hook contact), so the sheet and the model share
+every number. Parts are built in the spec's millimetres and mapped into the guitar's frame
+(origin at the hook contact, MESHES.md). The headstock is r3, the small style the owner chose,
+traced from the owner's photo; the body outline is r2, corrected against a perspective-rectified
+frontal photo (see video-local/footage/2026-10-23-guitar-02/NOTE.md). The .blend keeps fine-grained `guitar_02_part_*`
+meshes (the build preview lands them one group at a time) and one `guitar_02_strings`;
+`export_rich()` joins the parts into `guitar_02_body` for renders, `export_lite()` builds the
+web model (about 6.7k triangles plus 312 for the strings), packs its UVs and bakes its colours,
+AO, roughness and metal from the same procedural materials into `out/guitar_02_atlas.jpg`
+(1024) and `out/guitar_02_orm.jpg` (512), one material.
+
+The test (stages `build,stills,export,preview` by default; `room` renders the guitar in the
+room from `out/room.blend`) hangs it on a plain wall with the blue-hour light and one warm
+lamp, renders seven Cycles stills, exports `out/guitar_02-rich.glb` and `out/guitar_02-lite.glb`,
+and renders a 7 s EEVEE build preview. Outputs go to `video-local/footage/2026-10-23-guitar-02/`.
+`build.py` builds the same guitar onto its hanger (`guitars_hook_02`, static) under
+`obj_guitars`, in place of its footprint, and puts the lite model in `room.glb`.

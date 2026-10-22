@@ -134,3 +134,7 @@ to the end. -->
 <!-- NOTE 2026-10-23: the "left-handed guitar" that is not mirrored: Hendrix turned a right-handed
 Strat upside down in its own plane, so on a wall it reads right-handed. A museum photo settled it;
 the first outline drawn from memory looked wrong until the real photo was measured. -->
+<!-- NOTE 2026-10-23: the first exact guitar. The model matched the approved drawing to the
+millimetre, and still looked wrong next to the museum photos; the drawing was wrong. A photo
+corrected for perspective on its own fret dots settled the body. The headstock took three tries
+and ended up as the owner's own choice, traced from a photo the owner sent. -->
