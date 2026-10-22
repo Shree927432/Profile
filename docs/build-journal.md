@@ -464,3 +464,49 @@ site or the room. Keep each entry short. No polishing; the post does that.
   as decided". The video plan now asks for five camera angles per build step, eased
   and staggered motion, and build timing read from a beat-grid file, so the footage
   can be re-rendered to the owner's own recording later.
+
+## 2026-10-22, night: the room shell in Blender (Phase 4 Step 1)
+
+- The owner: "start the room shell". Built on Opus (designer agent), headless first, then
+  with Blender's window open for the footage.
+- One command builds the whole room in about 3 s (`blender/build.py`): the floor, walls,
+  ceiling, skirting, the window opening with its Kota-style stone ledge and the door
+  opening at the plan's numbers; the desk with keyboard and mouse; the monitor in the
+  approved style (aluminium frame, black glass front, a stand bent from one plate, leaning
+  back 5 degrees); the approved piano; and a named footprint shape for every other root on
+  the plan, so the shell can be judged whole. Names are checked against MESHES.md before
+  the save and again in the exported GLB.
+- The TOP test passed on the first export: `/?room&glb&uvtest` shows TOP upright and not
+  mirrored, on desktop and phone; with `/?room&glb` the posts are upright, the glide still
+  opens a post (keyboard and a mouse tap), orbit and zoom work, no console errors.
+  `/?room` and `/` are unchanged. The GLB is 521 KB, 12k triangles, behind the flag only.
+- The site now opens the GLB room at `room_view`, the hero camera of the approved sheet.
+  Orbiting the screen's centre from there would have dropped the pendant light out of the
+  top of the frame, so a lens shift keeps `room_view_target` centred at the start and fades
+  out as the camera nears the screen; the close-up and the glide are framed as before.
+- Went wrong on the way, all caught on rendered pictures, not in code review:
+  - the first GLB was 1.1 MB because the keyboard plate's 3 mm bevel was applied to every
+    keycap joined into it; keycaps became their own part, and the web copy drops bevels of
+    2 mm or less and every footprint bevel (521 KB);
+  - procedural colours (oak grain, walnut, stone) arrive white in a GLB; the export now
+    uses each material's mean colour until the bake;
+  - in the browser a black box filled the foreground: the piano stand-in lost its root's
+    turn because the copies made for the static join were re-parented with a stale matrix;
+  - the first storm frames speckled along the back-right corner during a lightning flash:
+    walls that only touched let EEVEE leak light through the seam; the walls, floor and
+    ceiling now overlap inside their thickness, and the flash is aimed into the window;
+  - the top-down camera rendered black: the ceiling's visibility was keyframed by the
+    build, so hiding it per camera did nothing; it is hidden from the camera ray instead;
+  - the night sky material vanished from the saved file (no users); it now has a fake user.
+- Footage: event times come from `blender/video/timing_room_shell.json` (bars and beats on
+  the placeholder Presto grid), five storm cameras and one dawn drift, Cycles stills.
+
+## 2026-10-23, night: the first room-shell footage, and a note on the camera
+
+- The room shell is built and runs in the site behind `?room&glb`; the TOP test passed
+  first time, upright. The approved piano is placed in it.
+- The owner watched the first clip: "camera movement looks very static, there's not
+  camera movement, closeup where needed, no zoom out where need, like a professional
+  grade camera movement". Tonight's clips stay as they are; from the next step every
+  shot is directed (push-ins, reveals, cranes, focus pulls, on the beat), with a shot
+  list and a low-resolution animatic approved before the full render.

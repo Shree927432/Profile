@@ -123,3 +123,8 @@ room to scale, with a rough 3D sketch from the camera the site opens on. The ske
 showed what a plan hides: from the door you only see the back half of the room, so
 everything clickable had to move there, and the ceiling had to be 3 m for the guitars
 to hang clear of the piano's open lid. -->
+<!-- NOTE 2026-10-22: the room shell. One command builds the room in 3 seconds and the
+first export passed the upside-down test: the word TOP on the monitor read upright in
+the browser. The misses were the good part: a black box swallowing the view (a piano
+stand-in that forgot which way it faced), light leaking through wall corners in the
+lightning, a top-down camera that saw only the ceiling. All found by looking at frames. -->

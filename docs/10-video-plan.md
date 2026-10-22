@@ -107,6 +107,30 @@ Animation quality:
 - Cameras move on eased paths with no sudden starts or stops.
 - Clean frames: no text, no counters, no UI. Titles happen in the edit only.
 
+### Camera direction (added 2026-10-23, owner's feedback)
+
+The first room-shell clips were too static: each camera held one slow move. From the
+next build step on, every shot is directed like a professional camera, not parked:
+- **Motivated moves.** The camera does what the moment needs: a push-in to a close-up
+  as a part lands (a hinge, a key, the emblem), a pull-out to reveal the room around
+  it, a crane up or down, a dolly or tracking move alongside, an orbit only where it
+  shows shape. Each shot has a start frame, an end frame and a reason.
+- **Close and wide on purpose.** Alternate scales the way an editor needs them: wide
+  establishing, medium, close, macro detail, then back out. Zoom by moving the camera
+  (dolly) or changing the lens, not by a cheap digital zoom.
+- **Real camera behaviour.** Eased acceleration and deceleration, a slight overshoot
+  and settle at the end of fast moves, lens choices from 18 mm wide to 85 mm and a
+  100 mm macro, depth of field with focus pulls (rack focus) from one part to the next,
+  and a very subtle hand-held drift only where it adds life, off with reduced effort
+  shots.
+- **Moves land on the music.** Moves start and peak on the beat grid of the timing
+  file: a push-in that arrives on an accented chord, a reveal that opens on a bar line.
+- **A shot list first.** Before rendering, each step writes a short shot list (camera,
+  lens, move, what it frames, which beat) and renders a fast, low-quality preview of
+  all the moves cut together (an animatic, a few minutes in EEVEE at low resolution).
+  The owner approves the camera work on that preview; only then the full renders run.
+  Same rule as "2D before 3D": cheap to fix on the preview, expensive after.
+
 ### Built for the Moonlight Sonata edit (added 2026-10-22, owner's reminder)
 
 The final edit is on the Moonlight Sonata, as decided: the storm (3rd movement,
@@ -150,3 +174,21 @@ Tools: Blender (needed for Phase 4 anyway; ask before installing), FFmpeg
   clay, wireframe) and `piano-build.mp4`, a 13 s build sequence from
   `blender/tests/piano_quality.py` (wireframe, clay, lit; keys sweep, fallboard folds
   open, C major chord). Raw material for the piano's accent in the storm section.
+- `video-local/footage/2026-10-22-room-shell/`: the room shell (Phase 4 Step 1). The build
+  sequence (24.5 s with handles) from five cameras in the storm look, `room-shell-hero-storm.mp4`,
+  `-low-`, `-orbit-`, `-top-` and `-detail-` (the monitor landing and lighting up), one dawn
+  drift `room-shell-drift-dawn.mp4`, three Cycles stills (blue hour, clay, wireframe), and
+  the timing file they were rendered from. Everything but the desk, the monitor and the
+  piano is a footprint stand-in; later steps re-render with the real props.
+
+### The timing file (decided by use, 2026-10-22)
+
+`blender/video/timing_room_shell.json`, one per build step. `grid` holds the beat grid:
+`bar_s`, `beats_per_bar`, `accent_every`, and `bars`, which is null for the placeholder
+and becomes the list of bar start times from the owner's MIDI beat map. Each event says
+`bar` and `beat` (1-based, fractional for eighths), a `motion` (`rise`, `drop`, `slide`,
+`unfold`, `grow`, `glow`), its `objects` (a name, or a list of names that move as one),
+and optional `duration_beats`, `stagger_beats` (0.5 = an eighth note), `overshoot`,
+`drop_m`, `offset`. `handles_s` and `tail_bars` frame the shot; `detail` places the close
+camera's moment; `storm_hidden` lists roots kept for the dawn. The script copies the file
+next to the clips it renders.
