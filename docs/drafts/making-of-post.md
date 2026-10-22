@@ -118,3 +118,8 @@ sheet was rasterised into the texture, so what I approved on paper is what sits 
 lacquer; the first lit render came out right. The silver key fronts I had asked for
 looked like a dark metal bar from across the room, so the agent rendered the ivory
 alternative beside it for me to choose. -->
+<!-- NOTE 2026-10-22: the room on paper. Before any wall was built, a plan of the whole
+room to scale, with a rough 3D sketch from the camera the site opens on. The sketch
+showed what a plan hides: from the door you only see the back half of the room, so
+everything clickable had to move there, and the ceiling had to be 3 m for the guitars
+to hang clear of the piano's open lid. -->

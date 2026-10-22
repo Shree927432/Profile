@@ -416,3 +416,36 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - The owner moved off Fable: "now don't use fable", then "you can use other model with
   right effort". Back to the model guide: designer on Opus, builder on Sonnet, quick
   on Haiku.
+
+## 2026-10-22, afternoon: the room on paper (Phase 4 Step 1, designer on Opus)
+
+- Before the room shell is built, a to-scale 2D room plan, as the 2026-10-22 rule
+  asks: `blender/design/room_plan_sheet.py` draws
+  `video-local/footage/2026-10-22-room-plan/room-plan-sheet.png` from new blocks in
+  `blender/lib/constants.py` (ROOM, WINDOW, DOOR, SWITCH, LIGHT, LAYOUT,
+  WALL_GUITARS, HERO). The piano front on the right wall is drawn by the approved
+  piano sheet's own function, so its numbers are not retyped.
+- Proposed room: 440 x 420 cm, 300 cm ceiling. Window over the bed's head on the
+  back wall (east), desk in the middle of the back wall, rack between the desk and
+  the piano, piano on the right wall in the back half, wall guitars above it, door
+  on the left wall by the front corner as in the owner's photo.
+- What drove the numbers, found by trying it, not by guessing: the hero camera stands
+  at the front wall, so only the back wall and the back halves of the side walls are
+  in frame. Everything clickable moved there. The first layouts put the piano and
+  the frames too far forward and they fell out of frame; the wall guitars hang high
+  (the lid opened fully reaches 163.7 cm), so with a 2.85 m ceiling their headstocks
+  were cut. 300 cm ceiling, guitar bottoms in one line at 172 cm.
+- The script checks clearances (desk, rack, piano, bench, bed, door, lid vs guitars)
+  and computes how much of each of the nine objects is in the hero frame; it also
+  renders a flat-shaded perspective sketch from the same numbers, so the composition
+  is judged from a picture, not a description.
+- Went wrong on the way: the centimetre formatter stripped zeros from whole numbers
+  ("44 cm" for 440); the guitar panel was depth-sorted over the guitars on it; the
+  sketch's back-face culling was inverted (the camera frame is left-handed), which hid
+  the monitor's screen and the frame pictures; the ceiling-light check measured the
+  light at the room's centre after it had moved. All seen on the rendered PNG and fixed.
+- Rack question: the hero sketch shows A and B side by side. B has no wall to stand
+  on (the bed's head is left of the desk), so the rack ends up on the rug. Recommended A.
+- Small changes proposed for the owner: cut the nightstand, the ceiling light becomes a
+  pendant 50 cm behind the centre so it is in the hero frame, the bench rests pushed in
+  22 cm so the rack guitars show, the switch on the left wall by the door.

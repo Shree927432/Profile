@@ -3,7 +3,8 @@
 The scripts that build the room. The scripts are the source; `.blend` files and test
 GLBs go to `blender/out/`, which git ignores.
 
-    lib/constants.py     paths, note names, colours, and every piano dimension (PIANO)
+    lib/constants.py     paths, note names, colours, every piano dimension (PIANO), the room
+                         (ROOM, WINDOW, DOOR, LAYOUT, WALL_GUITARS, HERO)
     lib/piano_layout.py  key positions, cheek and console curves, fallboard, lid, sheet
                          (plain Python: the 2D sheet and the 3D builder both use it)
     lib/names.py         name checks against scene/objects/MESHES.md
@@ -16,6 +17,13 @@ GLBs go to `blender/out/`, which git ignores.
     props/               one script per prop: props/obj_piano.py
     tests/               test scenes with renders and exports: tests/piano_quality.py
     out/                 .blend files, GLBs, clip frames (git ignores it)
+
+## Room plan sheet (2D, no Blender)
+
+    python3 blender/design/room_plan_sheet.py
+
+Writes `video-local/footage/2026-10-22-room-plan/room-plan-sheet.{html,png}` from the
+ROOM, LAYOUT and HERO blocks in `lib/constants.py`, and prints a clearance check.
 
 ## Piano design sheet (2D, no Blender)
 

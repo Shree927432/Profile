@@ -106,3 +106,77 @@ FINISHES = {
                    base="#4a2c1a", dark="#2a170d", light="#6b4329",
                    note="walnut veneer under a satin-gloss clear coat"),
 }
+
+
+# ---------------------------------------------------------------------------
+# The room (set_room and where every root stands). Proposed 2026-10-22 on the room
+# plan sheet (blender/design/room_plan_sheet.py); the owner approves the sheet before
+# any of it is modelled. World metres, Blender axes (MESHES.md section 1): origin on the
+# floor at the room's centre, back wall (window, desk) at +Y, viewer at -Y, left wall
+# (bed, frames) at -X, right wall (piano, guitars) at +X, Z up.
+#
+# A large master bedroom in an older Pune flat: 4.40 x 4.20 m (14 ft 5 in x 13 ft 9 in),
+# 3.00 m clear ceiling. Smaller than this and the bed, the desk chair and the piano
+# bench start to collide; the 3 m ceiling is what lets the wall guitars hang clear of
+# the piano's open lid.
+# ---------------------------------------------------------------------------
+ROOM = dict(
+    width=4.40,                 # X, left wall to right wall (inner faces)
+    depth=4.20,                 # Y, front wall to back wall
+    height=3.00,                # floor to ceiling, clear
+    wall_back_t=0.23,           # outer wall with the window (230 mm brick)
+    wall_side_t=0.15,           # inner walls (150 mm block)
+    skirting_h=0.10, skirting_t=0.012,
+)
+RX, RY = ROOM["width"] / 2, ROOM["depth"] / 2   # inner faces at x = +-RX, y = +-RY
+
+# Openings and fittings in the walls.
+WINDOW = dict(              # back wall, over the bed's head; aluminium sliding window, MS grill
+    x0=-1.95, x1=-0.75, sill=1.05, head=2.10,
+    ledge_d=0.15, ledge_t=0.03,     # stone sill ledge inside, the plant stands on it
+)
+DOOR = dict(                # left wall near the front corner, as in the owner's photo
+    wall="left", y0=-2.00, y1=-1.10, head=2.10, leaf_t=0.035,
+    hinge="front",                  # hinged at y0, swings in and lies along the front wall
+)
+SWITCH = dict(wall="left", y=-0.92, z=1.20, w=0.20, h=0.13)   # modular board, latch side
+LIGHT = dict(x=0.10, y=0.50, canopy_d=0.12, drop=0.45, shade_d=0.40, shade_h=0.15)  # pendant over the free floor, bottom at 2.40
+
+# Where each root stands. x, y: the root's origin in the world; yaw: degrees about +Z
+# (counter-clockwise from above), 0 = the object's front faces -Y. Sizes are footprints
+# (w along the object's own X, d along its own Y, h up); the prop sheets refine them.
+LAYOUT = dict(
+    bed=dict(x=-1.475, y=1.10, yaw=0, w=1.45, d=2.00, h=0.55, head_h=1.00),   # head on the back wall
+    bookshelf=dict(x=-2.05, y=-0.35, yaw=90,  w=0.80, d=0.30, h=1.95),
+    rug=dict(x=0.10, y=-0.20, yaw=0, w=1.50, d=2.30, h=0.01),
+    desk=dict(x=0.025, y=1.695, yaw=0, w=1.45, d=0.75, h=0.75, top_t=0.03),   # back edge 3 cm off the wall
+    chair=dict(x=0.05, y=0.92, yaw=165, w=0.66, d=0.66, h=1.02, seat=0.47),
+    monitor=dict(x=0.10, y=1.79, w=0.62, h=0.41, t=0.035, z=1.055),           # body centre; screen 0.56 x 0.35
+    speakers=dict(dx=0.52, y=1.87, w=0.17, d=0.25, h=0.28, pad_h=0.10),       # centres at monitor x -+ dx
+    dj=dict(x=-0.43, y=1.50, w=0.44, d=0.28, h=0.05),
+    interface=dict(x=-0.22, y=1.73, w=0.18, d=0.12, h=0.05),
+    lightstick=dict(x=-0.49, y=1.69, w=0.26, d=0.06, h=0.06),                 # lying along X
+    keyboard=dict(x=0.10, y=1.44, w=0.44, d=0.13),
+    mic=dict(clamp=(0.47, 2.05), elbow=(0.52, 1.93, 1.45), capsule=(0.56, 1.52, 1.16)),
+    plant=dict(x=-0.92, y=RY - 0.08, pot_d=0.14, h=0.38),                     # on the sill ledge
+    rack=dict(x=1.15, y=1.745, yaw=22, w=0.60, d=0.50, h=0.95, slots=3, pitch=0.15, cradle=0.10, lean=15),
+    piano=dict(x=RX - 0.05, y=0.95, yaw=-90, bench_in=0.22),                  # case back 5 cm off the wall; bench rests 22 cm in from BENCH.cy
+    frames=dict(y=(1.21, 1.53, 1.85), z=1.55, w=0.30, h=0.40, t=0.03),       # left wall, front to back
+    panels_guitar=dict(y0=0.10, y1=1.80, z0=1.62, z1=2.86, t=0.05),           # right wall, behind the guitars
+    panels_desk=dict(x=(-0.42, 0.62), w=0.50, z0=1.15, z1=2.15, t=0.05),      # back wall, behind each speaker
+)
+
+# Wall guitars (guitar_01 to _03, right wall, back to front = left to right from the
+# hero view). Bottoms in one line 8 cm above the piano lid opened fully to 90 degrees.
+WALL_GUITARS = dict(
+    y=(1.45, 0.95, 0.45), bottom=1.72, off_wall=0.10,
+    length=(1.07, 0.99, 0.99), width=(0.43, 0.32, 0.32), hook_from_top=0.18,
+)
+
+# The hero camera: the room view the website opens on (room_view, room_view_target,
+# still_cam_home). Standing just inside the front wall, left of centre, as in the
+# owner's photo, looking 30 cm above the screen's centre so the monitor sits in the
+# middle of the frame, a little low; vertical field of view in degrees (about a 22 mm
+# lens on full frame).
+HERO = dict(pos=(-0.70, -2.00, 1.60), target=(0.10, 1.77, 1.35), vfov=50,
+            phone_vfov=70)   # still_cam_phone: same place, aimed at the monitor
