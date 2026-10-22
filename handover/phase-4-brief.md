@@ -1,11 +1,12 @@
 # Phase 4 brief (the room model in Blender)
 
-Last updated: 2026-10-22, 02:00. Planning is done. A quality test of the upright
-piano is done too (2D sheet approved, 3D model, five stills, a build clip; see
-`video-local/footage/2026-10-22-piano-quality-test/` and the 2026-10-22 journal
-entry). The scripts in `blender/` are the start of the real build. Next: the owner
-judges the quality bar and the web-export question (docs/05-decisions.md, open
-questions), then Step 1 below.
+Last updated: 2026-10-22, afternoon. Done and approved: the piano (the quality bar:
+polished black upright with silver tribal ornament, tuning-fork emblem, ivory key
+fronts), the room plan (440 x 420 x 300 cm, layout, hero camera, rack A; numbers in
+blender/lib/constants.py), and the desk designs (Adam A7V-style monitors, thin
+aluminium screen, compact two-deck controller). Next: Step 1 below, the room shell; it
+was briefed and stopped at the owner's request before any file was written. Models:
+designer on Opus, builder on Sonnet, quick on Haiku; no Fable.
 
 ## Context to read first
 
