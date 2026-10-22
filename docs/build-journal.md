@@ -459,3 +459,8 @@ site or the room. Keep each entry short. No polishing; the post does that.
   options each. The owner: "use adam audio studio monitors, which model you are
   choosing let me know, for rest you can use recommended options". Chosen: the A7V
   style, the thin aluminium monitor, the compact two-deck controller.
+- Before the room shell, the owner asked for footage "from multiple camera angle and
+  with better animation" and reminded that the "final edit will be on moonlight sonata
+  as decided". The video plan now asks for five camera angles per build step, eased
+  and staggered motion, and build timing read from a beat-grid file, so the footage
+  can be re-rendered to the owner's own recording later.

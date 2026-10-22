@@ -89,6 +89,44 @@ needs a reshoot of the process.
   `video-local/scripts/capture.mjs`.
 - A one-line note per folder: what changed, which commit.
 
+### Multiple cameras and better animation (added 2026-10-22, owner's request)
+
+Every build step from the room shell on renders its build sequence from several
+cameras, so the final edit can cut between angles instead of holding one shot:
+- **Hero:** the room_view the site opens on, a slow push-in.
+- **Low wide:** near the floor, wide lens, looking up at the part as it lands.
+- **Orbit:** a slow arc of 60 to 90 degrees around the part being built.
+- **Detail:** a close macro with shallow depth of field on one moment (a key, a
+  hinge, the emblem, a pad lighting up).
+- **Top-down:** for the room shell and the floor plan becoming the room.
+All cameras watch the same animation, so the angles match and can be cut together.
+
+Animation quality:
+- Parts land with eased motion: a drop or slide-in with a small overshoot and settle,
+  staggered so groups ripple rather than pop together. Nothing appears in one frame.
+- Cameras move on eased paths with no sudden starts or stops.
+- Clean frames: no text, no counters, no UI. Titles happen in the edit only.
+
+### Built for the Moonlight Sonata edit (added 2026-10-22, owner's reminder)
+
+The final edit is on the Moonlight Sonata, as decided: the storm (3rd movement,
+Presto agitato) builds the room, then dawn (1st movement) shows it finished. So the
+footage is made to be cut to music:
+- **Timing from a table, not baked in.** Each build script reads its event times
+  (when each part lands) from a small timing file. Until the owner's recording
+  exists, the times follow a placeholder beat grid at the Presto's usual tempo (a
+  bar about 1.5 s, the accented chords every second bar); later the real MIDI beat
+  map replaces the file and the same scripts re-render in time with the playing.
+- **Every landing on a beat.** The main parts land on the accented chords; small parts
+  ripple on the eighth notes in between. The keys sweep like the arpeggios.
+- **Handles.** Each shot starts 1 s early and ends 1 s late, so the editor can trim to
+  the music.
+- **Two looks per shot.** Storm footage in the night lighting (the building); dawn
+  footage in blue hour turning to sunrise (the finished room, slow camera moves, no
+  building), for the 1st movement.
+- **30 fps, 1920x1080, one file per camera per step,** named
+  `<step>-<camera>-<look>.mp4`, plus the timing file used.
+
 ## How it gets made
 
 1. Owner records both excerpts (MIDI plus audio).

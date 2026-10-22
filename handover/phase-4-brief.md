@@ -41,6 +41,11 @@ designer on Opus, builder on Sonnet, quick on Haiku; no Fable.
 
 ## Step 1: room shell, desk, monitor, and the TOP test (next)
 
+From this step on, footage follows docs/10-video-plan.md, sections "Multiple cameras
+and better animation" and "Built for the Moonlight Sonata edit": several camera angles,
+eased and staggered animation, event times read from a timing file on the placeholder
+Presto beat grid, 1 s handles, storm and dawn looks.
+
 Agent: designer (Opus, high). Goal: prove Blender to website end to end with the
 smallest real slice of the room.
 
