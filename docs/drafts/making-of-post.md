@@ -138,3 +138,11 @@ the first outline drawn from memory looked wrong until the real photo was measur
 millimetre, and still looked wrong next to the museum photos; the drawing was wrong. A photo
 corrected for perspective on its own fret dots settled the body. The headstock took three tries
 and ended up as the owner's own choice, traced from a photo the owner sent. -->
+
+<!-- NOTE 2026-10-23: Number One overnight. The owner saw "little bit off" on a body that matched its photo to the
+millimetre; the photo itself was bent (a retail shot, barrel lens). A second photo of the real guitar disagreed by
+4.6%, and one lens term made both agree. Measuring a photo you cannot trust needs a second one. -->
+<!-- NOTE 2026-10-23: the AI lab was chosen as a shopping list before any modelling: a front
+view of the two walls, 22 real products matched to my two photos (white monitors, a glass PC
+with the GPU on show, an L desk on drawers), a photo sheet to approve, and no logos on any of
+them. -->

@@ -584,3 +584,56 @@ site or the room. Keep each entry short. No polishing; the post does that.
   engineer". Then two photos of a white L-shaped tech desk: "we can remove the bed and
   table and turn the other half into this". The room becomes half music studio, half AI
   lab. A new room plan sheet comes first.
+
+## 2026-10-23, 03:20 to 04:50: Number One overnight, then guitar_02's guard
+
+- `guitar_04`, Stevie Ray Vaughan's "Number One", built overnight without a prior blueprint approval
+  (decision of the evening). Blueprint and 3D together: `guitar_04.py` runs guitar_02's Strat builders
+  under guitar_04's names and spec (`lib/variant.py`), so guitar_02.py was not touched; its own pieces
+  are the worn sunburst (traced wear map plus noise, shared with the blueprint by `lib/guitar_wear.py`),
+  rosewood and clay dots, gold hardware, pearl tuner buttons, the jack, the bridge and the arm. Stands in
+  rack slot 1, pivot at the body's lowest point at the 15 degree lean, neck on the top bar at the 3rd fret.
+  First stills 03:38, room 03:51; rich 3.7 MB / 126k, lite 644 KB / 7.1k triangles.
+- Owner's review of the first compare, in three messages: "head stock is correct but body outline is
+  little bit off", "even pickups of guitar are little off", "bridge is different of this guitar plus jack
+  input is not right". The first photo fit had used guitar_02's pickup places and strap buttons as fit
+  points, so it could not have found them wrong. Refit with the bridge row and pickups free (0.52 px rms):
+  pickups 3 to 7 mm and the bridge 5 to 7 mm towards the tail of guitar_02's places, and a traced body of
+  its own. Rebuilt; the coordinator committed it (76a6b45).
+- Then the check on a second photo (the real guitar, n1-4) put the trace 6.6 mm inside it, 4.6% apart.
+  Photo or guitar? One radial lens term on owner-ref-11 dropped the residual from 3.65 to 1.27 px, made the
+  body 322.6 mm wide (a Strat's) and made the approved headstock fit too (25 -> 4 mm): the retail photo is
+  barrel-distorted about 3% at its edges. n1-4 shows no distortion. Everything re-measured in the lens-
+  corrected frame, rebuilt (997c140): body median 0.0 mm, 95% within 0.6 against owner-ref-11; 4 mm inside
+  n1-4 (1.9%, within that photo's dark-edge segmentation). Rich 3.9 MB / 132k, lite 650 KB / 7.3k triangles.
+- Owner: "you can change position of tremolo arm": the arm rests across the lower bout (it would hang
+  into the rack's cradle as displayed). "you can fix the strat if you want": guitar_02 r4. On the real 1968
+  guitar's close-up its r1 guard was about 50 mm too wide on the bass side at the waist and the knob line
+  10 to 32 mm off; the frontal 1970 Strat put its pickups 4 to 7 mm too far up, agreeing with Number One's
+  places. Guard, screws, knobs and pickups fixed; body, headstock, bridge, switch left (the bridge is about
+  7 mm off and the switch about 17 mm by the same photos: for the owner). Rich 3.6 MB, lite 579 KB.
+  `room.glb` 1,745 KB with both; `/?room&glb` loads with no console errors on desktop and phone, posts and
+  glide work, `npm run build` passes.
+- Went wrong: a misread grid put the bridge screws 3 to 7 px off (found when the bridge row came out of the
+  fit 2 mm off); a re-aimed hero cut off the headstock; the rack close-up first rendered black (camera
+  inside the piano) and then mostly piano bench; one windowed Blender run printed 6,833 "Python context
+  internal state bug" lines without harming the renders. The first wood read grey-violet under the dawn
+  light: warmer colours, rougher, lower specular.
+
+## 2026-10-23, 03:30 to 04:50: the AI lab on paper, piece by piece
+
+- Asked for "the exact ai lab and same models for each components of it", I drew a rough
+  front-facing layout of the two walls from the owner's photos, with each component
+  numbered. The brands in the photos could not all be read for sure; the drawing said so.
+- The owner chose white studio monitors ("can use white version of adam aduio studio
+  montiors") and asked whether to place them as in the photo or as in the old layout. The
+  photo was right: on short stands, tweeters at ear height, turned in. My first drawing had
+  them on flat pads, too low. Checking the photos showed the white A7V is a real limited
+  edition, so nothing had to be invented.
+- "i want to know model of each component": a list of 22, then "can show the images as
+  well": a local photo sheet of Bing thumbnails, 112 images, nothing downloaded. One swap
+  came from checking: the white Stream Deck I could confirm is the MK.2, not the +.
+- The L desk: three options drawn to scale (one-piece top, two butted IKEA tops, an L
+  standing desk). Owner: "okay go with option A". Then: "okay then list has been aproved".
+- Miss: the first front layout put the speakers on pads at desk height, and the window
+  still sits at its old place in `constants.py`; both are fixed on the new room plan sheet.
