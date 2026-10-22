@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.join(C.BLENDER_DIR, "design"))
 import room_plan_sheet as PLAN  # noqa: E402
 
 L, WG, WIN, H = C.LAYOUT, C.WALL_GUITARS, C.WINDOW, C.ROOM["height"]
-MODELLED = {"guitar_02"}        # built by its own prop script (props/guitar_02.py) with its hanger
+MODELLED = {"guitar_02", "guitar_04"}   # built by their own prop scripts (props/guitar_02.py, guitar_04.py)
 RX, RY = C.RX, C.RY
 TOP = L["desk"]["h"]
 ROOTS = []                      # (root name, [part objects]) in build order
@@ -322,6 +322,8 @@ def build_guitars():
     parts.append(rack)
     rcols = ["#c0762a", "#ece8dc", "#a98aa9"]
     for i, (g, sl) in enumerate(zip(gs, slots)):
+        if g["name"] in MODELLED:
+            continue
         o = _guitar(f"guitars_footprint_{i + 4:02d}", g["length"], g["width"], 0.05, rcols[i], kw)
         # in the rack's X-Z plane at its slot (face along the rack's length), bottom on the
         # cradle, leaning toward +X about the rack's Y, then the rack's yaw (as the sheet draws it)

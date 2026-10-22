@@ -18,6 +18,8 @@ What is built (Phase 4 Step 1, the room shell):
   guitar_02    props/guitar_02.py    the Woodstock Strat on its hanger under obj_guitars; the
                                      .blend has the rich model, the GLB its lite web model
                                      (about 6k triangles, one baked atlas)
+  guitar_04    props/guitar_04.py    Number One in rack slot 1 (guitar_02's Strat builders under
+                                     guitar_04's spec); rich in the .blend, lite in the GLB
   the rest     props/footprints.py   named footprint shapes for every other root on the plan
 Lights, the sky plane and the review cameras (lib/looks.py) are Blender only.
 """
@@ -32,7 +34,7 @@ import bpy
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from lib import constants as C, geo, looks, materials as M, names, run  # noqa: E402
-from props import footprints, guitar_02, obj_monitor, obj_piano, set_desk, set_room  # noqa: E402
+from props import footprints, guitar_02, guitar_04, obj_monitor, obj_piano, set_desk, set_room  # noqa: E402
 
 ARGS = run.args()
 STAGE = next((a for a in ARGS if not a.startswith("--")), "build,export")
@@ -46,12 +48,12 @@ T0 = time.time()
 # Roots in the GLB, in build order. obj_piano stays out (a stand-in goes in its place).
 EXPORT_ROOTS = ["set_room", "set_desk", "obj_monitor"]
 KEEP = {"monitor_body", "monitor_screen", "monitor_static",      # code-touched or already the static
-        "guitar_02_body", "guitar_02_strings"}
+        "guitar_02_body", "guitar_02_strings", "guitar_04_body", "guitar_04_strings"}
 
 
 def skipped(o):
-    """The rich guitar_02 stays in the .blend; its lite copy goes in the GLB."""
-    return o.name.startswith("guitar_02_part_") or o.name.endswith("_rich")
+    """The rich guitars stay in the .blend; their lite copies go in the GLB."""
+    return o.name.startswith(("guitar_02_part_", "guitar_04_part_")) or o.name.endswith("_rich")
 
 
 def clear_scene():
@@ -122,6 +124,15 @@ def stage_build():
     guitar_02.build_hanger(g2, bpy.data.collections["obj_guitars"], parent=og)
     run.log("build: guitar_02 on its hanger")
     yield
+    gen = guitar_04.build_steps(parent=og, collection=bpy.data.collections["obj_guitars"])
+    try:
+        while True:
+            run.log(f"build: guitar_04 {next(gen)}")
+            yield
+    except StopIteration as s:
+        REPORT["guitar_04_rack"] = guitar_04.place_in_rack(s.value, slot=0)
+    run.log(f"build: guitar_04 in rack slot 1 ({REPORT['guitar_04_rack']})")
+    yield
     looks.build_lights()
     review_cameras()
     scene.camera = bpy.data.objects["still_cam_home"]
@@ -138,7 +149,7 @@ def check_names():
     objs = bpy.data.objects
     out = {"set_room": names.check_set(objs["set_room"]), "set_desk": names.check_set(objs["set_desk"]),
            "obj_monitor": names.check_export(objs["obj_monitor"]),
-           "guitar_02": guitar_02.check(objs["guitar_02"])}
+           "guitar_02": guitar_02.check(objs["guitar_02"]), "guitar_04": guitar_04.check(objs["guitar_04"])}
     export, undo = obj_piano.export_prep(objs["obj_piano"])
     try:
         out["obj_piano"] = names.check_export(objs["obj_piano"], multi_material_ok=("piano_static",))
@@ -259,6 +270,10 @@ def stage_export():
     lite_objs, undo_lite, lite_info = guitar_02.export_lite(bpy.data.objects["guitar_02"])
     REPORT["guitar_02_lite"] = lite_info
     yield
+    run.log("export: guitar_04 web model (lite parts, baked atlas)")
+    lite4, undo_lite4, lite_info4 = guitar_04.export_lite(bpy.data.objects["guitar_04"])
+    REPORT["guitar_04_lite"] = lite_info4
+    yield
     run.log("export: joining static parts")
     temp = []
     roots = EXPORT_ROOTS + [n for n, _ in footprints.ROOTS] if footprints.ROOTS else None
@@ -286,6 +301,7 @@ def stage_export():
     except TypeError:
         bpy.ops.export_scene.gltf(**kw)
     undo_web()
+    undo_lite4()
     undo_lite()
     gone = {c.name for o in temp for c in [o] + names.descendants(o)}
     for n in gone:
@@ -316,7 +332,8 @@ def check_glb(path, st):
     nodes = {n.get("name"): n for n in doc["nodes"]}
     need = ["set_room", "room_view", "room_view_target", "obj_monitor", "monitor_body", "monitor_screen",
             "monitor_static", "monitor_view", "monitor_view_target", "set_desk", "desk_static", "room_static",
-            "obj_guitars", "guitar_02", "guitar_02_body", "guitar_02_strings", "guitars_static"]
+            "obj_guitars", "guitar_02", "guitar_02_body", "guitar_02_strings", "guitar_04", "guitar_04_body",
+            "guitar_04_strings", "guitars_static"]
     missing = [n for n in need if n not in nodes]
     bad = [n for n in nodes if not names.NAME_RE.match(n or "")]
     leaked = [n for n in nodes if n.startswith(("lt_", "video_", "still_", "bake_"))]
@@ -335,9 +352,17 @@ def check_glb(path, st):
                    guitar_02_textured="baseColorTexture" in gm.get("pbrMetallicRoughness", {}),
                    guitar_02=nodes["guitar_02"].get("translation"),
                    guitar_02_strings_origin=nodes["guitar_02_strings"].get("translation"))
+        gb4 = doc["meshes"][nodes["guitar_04_body"]["mesh"]]["primitives"]
+        gs4 = doc["meshes"][nodes["guitar_04_strings"]["mesh"]]["primitives"]
+        gm4 = doc["materials"][gb4[0]["material"]]
+        res.update(guitar_04_body_primitives=len(gb4), guitar_04_strings_primitives=len(gs4),
+                   guitar_04_textured="baseColorTexture" in gm4.get("pbrMetallicRoughness", {}),
+                   guitar_04=nodes["guitar_04"].get("translation"), guitar_04_rotation=nodes["guitar_04"].get("rotation"))
     ok = not missing and not bad and not leaked and len(scr) == 1 and res["screen_has_uv"] and res["screen_textured"]
     ok = ok and res.get("guitar_02_body_primitives") == 1 and res.get("guitar_02_strings_primitives") == 1 \
         and res.get("guitar_02_textured")
+    ok = ok and res.get("guitar_04_body_primitives") == 1 and res.get("guitar_04_strings_primitives") == 1 \
+        and res.get("guitar_04_textured")
     res["ok"] = ok
     if not ok:
         raise AssertionError(f"GLB check failed: {res}")
