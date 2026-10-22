@@ -162,7 +162,7 @@ def build_cameras():
     body = W(-105, 205, 0)
     head = W(-6, VN + 100, 0)
     cams = dict(
-        hero=looks.camera("still_cam_hero", (-0.95, -2.2, 0.82), tuple(mid + Vector((0.02, 0, -0.02))), lens=42, coll=coll),
+        hero=looks.camera("still_cam_hero", (-0.92, -2.25, 0.78), tuple(mid + Vector((0.0, 0, 0.0))), lens=44, coll=coll),
         front=looks.camera("still_cam_front", tuple(mid + nrm * 2.25), tuple(mid), lens=40, coll=coll),
         body=looks.camera("still_cam_body", tuple(body + Vector((-0.38, -0.50, 0.08))), tuple(body), lens=55,
                           fstop=4.0, coll=coll),
