@@ -34,6 +34,14 @@ GLBs go to `blender/out/`, which git ignores.
 Writes `video-local/footage/2026-10-22-room-plan/room-plan-sheet.{html,png}` from the
 ROOM, LAYOUT and HERO blocks in `lib/constants.py`, and prints a clearance check.
 
+## Room plan v2 sheet (proposal, not approved)
+
+    /Applications/Blender.app/Contents/MacOS/Blender --factory-startup --python blender/design/room_plan_v2_blockout.py
+    python3 blender/design/room_plan_v2_sheet.py
+
+Both read `lib/plan_v2.py` only (nothing in build.py reads it). Output in
+`video-local/footage/2026-10-23-room-plan-v2/`.
+
 ## Piano design sheet (2D, no Blender)
 
     python3 blender/design/piano_design_sheet.py

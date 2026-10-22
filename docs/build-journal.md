@@ -637,3 +637,20 @@ site or the room. Keep each entry short. No polishing; the post does that.
   standing desk). Owner: "okay go with option A". Then: "okay then list has been aproved".
 - Miss: the first front layout put the speakers on pads at desk height, and the window
   still sits at its old place in `constants.py`; both are fixed on the new room plan sheet.
+
+## 2026-10-23, 05:00 to 05:30: the room plan v2, half studio, half AI lab
+
+- Owner: "Draw the room plan sheet tonight after Number One and the Strat fix, then shut down.
+  I'll review it all in the morning." The designer (Opus) drew it from a new
+  `blender/lib/plan_v2.py`; nothing the current build reads was changed. Sheet, blockout from
+  the hero camera and a phone view in `video-local/footage/2026-10-23-room-plan-v2/`. Not yet
+  approved.
+- Numbers: window centred (x -60 to +60); L desk 155 x 80 plus a 180 x 60 return; screens on
+  one pole, the 27-inch on top carries the posts (16:10 inside the glass, so the posts code does
+  not change), the 34-inch the training dashboard; the wall guitars' bottoms 8 cm above the open
+  lid, the double-neck 18 cm under the ceiling; walkways 120 cm or more; ten interactive
+  objects, exactly the limit, with a new `obj_rig` (needs the owner's OK to change MESHES.md).
+- Went wrong, all found in the first blockout render: the wall guitars' heads cut off at the top,
+  the DJ decks hidden behind the chair, every left-wall item facing the wall, the rack's
+  footprint through the back wall and the bench, the rack's guitars in reverse order, a key
+  light through the wall. Not fixed: the chair zone overlaps the rug by about 10 cm.
