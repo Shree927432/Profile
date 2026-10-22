@@ -149,25 +149,35 @@ GUITAR_02 = dict(
     # pickups: three single coils, white covers, staggered poles as built (not turned)
     pickup=dict(l=83.0, w=18.5, pole_d=4.9, pole_spread=52.4, screw_off=38.5),   # r2: screws through
                                                                                    # the cover ends, 77 apart
-    pickups_from_scale=(162.0, 102.0, 48.0),             # neck, middle, bridge centre, mm (photo)
+    pickups_from_scale=(157.7, 98.2, 41.6),              # neck, middle, bridge centre from the scale line, mm. r4: the
+                                                         # 1970 Strat photo (dots, screws, rows free: 295.6, 236.6, 179.1
+                                                         # from v 0, +-1.3 to 2.8) and Number One's two photos (296.7 /
+                                                         # 295.6, 236.0 / 237.0, 179.6 / 181.1) agree; the mean of the three.
+                                                         # r1 was (162, 102, 48), from the MoPOP photo by eye
     bridge_slant_deg=10.0,                               # treble (right) end towards the bridge
     pickup_top_z=(8.0, 7.5, 7.0),
 
-    # pickguard: 3-ply white/black/white, about 2.3 thick, 30 degree bevel, 11 screws
+    # pickguard: 3-ply white/black/white, about 2.3 thick, 30 degree bevel, 11 screws.
+    # r4 (2026-10-23 night, the owner: "you can fix the strat"): measured on the real guitar's close-up
+    # (photo 2 of docs/moodboard/local/hendrix-strat-photos.jpg, a full homography on the 18 poles, 6 pickup
+    # screws and 6 bridge screws, 1.33 px rms) and checked on the frontal 1970 Strat. The r1 guard was about
+    # 35 mm too wide on the bass side and its screws and knob line did not match either photo. The bridge cut
+    # is drawn round this guitar's bridge plate (front at v 158.0). Scripts: video-local/footage/
+    # 2026-10-23-guitar-04/measure/g02_*.py; numbers in video-local/footage/2026-10-23-guitar-02/NOTE.md.
     guard_t=2.3,
     pickguard=[
-        (-29, 362), (-40, 366), (-55, 367), (-70, 362), (-86, 350), (-96, 330), (-101, 300),
-        (-101, 270), (-96, 245), (-84, 226), (-68, 210), (-57, 188), (-48, 170), (-42, 163.5),
-        (-39.5, 162), (39.5, 162), (42, 158.5), (44, 140), (50, 118), (62, 98), (80, 85),
-        (100, 81), (116, 86), (125, 104), (126, 130), (122, 165), (115, 200), (107, 235),
-        (104, 262), (108, 290), (113, 314), (105, 328), (88, 334), (70, 330.5), (55, 326.5),
-        (40, 325.5), (28, 326)],
+        (-32.2, 354.2), (-54.8, 358.8), (-57, 347.4), (-52.9, 320.6), (-51.2, 293.4), (-50.9, 270.4),
+        (-56.1, 248.4), (-64.3, 227.3), (-69.3, 205), (-69.4, 180.7), (-64.5, 158.6), (-54.6, 145.3),
+        (-40.7, 140.5), (-39.5, 141.5), (-39, 160), (39, 160), (39.5, 141.5), (49.6, 141.6), (82.8, 133.2),
+        (114.4, 116.3), (135.4, 95.3), (142.1, 108.7), (138, 135.7), (131.9, 168.8), (120, 208.3), (110.5,
+        239.7), (111.2, 273.2), (117.5, 302.2), (123.9, 336.3), (123.2, 368), (115.1, 382.9), (103.6,
+        364.8), (92, 335.3), (73.7, 320), (53.2, 319.6), (34, 326.4), (26.4, 330)],
     guard_screws=[
-        (-53, 361), (-89, 333), (-95, 262), (-76, 222), (-47, 174), (50, 135),
-        (92, 89), (119, 110), (114, 195), (103, 300), (48, 320)],
+        (-49.7, 351.2), (32.1, 319.4), (116.7, 370.4), (109.2, 308.5), (-51.6, 247.6), (101, 212.2), (108.2,
+        178.5), (122.6, 162.1), (-66.7, 198), (-50.2, 147.3), (40.9, 145.6)],
 
     # controls (1968): master volume, neck tone, middle tone, 3-way blade switch
-    knobs=[("volume", 64, 170), ("tone, neck", 83.5, 136), ("tone, middle", 103, 102)],
+    knobs=[("volume", 54.1, 165.7), ("tone, neck", 92.9, 150.4), ("tone, middle", 127.1, 122.4)],   # r4, measured (r1: 64/170, 83.5/136, 103/102)
     knob=dict(d=24.5, top_d=20.0, h=16.0, above_guard=3.0),
     switch=dict(u=68, v=208, slot_l=22.0, slot_w=3.5, angle_deg=-60.0, tip_l=14.0, tip_w=8.0),
 

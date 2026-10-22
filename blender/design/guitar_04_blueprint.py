@@ -346,8 +346,9 @@ def build():
     rx, rw = 1820, 740
     panel(rx, top_y, rw, 1180, "3 · What differs from guitar_02", "Shared with guitar_02: contours, headstock r3, "
           "posts, neck heel")
-    rows = [("body outline", "r2, photo-measured", "its own, traced from ref 11 (313 wide)"),
-            ("pickups", "162 / 102 / 48 from the scale", "measured: 158.8 / 99.3 / 44.9, 9.9 deg"),
+    pk_ = G["pickups_from_scale"]
+    rows = [("body outline", "r2, photo-measured", f"its own, traced from ref 11 ({mm(BODY_W, 0)} wide)"),
+            ("pickups", "162 / 102 / 48 from the scale", f"measured: {pk_[0]} / {pk_[1]} / {pk_[2]}, {G['bridge_slant_deg']} deg"),
             ("strings", "Hendrix's reversed (thin E left)", "right-handed, low E left; .013 to .058"),
             ("string tree", "on A and low E", "on B and high E (same place)"),
             ("fingerboard", "maple cap, black dots", "rosewood, clay dots"),
@@ -357,7 +358,7 @@ def build():
             ("pickups, knobs", "white", "aged cream"),
             ("knob layout", "the 1968 sheet's", "measured: 55/174, 94/154, 126/126"),
             ("switch", "3-way", "5-way, tip at the neck end"),
-            ("bridge, saddles", "chrome, nickel; 42 plate", "gold, left-handed; 72 x 38.8 plate, long saddles"),
+            ("bridge, saddles", "chrome, nickel; 74 x 42 plate", f"gold, left-handed; {mm(G['bridge']['w'])} x {mm(G['bridge']['l'])} plate, 5 mm nearer the tail"),
             ("tremolo arm", "treble side, across", "bass side, across the lower bout"),
             ("jack", "football in a dish", "long oval gold plate, 55 deg, the cup low"),
             ("strap buttons", "3, chrome", "2, gold"),
@@ -437,15 +438,16 @@ def build():
     panel(40, r3, 2520, H_PX - r3 - 30, "9 · For the morning review")
     notes = [
         "Not approved before 3D (decision 2026-10-23, overnight): this sheet and the model were made together.",
-        "Measured on owner-ref-11 (a Custom Shop copy made from the real guitar), rectified by fit 6 (0.52 px rms, "
-        "on the neck, the bridge screws and the poles; nothing on the body assumed): the body outline, pickups, "
+        "Measured on owner-ref-11 (a Custom Shop copy made from the real guitar), rectified by fit 8 (a homography and "
+        "one radial lens term, 1.27 px rms, on the neck, bridge screws, poles and the r3 posts; nothing on the body "
+        "assumed; the photo is barrel-distorted about 3% at its edges): the body outline, pickups, "
         "bridge, guard, its 9 screws, knobs, switch, jack, arm socket and the wear map. The headstock is guitar_02's "
         "r3 (approved). Checked on the real guitar (n1-4): see guitar-04-compare.png and NOTE.md.",
         "The arm: his left-handed tremolo puts the socket on the bass end of the plate. Displayed, the real guitar's "
         "arm hangs below the tail; in the rack that would hit the cradle, so it rests across the lower bout as in "
         "its case photo (ref 13). Approved by the owner overnight (\"you can change position of tremolo arm\").",
         "Found while measuring: guitar_02's pickguard is about 25 mm too wide on the bass side and its knob line "
-        "is steeper than the photos (both photos agree). The owner asked for it to be fixed after this guitar.",
+        "is steeper than the photos (both photos agree). Fixed after this guitar (guitar_02 r4), with its pickups.",
     ]
     y = r3 + 70
     for n_ in notes:
