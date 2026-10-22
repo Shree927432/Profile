@@ -84,17 +84,21 @@ studio monitors and the lightstick count as one object, the studio desk.
 ## The instruments and their eras (decided 2026-10-21)
 
 Guitars, as a timeline: the wall left to right (1 to 3), then the floor rack beside
-the desk left to right (4 to 6). Each guitar is modelled in the style of
-one player's famous instrument, without logos, brand names or trademarked graphics.
+the desk left to right (4 to 6). Each guitar is modelled on
+one player's famous instrument, without logos, brand names or signature graphics.
 
 | # | Era | After | Style |
 |---|---|---|---|
-| 1 | Jazz, 1950s and 60s | Wes Montgomery | Sunburst archtop, f-holes, one pickup |
-| 2 | Rock, 1960s | Jimi Hendrix | White Strat-style, flipped and played left-handed |
-| 3 | Blues rock, 1980s | Stevie Ray Vaughan | Sunburst Strat-style worn to bare wood, black pickguard |
-| 4 | Hard rock, late 1980s | Slash | Single-cut, flame-maple top in amber sunburst |
-| 5 | Metal, late 1980s | James Hetfield (Metallica) | Off-white Explorer-style |
-| 6 | Now, 2020s | Tim Henson (Polyphia) | Slim modern electric in mauve, tree inlay |
+| 1 | Blues, 1950s | B.B. King | "Lucille": black semi-hollow, gold hardware |
+| 2 | Rock, 1969 | Jimi Hendrix | The Woodstock Strat, Olympic White, small headstock by the owner's choice |
+| 3 | Hard rock, 1970s | Jimmy Page (Led Zeppelin) | Cherry double-neck, 12-string over 6-string |
+| 4 | Blues rock, 1980s | Stevie Ray Vaughan | "Number One": sunburst Strat worn to bare wood, black pickguard |
+| 5 | Metal, late 1980s | James Hetfield (Metallica) | Off-white Explorer |
+| 6 | Now, 2020s | Tim Henson (Polyphia) | TOD10 modern electric in mauve |
+
+Changed 2026-10-23 (owner): from Wes Montgomery, Hendrix, Vaughan, Slash, Hetfield,
+Henson to one guitar per style, a decade apart. Since 2026-10-23 the guitars are exact
+replicas in shape, hardware and finish, without logos, names or signature graphics.
 
 Piano: Baroque, Classical and Romantic pieces (the list is chosen later; for
 example Bach's Prelude in C, Mozart's K. 545, Beethoven's Für Elise and Moonlight
