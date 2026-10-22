@@ -3,8 +3,14 @@
 The scripts that build the room. The scripts are the source; `.blend` files and test
 GLBs go to `blender/out/`, which git ignores.
 
+    build.py             THE ROOM: builds everything from scratch, checks names, saves
+                         out/room.blend, exports scene/assets/room.glb (see below)
     lib/constants.py     paths, note names, colours, every piano dimension (PIANO), the room
                          (ROOM, WINDOW, DOOR, LAYOUT, WALL_GUITARS, HERO)
+    lib/run.py           the windowed, timer-driven run pattern (drive, render_to, log), render setup,
+                         GLB stats
+    lib/looks.py         lights (lt_*), the sky plane, the dawn and night looks, clay and wireframe,
+                         cameras with a look-at
     lib/piano_layout.py  key positions, cheek and console curves, fallboard, lid, sheet
                          (plain Python: the 2D sheet and the 3D builder both use it)
     lib/names.py         name checks against scene/objects/MESHES.md
@@ -14,7 +20,10 @@ GLBs go to `blender/out/`, which git ignores.
     lib/piano_ornament.py the tribal ornament: stroke engine, motifs, emblems, placements,
                          the silver-mask rasteriser and the UV mapper (sheet and model share it)
     design/              2D design sheets drawn from the same constants
-    props/               one script per prop: props/obj_piano.py
+    props/               one script per prop: obj_piano.py, set_room.py, set_desk.py, obj_monitor.py;
+                         footprints.py holds the named stand-ins for every root not modelled yet
+    video/               footage scripts and their timing files (room_shell.py,
+                         timing_room_shell.json)
     tests/               test scenes with renders and exports: tests/piano_quality.py
     out/                 .blend files, GLBs, clip frames (git ignores it)
 
@@ -72,3 +81,34 @@ root, names and pivots from scene/objects/MESHES.md, dimensions from `lib/consta
 the layout maths shared with the 2D sheet in `lib/piano_layout.py`. Static parts stay
 separate in the .blend (the clip builds them one by one); `export_prep()` joins copies
 of them into `piano_static` for the GLB and removes the join afterwards.
+
+## The room (Phase 4 Step 1, 2026-10-22): one rebuild command
+
+    /Applications/Blender.app/Contents/MacOS/Blender --factory-startup --python blender/build.py
+
+About 3 s. Blender opens with its window (add `-b` after `Blender` for headless; add `-- build`
+or `-- export` for one stage, `--stay` to keep the window open). It builds `set_room`,
+`set_desk`, `obj_monitor` (with the TOP test texture on `monitor_screen`), the approved
+`obj_piano`, and named footprints for every other root on the room plan; checks the names
+against `scene/objects/MESHES.md`; saves `out/room.blend`; then exports
+`scene/assets/room.glb`: each root's static parts joined into `<word>_static`, bevels of 2 mm
+or less and all footprint bevels off, procedural colours flattened to their mean (the bake
+replaces both later), the piano as a black stand-in box (its web export is an open question),
+and checks the GLB (names, `room_view`, a textured one-primitive screen). Report:
+`out/room-build-report.json`.
+
+The site loads it only behind a flag: `/?room&glb` (and `&uvtest` to keep the TOP texture).
+
+## Room shell footage
+
+    /Applications/Blender.app/Contents/MacOS/Blender --factory-startup --python blender/video/room_shell.py
+
+Opens `out/room.blend`, renders three Cycles stills from the hero camera, keys the build from
+`video/timing_room_shell.json` (bars and beats on the placeholder Presto grid; put the MIDI
+beat map's bar times in `grid.bars` and rerun), renders it from five cameras in the storm look
+and one dawn drift, encodes each to MP4 and deletes its frames. About two hours at
+about 2 s a frame; the owner stopped it after the hero clip (2026-10-22): per step only
+light captures now, the full shoot once at the end.
+`-- --test` renders a handful of half-size frames in a few seconds to check light and framing;
+`-- storm --cams=hero` renders one clip. Output and a NOTE in
+`video-local/footage/2026-10-22-room-shell/`.

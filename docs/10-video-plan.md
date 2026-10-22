@@ -105,6 +105,10 @@ needs a reshoot of the process.
 
 ### Multiple cameras and better animation (added 2026-10-22, owner's request)
 
+Changed 2026-10-22 night, after the room shell's first clip: each build step keeps only
+light process captures (a few stills, one quick low-resolution build preview); the
+directed, multi-camera, music-timed shoot below happens once, at the end.
+
 Every build step from the room shell on renders its build sequence from several
 cameras, so the final edit can cut between angles instead of holding one shot:
 - **Hero:** the room_view the site opens on, a slow push-in.
@@ -188,12 +192,11 @@ Tools: Blender (needed for Phase 4 anyway; ask before installing), FFmpeg
   clay, wireframe) and `piano-build.mp4`, a 13 s build sequence from
   `blender/tests/piano_quality.py` (wireframe, clay, lit; keys sweep, fallboard folds
   open, C major chord). Raw material for the piano's accent in the storm section.
-- `video-local/footage/2026-10-22-room-shell/`: the room shell (Phase 4 Step 1). The build
-  sequence (24.5 s with handles) from five cameras in the storm look, `room-shell-hero-storm.mp4`,
-  `-low-`, `-orbit-`, `-top-` and `-detail-` (the monitor landing and lighting up), one dawn
-  drift `room-shell-drift-dawn.mp4`, three Cycles stills (blue hour, clay, wireframe), and
-  the timing file they were rendered from. Everything but the desk, the monitor and the
-  piano is a footprint stand-in; later steps re-render with the real props.
+- `video-local/footage/2026-10-22-room-shell/`: the room shell (Phase 4 Step 1):
+  `room-shell-hero-storm.mp4` (the build from room_view, 24.5 s with handles; the owner
+  found the camera too static), three Cycles stills (blue hour, clay, wireframe) and the
+  timing file. The other four cameras and the dawn drift were stopped by the owner; their
+  setups stay in `blender/video/room_shell.py` for the final shoot.
 
 ### The timing file (decided by use, 2026-10-22)
 

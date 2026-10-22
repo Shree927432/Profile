@@ -499,7 +499,12 @@ site or the room. Keep each entry short. No polishing; the post does that.
     build, so hiding it per camera did nothing; it is hidden from the camera ray instead;
   - the night sky material vanished from the saved file (no users); it now has a fake user.
 - Footage: event times come from `blender/video/timing_room_shell.json` (bars and beats on
-  the placeholder Presto grid), five storm cameras and one dawn drift, Cycles stills.
+  the placeholder Presto grid). Three Cycles stills (blue hour, clay, wireframe) and the hero
+  storm clip were rendered (24.5 s, 26.6 min at about 2 s a frame). The owner found the
+  camera too static and stopped the run at 00:26, during the second of six clips; the low,
+  orbit, top, detail and dawn clips were not rendered. New plan: each build step keeps only
+  light process captures (a few stills, one quick low-resolution build preview); the full
+  directed, multi-camera shoot to the music happens once, at the end.
 
 ## 2026-10-23, night: the first room-shell footage, and a note on the camera
 

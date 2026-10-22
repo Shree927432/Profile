@@ -1,0 +1,82 @@
+{
+  "step": "room-shell",
+  "about": "When each part of the room shell lands, in bars and beats. Read by blender/video/room_shell.py. Placeholder grid until the owner's Moonlight Sonata recording exists: then `grid.bars` takes the bar start times from the MIDI beat map and the same script re-renders in time with the playing. Main parts land on the accented bars (odd bars, the Presto's accented chords every second bar); small parts ripple on eighth notes (stagger 0.5 beat).",
+  "fps": 30,
+  "handles_s": 1.0,
+  "grid": {
+    "kind": "placeholder",
+    "piece": "Beethoven, Sonata op. 27 no. 2, 3rd movement (Presto agitato); placeholder bar of 1.5 s as docs/10-video-plan.md sets it",
+    "bar_s": 1.5,
+    "beats_per_bar": 4,
+    "accent_every": 2,
+    "first_accent_bar": 1,
+    "bars": null
+  },
+  "tail_bars": 2,
+  "defaults": { "duration_beats": 1.5, "overshoot": 1.2, "drop_m": 0.6, "stagger_beats": 0.5 },
+  "storm_hidden": ["obj_plant"],
+  "events": [
+    { "bar": 1, "beat": 1, "motion": "unfold", "axis": "y", "from": "max", "duration_beats": 3, "overshoot": 0.6,
+      "objects": ["room_floor", "room_threshold"], "stagger_beats": 0 },
+    { "bar": 1, "beat": 3, "motion": "rise", "objects": ["room_skirting"] },
+
+    { "bar": 2, "beat": 1, "motion": "rise", "duration_beats": 2,
+      "objects": ["room_wall_back", "room_wall_right", "room_wall_left", "bake_wall_front", "bake_door"] },
+    { "bar": 2, "beat": 3.5, "motion": "slide", "offset": [0, 0.25, 0], "objects": ["room_window_ledge"] },
+    { "bar": 2, "beat": 4, "motion": "rise", "objects": ["window_footprint_frame", "window_footprint_grill"] },
+
+    { "bar": 3, "beat": 1, "motion": "drop", "drop_m": 0.9, "duration_beats": 2, "objects": ["room_ceiling"] },
+    { "bar": 3, "beat": 2.5, "motion": "drop", "drop_m": 0.5,
+      "objects": [["light_footprint_canopy", "light_footprint_cord", "light_footprint_shade"]] },
+    { "bar": 3, "beat": 3.5, "motion": "grow", "objects": ["light_footprint_switch"] },
+
+    { "bar": 4, "beat": 1, "motion": "rise", "objects": ["desk_legs"] },
+    { "bar": 4, "beat": 2, "motion": "drop", "drop_m": 0.35, "objects": ["desk_top"] },
+    { "bar": 4, "beat": 3, "motion": "drop", "drop_m": 0.15,
+      "objects": [["desk_keyboard", "desk_keyboard_keys"], "desk_mouse"] },
+    { "bar": 4, "beat": 3.5, "motion": "slide", "offset": [0, -0.9, 0], "duration_beats": 2,
+      "objects": [["chair_footprint_base", "chair_footprint_seat", "chair_footprint_back"]] },
+
+    { "bar": 5, "beat": 1, "motion": "rise", "objects": ["monitor_static"] },
+    { "bar": 5, "beat": 1.5, "motion": "drop", "drop_m": 0.25, "objects": [["monitor_body", "monitor_screen"]] },
+    { "bar": 5, "beat": 2.5, "motion": "glow", "duration_beats": 2, "objects": ["monitor_screen"] },
+
+    { "bar": 6, "beat": 1, "motion": "drop", "drop_m": 0.3,
+      "objects": [["studio_footprint_pad_01", "studio_footprint_speaker_01", "studio_footprint_woofer_01", "studio_footprint_tweeter_01"],
+                  ["studio_footprint_pad_02", "studio_footprint_speaker_02", "studio_footprint_woofer_02", "studio_footprint_tweeter_02"]] },
+    { "bar": 6, "beat": 3, "motion": "drop", "drop_m": 0.2,
+      "objects": [["studio_footprint_dj", "studio_footprint_jogs"], "studio_footprint_interface"] },
+
+    { "bar": 7, "beat": 1, "motion": "drop", "drop_m": 0.25,
+      "objects": [["studio_footprint_stick_handle", "studio_footprint_stick_head"]] },
+    { "bar": 7, "beat": 2.5, "motion": "rise", "objects": ["mic_footprint_arm"] },
+    { "bar": 7, "beat": 3.5, "motion": "drop", "drop_m": 0.2, "objects": ["mic_footprint_capsule"] },
+
+    { "bar": 8, "beat": 1, "motion": "rise", "objects": ["bookshelf_footprint_case"] },
+    { "bar": 8, "beat": 2, "motion": "slide", "offset": [0.3, 0, 0], "objects": ["bookshelf_footprint_books"] },
+    { "bar": 8, "beat": 3, "motion": "grow",
+      "objects": [["frames_footprint_01", "frames_footprint_picture_01"], ["frames_footprint_02", "frames_footprint_picture_02"],
+                  ["frames_footprint_03", "frames_footprint_picture_03"]] },
+
+    { "bar": 9, "beat": 1, "motion": "unfold", "axis": "y", "from": "max", "duration_beats": 2, "overshoot": 0.6,
+      "objects": ["rug_footprint"] },
+    { "bar": 9, "beat": 2, "motion": "rise", "objects": ["bed_footprint_frame"] },
+    { "bar": 9, "beat": 2.5, "motion": "drop", "drop_m": 0.3, "objects": ["bed_footprint_mattress"] },
+    { "bar": 9, "beat": 3.5, "motion": "drop", "drop_m": 0.2, "objects": ["bed_footprint_pillow_01", "bed_footprint_pillow_02"] },
+
+    { "bar": 10, "beat": 1, "motion": "grow",
+      "objects": ["panels_footprint_desk_01", "panels_footprint_desk_02", "panels_footprint_guitar"] },
+    { "bar": 10, "beat": 3, "motion": "grow", "objects": ["guitars_footprint_hooks"] },
+
+    { "bar": 11, "beat": 1, "motion": "drop", "drop_m": 0.4, "stagger_beats": 1,
+      "objects": ["guitars_footprint_01", "guitars_footprint_02", "guitars_footprint_03"] },
+
+    { "bar": 12, "beat": 1, "motion": "rise", "objects": ["guitars_footprint_rack"] },
+    { "bar": 12, "beat": 2, "motion": "drop", "drop_m": 0.5, "stagger_beats": 1,
+      "objects": ["guitars_footprint_04", "guitars_footprint_05", "guitars_footprint_06"] },
+
+    { "bar": 13, "beat": 1, "motion": "drop", "drop_m": 1.2, "duration_beats": 2.5, "objects": ["obj_piano"] }
+  ],
+  "detail": { "bar": 5, "beat": 1, "before_s": 1.5, "after_s": 3.0 },
+  "dawn": { "seconds": 8 }
+}

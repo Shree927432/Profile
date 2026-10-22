@@ -308,3 +308,47 @@ def emission(name, colour, strength):
 
 def clay(name="mat_look_clay"):
     return principled(name, base="#b7b2a9", rough=0.62, spec=0.4)
+
+
+def stone(name, colour="#8a8478"):
+    """Kota-style limestone (the grey-blue stone of Pune sills and thresholds): honed,
+    fine speckle, faint cloud."""
+    m, nt, b = _new(name)
+    cloud = _noise(nt, _coords(nt), 6, detail=3)
+    speck = _noise(nt, _coords(nt), 300, detail=2)
+    mix = nt.nodes.new("ShaderNodeMix")
+    mix.data_type = "FLOAT"
+    mix.inputs["Factor"].default_value = 0.3
+    nt.links.new(cloud, mix.inputs["A"])
+    nt.links.new(speck, mix.inputs["B"])
+    col = _ramp(nt, mix.outputs["Result"], [(0.35, "#6f6d66"), (0.65, "#9b968b")])
+    nt.links.new(col, b.inputs["Base Color"])
+    b.inputs["Base Color"].default_value = rgba(colour)
+    _set(b, rough=0.45, spec=0.5)
+    m.diffuse_color = rgba(colour)
+    return m
+
+
+def fabric(name, colour, rough=0.9):
+    """Woven fabric: matte with sheen and a fine weave bump."""
+    m, nt, b = _new(name)
+    _set(b, base=colour, rough=rough, sheen=0.5, sheen_rough=0.4, spec=0.25)
+    weave = _noise(nt, _coords(nt), 1400, detail=2)
+    _bump(nt, b, weave, 0.15, 0.0003)
+    m.diffuse_color = rgba(colour)
+    return m
+
+
+def screen_image(name, image, strength=1.0):
+    """A screen: the image as base colour and as emission, so it reads in the dark.
+    The glTF exporter carries both (baseColorTexture, emissiveTexture)."""
+    m, nt, b = _new(name)
+    t = nt.nodes.new("ShaderNodeTexImage")
+    t.name = "screen_image"
+    t.image = image
+    t.interpolation = "Linear"
+    nt.links.new(t.outputs["Color"], b.inputs["Base Color"])
+    nt.links.new(t.outputs["Color"], b.inputs["Emission Color"])
+    _set(b, rough=0.18, spec=0.5, emit_strength=strength)
+    m.diffuse_color = (0.1, 0.15, 0.25, 1)
+    return m

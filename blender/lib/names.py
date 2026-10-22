@@ -95,3 +95,33 @@ def check_export(root_obj, multi_material_ok=()):
     if problems:
         raise AssertionError(f"{root_obj.name}: " + "; ".join(problems))
     return {"listed": len(want), "found": len(want) - len(missing), "extra": extra}
+
+
+def expected_set(root):
+    """Names MESHES.md section 4 lists for a scenery root (`set_room`, `set_desk`, ...):
+    the `Contains` cell of its row. `bake_*` names are listed there too (Blender only)."""
+    with open(C.MESHES_MD, encoding="utf-8") as f:
+        md = f.read()
+    sec = md[md.index("## 4. Static scenery"): md.index("## 5. Lights and cameras")]
+    for line in sec.splitlines():
+        cells = line.split("|")
+        if len(cells) > 2 and TOKEN_RE.findall(cells[1]) == [root]:
+            return [t for t in TOKEN_RE.findall(cells[2]) if t[0].isalpha() and not t.startswith(("obj_", "set_"))]
+    raise KeyError(f"{root} has no row in MESHES.md section 4")
+
+
+def check_set(root_obj):
+    """Check a scenery root in the .blend (before the export join): every name its row lists
+    is under it, every name is clean. Returns a report dict."""
+    want = expected_set(root_obj.name)
+    tree = descendants(root_obj)
+    have = {o.name for o in tree}
+    problems = [f"missing {n}" for n in want if n not in have]
+    for o in [root_obj] + tree:
+        if not NAME_RE.match(o.name):
+            problems.append(f"bad name {o.name!r}")
+        if o.type == "MESH" and o.data.name == o.name:
+            problems.append(f"mesh data named like its object: {o.name}")
+    if problems:
+        raise AssertionError(f"{root_obj.name}: " + "; ".join(problems))
+    return {"listed": len(want), "found": len(want), "extra": sorted(have - set(want))}

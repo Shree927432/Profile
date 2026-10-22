@@ -209,3 +209,56 @@ def screen_plane(name, width, height, center, **kw):
         uv.data[li].uv = (u, v)
     obj.location = center
     return obj
+
+
+def root(name):
+    """An empty `obj_*` / `set_*` root at the world origin, in a collection of the same name."""
+    scene = bpy.context.scene
+    coll = bpy.data.collections.get(name) or bpy.data.collections.new(name)
+    if coll.name not in scene.collection.children:
+        scene.collection.children.link(coll)
+    r = bpy.data.objects.new(name, None)
+    coll.objects.link(r)
+    names.set_name(r, name, data=False)
+    return r, coll
+
+
+def empty(name, loc, collection, parent=None, size=0.05):
+    e = bpy.data.objects.new(name, None)
+    e.empty_display_type = "SPHERE"
+    e.empty_display_size = size
+    e.location = loc
+    collection.objects.link(e)
+    e.parent = parent
+    names.set_name(e, name, data=False)
+    return e
+
+
+def boxes(name, specs, **kw):
+    """Many boxes in one mesh. specs: iterable of (x0, x1, y0, y1, z0, z1)."""
+    bm = bmesh.new()
+    for x0, x1, y0, y1, z0, z1 in specs:
+        vs = [bm.verts.new(v) for v in ((x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0),
+                                         (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1))]
+        for f in ((0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)):
+            bm.faces.new([vs[i] for i in f])
+    return from_bmesh(name, bm, **kw)
+
+
+def rounded_rect(w, h, r, n=6, cx=0.0, cy=0.0):
+    """Corner-rounded rectangle as a CCW point list (w x h, corner radius r)."""
+    pts = []
+    for k, (sx, sy) in enumerate(((1, -1), (1, 1), (-1, 1), (-1, -1))):
+        ox, oy = cx + sx * (w / 2 - r), cy + sy * (h / 2 - r)
+        a0 = -math.pi / 2 + k * math.pi / 2
+        for i in range(n + 1):
+            a = a0 + (math.pi / 2) * i / n
+            pts.append((ox + r * math.cos(a), oy + r * math.sin(a)))
+    return pts
+
+
+def place(obj, loc=(0, 0, 0), yaw=0.0):
+    """Turn an object built in its own frame about +Z (degrees) and move it."""
+    obj.rotation_euler = (0, 0, math.radians(yaw))
+    obj.location = loc
+    return obj

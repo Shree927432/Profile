@@ -6,7 +6,8 @@
 // mapped (dev) and copied (build) from the installed package, and the home page's
 // import map points "three" and "three/addons/" at them:
 //   /scene/vendor/three/three.module.js   <- three/build/three.module.js (+ three.core.js, which it imports)
-//   /scene/vendor/three/addons/<path>     <- three/examples/jsm/<path>   (only the folders in ADDON_DIRS)
+//   /scene/vendor/three/addons/<path>     <- three/examples/jsm/<path>   (only the folders in ADDON_DIRS
+//                                            and the single files in ADDON_FILES)
 import { cp, mkdir, stat } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -32,13 +33,17 @@ const VENDOR = '/scene/vendor/three/';
 const BUILD_FILES = ['three.module.js', 'three.core.js'];
 // Addon folders the room needs: orbit controls, EffectComposer + passes (bloom, output), their shaders.
 const ADDON_DIRS = ['controls', 'postprocessing', 'shaders'];
+// Single addon files: the GLB loader for ?room&glb and the two utils it imports (not the whole
+// 2 MB loaders/ folder).
+const ADDON_FILES = ['loaders/GLTFLoader.js', 'utils/BufferGeometryUtils.js', 'utils/SkeletonUtils.js'];
 
 // Maps a /scene/vendor/three/... URL to a file inside node_modules/three, or null.
 function vendorFile(threeDir, rel) {
   if (BUILD_FILES.includes(rel)) return path.join(threeDir, 'build', rel);
   if (rel.startsWith('addons/')) {
     const sub = path.normalize(rel.slice('addons/'.length));
-    if (sub.startsWith('..') || !ADDON_DIRS.includes(sub.split(path.sep)[0])) return null;
+    const allowed = ADDON_DIRS.includes(sub.split(path.sep)[0]) || ADDON_FILES.includes(sub.split(path.sep).join('/'));
+    if (sub.startsWith('..') || !allowed) return null;
     return path.join(threeDir, 'examples', 'jsm', sub);
   }
   return null;
@@ -97,6 +102,10 @@ export default function sceneFiles() {
         for (const f of BUILD_FILES) await cp(path.join(threeDir, 'build', f), path.join(vendorOut, f));
         for (const d of ADDON_DIRS) {
           await cp(path.join(threeDir, 'examples', 'jsm', d), path.join(vendorOut, 'addons', d), { recursive: true });
+        }
+        for (const f of ADDON_FILES) {
+          await mkdir(path.dirname(path.join(vendorOut, 'addons', f)), { recursive: true });
+          await cp(path.join(threeDir, 'examples', 'jsm', f), path.join(vendorOut, 'addons', f));
         }
         logger.info('copied scene/ and three.js to dist/scene/');
       },

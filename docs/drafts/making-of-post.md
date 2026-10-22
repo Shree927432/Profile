@@ -127,4 +127,7 @@ to hang clear of the piano's open lid. -->
 first export passed the upside-down test: the word TOP on the monitor read upright in
 the browser. The misses were the good part: a black box swallowing the view (a piano
 stand-in that forgot which way it faced), light leaking through wall corners in the
-lightning, a top-down camera that saw only the ceiling. All found by looking at frames. -->
+lightning, a top-down camera that saw only the ceiling. All found by looking at frames.
+Then I watched the first 25-second clip, found the camera too static, and stopped the other
+five: half an hour a clip was too much for footage of stand-in boxes. The big shoot moved
+to the end. -->

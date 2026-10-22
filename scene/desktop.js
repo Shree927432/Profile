@@ -6,7 +6,8 @@
 //   start()            wires everything; resolves after the first frame is drawn
 //     renderer               plain renderer.render(); setPixelRatio() is the one place pixel ratio changes
 //     quality                quality.js decides the pixel ratio; applyQuality() applies it
-//     scene                  lights + buildPlaceholderRoom() (Phase 4: GLB loader instead)
+//     scene                  lights + buildPlaceholderRoom(), or with ?room&glb the Blender room
+//                            (/scene/assets/room.glb through GLTFLoader; &uvtest keeps its TOP texture)
 //     screen + glow          monitor-posts.js on an offscreen canvas -> CanvasTexture; a soft
 //                            halo plane behind it (made here so it survives the GLB)
 //     camera + controls      resize() fits the monitor to the aspect; zoom is ours, not OrbitControls'
@@ -23,6 +24,12 @@
 // the screen, ctrl+wheel (trackpad pinch) and a two-finger touch pinch zoom.
 // Quality ladder (quality.js): full / auto / smooth. With ?debug a small panel in the overlay
 // shows fps and the pixel ratio and switches the mode.
+//
+// With ?room&glb (Phase 4, behind a flag): the camera starts at the GLB's room_view (the hero view
+// on the approved room plan) and orbits the screen's centre. A lens shift keeps room_view_target in
+// the middle of the frame at the start distance and fades out as the camera nears the screen, so the
+// close-up and the glide are framed exactly as before. The start is the farthest zoom (the front
+// wall is right behind it). Portrait: 70 degrees and no shift, as the sheet's phone frame.
 //
 // Every word shown comes from content.site.room / content.site.screens.
 
@@ -69,6 +76,10 @@ const NARROW_BELOW = 480;
 const TAP_MAX_MOVE = 6;
 const TAP_MAX_MS = 500;
 const WHEEL_LINE_PX = 16; // deltaMode "lines" -> px, as in screen-host.js
+// The GLB room (?room&glb). Field of view from HERO in blender/lib/constants.py (vfov, phone_vfov).
+const ROOM_GLB = "/scene/assets/room.glb";
+const ROOM_FOV = 50;
+const ROOM_FOV_PORTRAIT = 70;
 
 export async function start({ canvas, content, overlay, params, reduce }) {
   const text = content.site.room;
@@ -83,6 +94,8 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(BACKGROUND);
 
+  const useGlb = params.has("glb");
+  const uvtest = useGlb && params.has("uvtest");
   const camera = new THREE.PerspectiveCamera(FOV, 1, 0.05, 30);
 
   // The loop draws only when this is true (see renderFrame). Anything that changes the picture sets it.
@@ -99,12 +112,19 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   const quality = createQuality({ dpr: window.devicePixelRatio || 1, reduce, apply: applyQuality });
 
   // ---- scene ----
-  scene.add(new THREE.HemisphereLight(0xcdd5e6, 0x3e281a, 1.1));
+  // Inside the GLB room the "ground" light also reaches the ceiling: a neutral bounce, not floor brown.
+  scene.add(new THREE.HemisphereLight(0xcdd5e6, useGlb ? 0x8c8a86 : 0x3e281a, 1.1));
   const sun = new THREE.DirectionalLight(0xffd7a3, 1.6); // early light from the window, left/back
   sun.position.set(-2.5, 2.2, 0.4);
   scene.add(sun);
 
-  const room = buildPlaceholderRoom(THREE);
+  let room;
+  if (useGlb) {
+    const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
+    room = (await new GLTFLoader().loadAsync(ROOM_GLB)).scene;
+  } else {
+    room = buildPlaceholderRoom(THREE);
+  }
   scene.add(room);
   scene.updateMatrixWorld(true);
 
@@ -147,6 +167,8 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     audio: null, content, open, reduce, say,
   });
 
+  // &uvtest: the GLB's own TOP texture stays on the screen (the UV check); otherwise the posts.
+  const glbMap = uvtest ? screenMesh.material.map : null;
   const screenTexture = new THREE.CanvasTexture(screenCanvas);
   screenTexture.colorSpace = THREE.SRGBColorSpace;
   screenTexture.minFilter = THREE.LinearMipmapLinearFilter;
@@ -154,7 +176,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   screenTexture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   screenMesh.material.dispose();
   // toneMapped:false: the screen shows the posts colours exactly as drawn.
-  screenMesh.material = new THREE.MeshBasicMaterial({ map: screenTexture, toneMapped: false });
+  screenMesh.material = new THREE.MeshBasicMaterial({ map: glbMap || screenTexture, toneMapped: false });
 
   // ---- glow: soft halo behind the screen (not pickable, not in the pick map) ----
   // Placed from the screen's world transform, so it follows whatever monitor_screen is in the GLB.
@@ -205,6 +227,15 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   }
 
   // ---- camera + orbit ----
+  // With the GLB: the start position is room_view; the polar band centres on it.
+  const viewNode = useGlb ? room.getObjectByName("room_view") : null;
+  const viewTargetNode = useGlb ? room.getObjectByName("room_view_target") : null;
+  if (useGlb && (!viewNode || !viewTargetNode)) throw new Error("room.glb has no room_view / room_view_target");
+  const viewPos = viewNode ? viewNode.getWorldPosition(new THREE.Vector3()) : null;
+  const viewTarget = viewTargetNode ? viewTargetNode.getWorldPosition(new THREE.Vector3()) : null;
+  const startPolar = viewPos ? new THREE.Spherical().setFromVector3(viewPos.clone().sub(lookAt)).phi : START_POLAR;
+  const zoomFar = useGlb ? 1 : ZOOM_FAR;
+
   const controls = new OrbitControls(camera, canvas);
   controls.target.copy(lookAt);
   controls.enablePan = false;
@@ -214,8 +245,8 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   controls.rotateSpeed = 0.6;
   controls.minAzimuthAngle = -AZIMUTH_LIMIT;
   controls.maxAzimuthAngle = AZIMUTH_LIMIT;
-  controls.minPolarAngle = START_POLAR - POLAR_BAND;
-  controls.maxPolarAngle = START_POLAR + POLAR_BAND;
+  controls.minPolarAngle = startPolar - POLAR_BAND;
+  controls.maxPolarAngle = startPolar + POLAR_BAND;
 
   let fitDistance = 0;
   let zoomNear = 1; // the close-up as a fraction of the fit; set by resize()
@@ -223,9 +254,10 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   let zoomGoal = 1;
   let zoomNow = 1;
 
-  // Distance at which the whole monitor fits both ways, with margins.
+  // Distance at which the whole monitor fits both ways, with margins. With the GLB: room_view's.
   function fittedDistance() {
-    const tanV = Math.tan(deg(FOV) / 2);
+    if (viewPos) return viewPos.distanceTo(lookAt);
+    const tanV = Math.tan(deg(camera.fov) / 2);
     const tanH = tanV * camera.aspect;
     return Math.max((bodySize.y / 2) * FIT_MARGIN_V / tanV, (bodySize.x / 2) * FIT_MARGIN_H / tanH);
   }
@@ -233,8 +265,8 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   // Distance, straight on, at which the screen fills CLOSE_UP_FILL of the view's tighter side.
   // The nearest zoom, and where the glide ends.
   function closeUpDistance() {
-    const tanV = Math.tan(deg(FOV) / 2) * CLOSE_UP_FILL;
-    const tanH = Math.tan(deg(FOV) / 2) * camera.aspect * CLOSE_UP_FILL;
+    const tanV = Math.tan(deg(camera.fov) / 2) * CLOSE_UP_FILL;
+    const tanH = Math.tan(deg(camera.fov) / 2) * camera.aspect * CLOSE_UP_FILL;
     return Math.max(screenSize.y / 2 / tanV, screenSize.x / 2 / tanH);
   }
 
@@ -248,12 +280,43 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     needsRender = true;
   }
 
-  // The start view's direction: START_POLAR, straight on. resize() then sets the distance.
+  // The start view's direction: START_POLAR, straight on (GLB: towards room_view). resize() then sets
+  // the distance.
   function placeAtStart() {
-    camera.position.setFromSphericalCoords(1, START_POLAR, 0).add(controls.target);
+    if (viewPos) camera.position.copy(viewPos);
+    else camera.position.setFromSphericalCoords(1, START_POLAR, 0).add(controls.target);
   }
 
-  const clampZoom = (z) => THREE.MathUtils.clamp(z, zoomNear, ZOOM_FAR);
+  const clampZoom = (z) => THREE.MathUtils.clamp(z, zoomNear, zoomFar);
+
+  // Lens shift (GLB, landscape): where room_view_target appears, in NDC, when the camera at room_view
+  // looks at the screen's centre. Set by resize(); applyShift() moves the frame by it, scaled from 1 at
+  // the fitted distance to 0 at the close-up, so the screen is centred whenever the camera is near it.
+  const shiftNdc = new THREE.Vector2();
+  const _probe = new THREE.PerspectiveCamera();
+  function measureShift() {
+    shiftNdc.set(0, 0);
+    if (!viewPos || camera.aspect < 1) return;
+    _probe.copy(camera);
+    _probe.clearViewOffset();
+    _probe.position.copy(viewPos);
+    _probe.lookAt(lookAt);
+    _probe.updateMatrixWorld(true);
+    const p = viewTarget.clone().project(_probe);
+    shiftNdc.set(p.x, p.y);
+  }
+  function applyShift() {
+    if (!viewPos) return;
+    const near = closeUpDistance();
+    const k = THREE.MathUtils.clamp((camera.position.distanceTo(lookAt) - near) / Math.max(1e-6, fitDistance - near), 0, 1);
+    const w = Math.max(1, canvas.clientWidth);
+    const h = Math.max(1, canvas.clientHeight);
+    if (k === 0 || (shiftNdc.x === 0 && shiftNdc.y === 0)) {
+      if (camera.view && camera.view.enabled) camera.clearViewOffset();
+      return;
+    }
+    camera.setViewOffset(w, h, (shiftNdc.x * k * w) / 2, (-shiftNdc.y * k * h) / 2, w, h);
+  }
 
   // Set where the zoom should end up (a fraction of the fit). instant skips the easing; with
   // reduced motion it is always instant. Ignored during the glide.
@@ -280,6 +343,8 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     const h = Math.max(1, canvas.clientHeight);
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
+    if (useGlb) camera.fov = camera.aspect < 1 ? ROOM_FOV_PORTRAIT : ROOM_FOV;
+    camera.clearViewOffset(); // applyShift() sets it again for the new size
     camera.updateProjectionMatrix();
 
     fitDistance = fittedDistance();
@@ -287,12 +352,14 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     zoomGoal = clampZoom(zoomGoal);
     zoomNow = clampZoom(zoomNow);
     controls.minDistance = fitDistance * zoomNear; // safety net only; zoomNow is already inside
-    controls.maxDistance = fitDistance * ZOOM_FAR;
+    controls.maxDistance = fitDistance * zoomFar;
+    measureShift();
     needsRender = true;
-    if (glide.active) return; // the glide owns the camera; it reads closeUpDistance() each tick
+    if (glide.active) { applyShift(); return; } // the glide owns the camera; it reads closeUpDistance() each tick
     setCameraDistance(fitDistance * zoomNow);
     camera.lookAt(controls.target);
     controls.update();
+    applyShift();
   }
 
   // ---- glide (opening a post) ----
@@ -554,6 +621,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     if (screenHandle.frame(t, dt)) { screenTexture.needsUpdate = true; needsRender = true; }
     const drew = needsRender;
     if (drew) {
+      applyShift();
       renderer.render(scene, camera);
       needsRender = false;
       if (lastDrew && dt > 0) quality.frame(dt);

@@ -151,12 +151,15 @@ LAYOUT = dict(
     rug=dict(x=0.10, y=-0.20, yaw=0, w=1.50, d=2.30, h=0.01),
     desk=dict(x=0.025, y=1.695, yaw=0, w=1.45, d=0.75, h=0.75, top_t=0.03),   # back edge 3 cm off the wall
     chair=dict(x=0.05, y=0.92, yaw=165, w=0.66, d=0.66, h=1.02, seat=0.47),
-    monitor=dict(x=0.10, y=1.79, w=0.62, h=0.41, t=0.035, z=1.055),           # body centre; screen 0.56 x 0.35
+    monitor=dict(x=0.10, y=1.79, w=0.62, h=0.41, t=0.035, z=1.055,           # body centre (front face at y)
+                 screen_w=0.56, tilt=5,                                     # 16:10 screen 0.56 x 0.35; leans back 5 deg
+                 foot_d=0.20, arm_w=0.16, plate_t=0.006),                   # the stand: one bent aluminium plate (desk refs, option A)
     speakers=dict(dx=0.52, y=1.87, w=0.17, d=0.25, h=0.28, pad_h=0.10),       # centres at monitor x -+ dx
     dj=dict(x=-0.43, y=1.50, w=0.44, d=0.28, h=0.05),
     interface=dict(x=-0.22, y=1.73, w=0.18, d=0.12, h=0.05),
     lightstick=dict(x=-0.49, y=1.69, w=0.26, d=0.06, h=0.06),                 # lying along X
     keyboard=dict(x=0.10, y=1.44, w=0.44, d=0.13),
+    mouse=dict(x=0.45, y=1.44, w=0.065, d=0.115, h=0.035),                    # right of the keyboard, clear of the mic clamp
     mic=dict(clamp=(0.47, 2.05), elbow=(0.52, 1.93, 1.45), capsule=(0.56, 1.52, 1.16)),
     plant=dict(x=-0.92, y=RY - 0.08, pot_d=0.14, h=0.38),                     # on the sill ledge
     rack=dict(x=1.15, y=1.745, yaw=22, w=0.60, d=0.50, h=0.95, slots=3, pitch=0.15, cradle=0.10, lean=15),
