@@ -657,3 +657,9 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Morning: the owner asked whether the PC setup would look better on the left wall. From the
   hero camera the screens would turn almost edge-on, so the back wall stays. Owner: "keep the
   current version don't change it".
+- The owner found "better rendered models of guitar online": two Sketchfab Strats and an ADAM
+  A4V on RenderHub. Checked, none usable as is: the Hendrix one is view-only and is not the
+  Woodstock guitar (rosewood board, cream guard); the free CC-BY Strat is a modern sunburst
+  with the logo, 373k triangles; the A4V is editorial use only. Their edge is lighting and
+  lacquer, not shape. A look pass on ours was offered; owner: "Not now, leave the guitars as
+  they are."
