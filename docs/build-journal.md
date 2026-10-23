@@ -702,3 +702,4 @@ site or the room. Keep each entry short. No polishing; the post does that.
   the GPU came out light silver with "GEFORCE RTX" on its edge, the camera was the original
   ZV-E10 with a big prime lens. The plants and the ledge are good as they are, once scaled; the
   GPU, camera body and keyboard are bases to adjust. Verdicts and four-view renders are local.
+- Owner answered the four room-plan questions, option A on all: 54 degree lens inside, neon on the left wall, obj_rig as the tenth object, open floor in front.
