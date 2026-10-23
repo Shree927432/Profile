@@ -716,3 +716,9 @@ site or the room. Keep each entry short. No polishing; the post does that.
   guitars gained only 3 cm unless the lid stops at 60 degrees, and the DJ stand only fitted in
   front of the new window, which spoiled it. Owner: "DJ controller on the desk return, PC on the
   floor under it. Window A, no panel, guitars lower with the lid stopping at 60°."
+- Seven layout versions later, the owner pointed at the reference photo: "no i want the exact
+  layout from the photo". The reason was a new story for the site: open on the sky or the city
+  through the window, click, the camera pulls back into the room and turns to the AI lab; the
+  music side stays hidden until About. A quick hand-built blockout copied the photo into the
+  back-left corner in about ten minutes (the first render had Blender's default cube sitting
+  in the middle of the room).
