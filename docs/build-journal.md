@@ -722,3 +722,16 @@ site or the room. Keep each entry short. No polishing; the post does that.
   music side stays hidden until About. A quick hand-built blockout copied the photo into the
   back-left corner in about ten minutes (the first render had Blender's default cube sitting
   in the middle of the room).
+
+## 2026-10-24, night: plan v3 from the photo layout
+
+- Owner: "Approved. Turn the photo layout into plan v3 with the checks and the sheet." The
+  designer drew `blender/lib/plan_v3.py` with four named cameras (intro out of the window, the
+  hero matching the photo, about for the music side, phone) and 68 clearance checks, all passing
+  after five first-run clashes (the monitor pole through the light bar, speaker poles 0.6 cm off
+  the 34-inch screen, the mic arm through the snake plant). The window moved 10 cm right to give
+  the return room. The hero cannot match the photo's perspective exactly: our room is wider, and
+  an exact match would put the camera where the piano stands.
+- Owner: "render the components first and then decide the layout", then "do one component for
+  now" (the Mac was on battery at 33%). The screens on their pole went first; the desk and speaker
+  builds were stopped before they wrote anything.
