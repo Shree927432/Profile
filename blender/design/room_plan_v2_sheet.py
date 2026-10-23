@@ -711,7 +711,7 @@ def objects_panel(px, py, pw, ph):
         "obj_monitor moves to the 27 in screen: monitor_screen",
         "stays 16:10 (53.8 × 33.6) centred in the 16:9 glass, so",
         "the posts code and the 400 × 250 phone rule do not change.",
-        "The audio interface is an Apollo Twin X: its big",
+        "The audio interface is an Apollo x4: its big",
         "monitor knob is the volume, the preamp knob the pan.",
         "Ten is the limit: nothing else can become interactive.",
     ], 12.5, MUTED)

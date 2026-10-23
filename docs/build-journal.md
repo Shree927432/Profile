@@ -669,3 +669,6 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Owner: "can you use apollo twin or suitable apollo audio interface instead of RØDECaster Pro
   II". Now an Apollo Twin X: big knob = volume, preamp knob = pan. Plan and sheet updated; the
   blockout still shows the old, larger console box until the next blockout render.
+- Owner: "go for bigger option": the Apollo x4 instead of the Twin X. It fits under the 34-inch
+  screen with only 1.3 cm to spare; the next plan revision raises the screen or moves the
+  interface forward.
