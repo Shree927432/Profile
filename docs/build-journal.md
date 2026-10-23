@@ -663,3 +663,9 @@ site or the room. Keep each entry short. No polishing; the post does that.
   with the logo, 373k triangles; the A4V is editorial use only. Their edge is lighting and
   lacquer, not shape. A look pass on ours was offered; owner: "Not now, leave the guitars as
   they are."
+- Reference photos saved, local only: the 14 ADAM A4V preview renders from RenderHub (the paid,
+  editorial-only model itself not bought) and the 14 Samsung Odyssey OLED G8 gallery images.
+  The Samsung server was slow; the download took over two minutes.
+- Owner: "can you use apollo twin or suitable apollo audio interface instead of RØDECaster Pro
+  II". Now an Apollo Twin X: big knob = volume, preamp knob = pan. Plan and sheet updated; the
+  blockout still shows the old, larger console box until the next blockout render.

@@ -122,7 +122,7 @@ def run_checks():
     for k in ("alex_1", "alex_2", "alex_3"):
         chk(f"parked chair to {CP[k]['label'].lower()}", S.gap(foot(CP["chair"]), foot(CP[k])), 0.02)
     chk("rack to the back wall", RY - max(y for _, y in RACK_FOOT), 0.02)
-    for a, b, need in (("a7v_1", "pc", 0.03), ("a7v_1", "rodecaster", 0.02), ("a7v_2", "streamdeck", 0.02),
+    for a, b, need in (("a7v_1", "pc", 0.03), ("a7v_1", "interface", 0.02), ("a7v_2", "streamdeck", 0.02),
                        ("pc", "lightstick", 0.03), ("lightstick", "mstand", 0.03), ("dj", "mstand", 0.0),
                        ("a7v_2", "keylight_pole_2", 0.0), ("a7v_1", "keylight_pole_1", 0.0), ("snake_plant", "mouse", 0.03)):
         chk(f"{CP[a]['label'].lower()} to {CP[b]['label'].lower()}", S.gap(foot(CP[a]), foot(CP[b])), need)
@@ -138,7 +138,7 @@ def run_checks():
     chk("guitar_01 to the back wall", RY - (WG["y"][0] + WG["width"][0] / 2), 0.10)
     chk("PC top to the pegboard", CP["pegboard"]["at"][2] - (P.TOP + CP["pc"]["size"][2]), 0.05)
     chk("light bar to the ledge", P.LEDGE["z"] - (CP["screenbar"]["at"][2] + 0.03), 0.10)
-    chk("ultrawide bottom over the console", CP["ultrawide"]["at"][2] - (P.TOP + CP["rodecaster"]["size"][2]), 0.01)
+    chk("ultrawide bottom over the console", CP["ultrawide"]["at"][2] - (P.TOP + CP["interface"]["size"][2]), 0.01)
 
 
 # ---------------------------------------------------------------------------
@@ -425,7 +425,7 @@ def elevations(px, py, pw, ph):
     vb.line((U(BACK["x0"]), P.TOP - DK["t"] - 0.005), (U(BACK["x1"]), P.TOP - DK["t"] - 0.005), "#7fb6ff", 2.0)
     for key in ("pole", "keylight_pole_1", "keylight_pole_2", "iso_1", "iso_2", "a7v_1", "a7v_2", "ultrawide",
                 "studio_display", "screenbar", "ledge", "frame_1", "frame_2", "frame_3", "keylight_1", "keylight_2",
-                "camera", "rodecaster", "streamdeck", "keyboard", "snake_plant", "plant"):
+                "camera", "interface", "streamdeck", "keyboard", "snake_plant", "plant"):
         c = CP[key]
         u0, u1 = proj_extent(c, "x")
         z0 = c["at"][2]
@@ -649,7 +649,7 @@ def legend(px, py, pw, ph):
             if c["key"] == "guitar_01":
                 model = "Lucille 107 × 41 · Strat 97.7 × 32.3 · double-neck 110 × 43"
             sz = size_str(c) if c["key"] != "guitar_01" else "see right wall"
-            unsure = "UNSURE" in c["note"] or c["key"] in ("rodecaster", "keyboard", "mstand", "guitar_01")
+            unsure = "UNSURE" in c["note"] or c["key"] in ("interface", "keyboard", "mstand", "guitar_01")
             text(x, y, lab[:25], 12.5, INK)
             text(x + 170, y, model if len(model) <= 50 else model[:48] + "…", 11.5, MUTED)
             text(x + 478, y, sz + (" ?" if unsure else ""), 12, INK)
@@ -711,8 +711,8 @@ def objects_panel(px, py, pw, ph):
         "obj_monitor moves to the 27 in screen: monitor_screen",
         "stays 16:10 (53.8 × 33.6) centred in the 16:9 glass, so",
         "the posts code and the 400 × 250 phone rule do not change.",
-        "The console (RODECaster) takes the old interface's pan",
-        "and volume, so the small interface is cut.",
+        "The audio interface is an Apollo Twin X: its big",
+        "monitor knob is the volume, the preamp knob the pan.",
         "Ten is the limit: nothing else can become interactive.",
     ], 12.5, MUTED)
 

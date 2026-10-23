@@ -159,8 +159,8 @@ MIC = dict(clamp=(DESK_V2["back"]["x1"] - 0.14, RY - 0.04), elbow=(DESK_V2["back
 part("mic", "Microphone on its arm", "Shure MV7+ white on a RODE PSA1+ white arm", (0.066, 0.153, 0.066),
      (MIC["capsule"][0], MIC["capsule"][1], MIC["capsule"][2] - 0.033), role="obj_mic", shape="special",
      note="email; arm reach 76 cm of 82")
-part("rodecaster", "Audio console", "RODECaster Pro II", (0.386, 0.25, 0.077), (XM - 0.145, RY - 0.38, TOP),
-     role="obj_studio", col=B_, note="UNSURE size; takes over the pan and volume of the old interface")
+part("interface", "Audio interface", "Universal Audio Apollo Twin X", (0.16, 0.14, 0.064), (XM - 0.145, RY - 0.38, TOP),
+     role="obj_studio", col=B_, note="UNSURE size; big monitor knob = volume, preamp knob = pan (owner, 2026-10-23)")
 part("streamdeck", "Stream Deck", "Elgato Stream Deck MK.2 white", (0.118, 0.084, 0.03), (XM + 0.245, RY - 0.42, TOP))
 part("mat", "Felt desk mat", "grey felt, 80 x 30", (0.80, 0.30, 0.004), (XM, 1.47, TOP), col="#8d9096")
 part("keyboard", "Keyboard", "Keychron Q1 Max, white", (0.327, 0.145, 0.04), (XM - 0.045, 1.47, TOP),
