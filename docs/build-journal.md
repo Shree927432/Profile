@@ -692,3 +692,8 @@ site or the room. Keep each entry short. No polishing; the post does that.
   a desk; the current Apollo x4 (Gen 2) is silver with white buttons; the ISO-155's short
   setting (76 mm) tilted up puts the tweeters near ear height; the PC case is 30.4 x 48 x 46.5.
   Plan v2 now uses the confirmed sizes; sheet and blockout redrawn, 36 checks pass.
+- The free-model shortlist went nowhere, for two reasons. Sketchfab now signs in through Epic
+  Games, whose security check never rendered in the in-app browser (the owner saw a blank "One
+  more step" box). And looking at the models, the owner: "these models are very novice models".
+  Decision: we build every AI-lab object ourselves from the references, like the guitars. The
+  three Poly Haven CC0 downloads stay as local reference.
