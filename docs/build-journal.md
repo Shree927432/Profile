@@ -697,3 +697,8 @@ site or the room. Keep each entry short. No polishing; the post does that.
   more step" box). And looking at the models, the owner: "these models are very novice models".
   Decision: we build every AI-lab object ourselves from the references, like the guitars. The
   three Poly Haven CC0 downloads stay as local reference.
+- The owner downloaded six of the free models in Safari after all ("you can check if it works
+  then its fine or make some adjustments"). Checked in Blender: scales were off by 33x to 90x,
+  the GPU came out light silver with "GEFORCE RTX" on its edge, the camera was the original
+  ZV-E10 with a big prime lens. The plants and the ledge are good as they are, once scaled; the
+  GPU, camera body and keyboard are bases to adjust. Verdicts and four-view renders are local.
