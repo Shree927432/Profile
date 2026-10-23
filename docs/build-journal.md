@@ -703,3 +703,16 @@ site or the room. Keep each entry short. No polishing; the post does that.
   ZV-E10 with a big prime lens. The plants and the ledge are good as they are, once scaled; the
   GPU, camera body and keyboard are bases to adjust. Verdicts and four-view renders are local.
 - Owner answered the four room-plan questions, option A on all: 54 degree lens inside, neon on the left wall, obj_rig as the tenth object, open floor in front.
+
+## 2026-10-24: the room shell rebuild, and a layout that did not feel right
+
+- The designer rebuilt the room to plan v2; the app restarted mid-run, so 15 files sit
+  half-finished and uncommitted. The owner moved the PC first ("desk is looking too clutered, can
+  we shift cpu little bitt towards left"), then: "something is not looking right about the layout
+  of the room, what do you think it is". Diagnosis: the desk return put the PC, decks and laptop
+  nearest the lens; the centre was an empty wall round a small window; the rack stood alone; the
+  wall guitars were jammed under the ceiling.
+- Four fixes in the blockout. Two did not work as written: the one-piece piano lid meant the
+  guitars gained only 3 cm unless the lid stops at 60 degrees, and the DJ stand only fitted in
+  front of the new window, which spoiled it. Owner: "DJ controller on the desk return, PC on the
+  floor under it. Window A, no panel, guitars lower with the lid stopping at 60°."
