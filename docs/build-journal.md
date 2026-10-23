@@ -654,3 +654,6 @@ site or the room. Keep each entry short. No polishing; the post does that.
   the DJ decks hidden behind the chair, every left-wall item facing the wall, the rack's
   footprint through the back wall and the bench, the rack's guitars in reverse order, a key
   light through the wall. Not fixed: the chair zone overlaps the rug by about 10 cm.
+- Morning: the owner asked whether the PC setup would look better on the left wall. From the
+  hero camera the screens would turn almost edge-on, so the back wall stays. Owner: "keep the
+  current version don't change it".
