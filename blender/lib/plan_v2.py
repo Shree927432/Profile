@@ -30,15 +30,15 @@ WINDOW_V2 = dict(C.WINDOW, x0=-0.60, x1=0.60)    # sill 1.05, head 2.10, stone l
 # Pendant: on the room's centre line, in front of the window, bottom at 2.40.
 LIGHT_V2 = dict(C.LIGHT, x=0.0, y=0.45)
 
-TOP = 0.75                                       # desk top surface
+TOP = 0.735                                      # desk top surface: ALEX 70 + top 3.5 (IKEA's own 3D file: 73.55 cm)
 # ---------------------------------------------------------------------------
 # The AI-lab desk, option A (decision 2026-10-23): one continuous white L top.
 # The return is measured from the back wall (180 = 80 shared with the back run + 100).
 # ---------------------------------------------------------------------------
 ALEX = (0.36, 0.58, 0.70)                        # IKEA ALEX-style drawer unit w, d, h
-PUCK = 0.02                                      # chrome pucks between unit and top (as in the photos)
+PUCK = 0.0                                       # no pucks: the top sits straight on the ALEX units (IKEA's file)
 DESK_V2 = dict(
-    top=TOP, t=0.03, edge_r=0.015, inner_r=0.06, colour="#f2f2ef",
+    top=TOP, t=0.035, edge_r=0.015, inner_r=0.06, colour="#f2f2ef",
     back=dict(x0=-RX, x1=WINDOW_V2["x0"] - 0.05, y0=RY - 0.80, y1=RY),     # 155 x 80
     ret=dict(x0=-RX, x1=-RX + 0.60, y0=RY - 1.80, y1=RY - 0.80),            # +100 x 60
     led_in=0.05,                                  # LED strip under the top, 5 cm in from the edge
@@ -55,8 +55,8 @@ XM = (KNEE_BACK[0] + KNEE_BACK[1]) / 2           # centre line of the monitor st
 EAR = (XM, 0.95, 1.15)                           # seated listener at the back run
 
 # speakers: ADAM A7V white, on ISO-155-style stands, tweeter about 115, back 20 cm off the wall
-A7V = (0.201, 0.288, 0.337)
-ISO_H = 0.135                                    # UNSURE: stand at its tall setting
+A7V = (0.200, 0.280, 0.337)                      # ADAM official W x D x H
+ISO_H = 0.076                                    # ISO-155 short setting (official 76 mm), tilted up towards the ear
 TWEETER_UP = 0.265                               # UNSURE: tweeter centre above the cabinet's base
 SPK_DX = 0.815 / 2 + 0.03 + A7V[0] / 2           # beside the ultrawide, 3 cm gap
 SPK_Y = RY - 0.20 - A7V[1] / 2
@@ -129,7 +129,7 @@ for i, (x, y, yaw) in enumerate(DESK_V2["drawers"]):
     part(f"alex_{i + 1}", f"Drawer unit {i + 1}", "IKEA ALEX style, white, 5 drawers", ALEX, (x, y, 0), yaw)
 part("led", "LED strip under the desk", "Philips Hue Play gradient style", (0, 0, 0), (0, 0, TOP - 0.03),
      shape="special", glow="#7fb6ff")
-UW = dict(w=0.815, h=0.363, d=0.09, z=0.853, y=RY - 0.24)
+UW = dict(w=0.814, h=0.364, d=0.128, z=0.853, y=RY - 0.24)
 part("ultrawide", "Main screen, 34 in curved", "Samsung Odyssey OLED G8 34 (21:9, 1800R)",
      (UW["w"], UW["d"], UW["h"]), (XM, UW["y"], UW["z"]), role="obj_rig", col=B_,
      note="the live training dashboard (projects as runs); 79.7 x 33.4 active", glow="#3a7bd5")
@@ -142,15 +142,15 @@ part("screenbar", "Monitor light bar", "BenQ ScreenBar Halo", (0.50, 0.10, 0.03)
      (XM, SD["y"] - 0.02, SD["z"] + SD["h"]), col=B_, glow="#fff4e0")
 for i, s in enumerate(SPEAKERS_V2):
     part(f"iso_{i + 1}", f"Speaker stand {'LR'[i]}", "IsoAcoustics ISO-155 style", (0.155, 0.19, ISO_H),
-         (s["x"], s["y"], TOP), s["yaw"], col="#2a2a2c", note="UNSURE height: tall setting")
+         (s["x"], s["y"], TOP), s["yaw"], col="#2a2a2c", note="short setting, 76 mm, tilted up")
     part(f"a7v_{i + 1}", f"Studio monitor {'LR'[i]}", "ADAM A7V, Arctic White", A7V, (s["x"], s["y"], s["z"]),
          s["yaw"], role="obj_studio", note=f"tweeter at {cm(s['z'] + TWEETER_UP)}, toed in {abs(s['yaw']):.0f} deg")
 KL = [(-RX + 0.18, RY - 0.08), (DESK_V2["back"]["x1"] - 0.04, RY - 0.06)]
 for i, (x, y) in enumerate(KL):
     part(f"keylight_pole_{i + 1}", f"Key light pole {i + 1}", "desk clamp pole", (0.025, 0.025, 1.05),
          (x, y, TOP), shape="cyl", col=W_)
-    part(f"keylight_{i + 1}", f"Key light {i + 1}", "Elgato Key Light Mk.2, white", (0.35, 0.06, 0.25),
-         (x, y - 0.05, 1.62), _aim(x, y, EAR[0], EAR[1]), col=W_, note="UNSURE panel size",
+    part(f"keylight_{i + 1}", f"Key light {i + 1}", "Elgato Key Light Mk.2, white", (0.35, 0.035, 0.25),
+         (x, y - 0.05, 1.62), _aim(x, y, EAR[0], EAR[1]), col=W_, note="panel 35 x 25 (Elgato)",
          glow="#ffffff")
 part("camera", "Camera on a flex arm", "Sony ZV-E10 II with kit lens, Elgato Flex Arm", (0.115, 0.10, 0.07),
      (XM - 0.44, RY - 0.38, 1.27), _aim(XM - 0.44, RY - 0.38, EAR[0], EAR[1]), col=B_)
@@ -159,24 +159,24 @@ MIC = dict(clamp=(DESK_V2["back"]["x1"] - 0.14, RY - 0.04), elbow=(DESK_V2["back
 part("mic", "Microphone on its arm", "Shure MV7+ white on a RODE PSA1+ white arm", (0.066, 0.153, 0.066),
      (MIC["capsule"][0], MIC["capsule"][1], MIC["capsule"][2] - 0.033), role="obj_mic", shape="special",
      note="email; arm reach 76 cm of 82")
-part("interface", "Audio interface", "Universal Audio Apollo x4", (0.235, 0.18, 0.09), (XM - 0.145, RY - 0.38, TOP),
-     role="obj_studio", col=B_, note="UNSURE size; big monitor knob = volume, preamp knob = pan (owner, 2026-10-23)")
+part("interface", "Audio interface", "Universal Audio Apollo x4 (Gen 2, silver)", (0.233, 0.15, 0.066), (XM - 0.145, RY - 0.38, TOP),
+     role="obj_studio", col=B_, note="size from retailers; big monitor knob = volume, preamp knob = pan (owner, 2026-10-23)")
 part("streamdeck", "Stream Deck", "Elgato Stream Deck MK.2 white", (0.118, 0.084, 0.03), (XM + 0.245, RY - 0.42, TOP))
 part("mat", "Felt desk mat", "grey felt, 80 x 30", (0.80, 0.30, 0.004), (XM, 1.47, TOP), col="#8d9096")
-part("keyboard", "Keyboard", "Keychron Q1 Max, white", (0.327, 0.145, 0.04), (XM - 0.045, 1.47, TOP),
+part("keyboard", "Keyboard", "Keychron Q1 Max, white", (0.3275, 0.145, 0.032), (XM - 0.045, 1.47, TOP),
      note="UNSURE height")
 part("mouse", "Mouse", "Logitech MX Master 3S, pale grey", (0.084, 0.125, 0.051), (XM + 0.265, 1.46, TOP), col="#d5d6d8")
 part("snake_plant", "Snake plant", "white pot", (0.12, 0.12, 0.45), (DESK_V2["back"]["x1"] - 0.13, 1.42, TOP),
      shape="cyl", col="#3f6b3a")
 # --- the return
 part("pc", "Training rig (PC)", "Lian Li O11 Vision white, RTX 5090 Founders Edition inside",
-     (0.272, 0.446, 0.465), (-RX + 0.03 + 0.446 / 2, 1.30, TOP), 90, role="obj_rig",
+     (0.304, 0.480, 0.4645), (-RX + 0.03 + 0.480 / 2, 1.30, TOP), 90, role="obj_rig",
      note="window side faces the camera, front glass faces the chair; GPU 30.4 x 13.7", glow="#9fd0ff")
 part("dj", "DJ controller", "two-deck, Pioneer DDJ-FLX4 shape (no logos)", (0.483, 0.273, 0.059),
      (-RX + 0.60 - 0.02 - 0.273 / 2, 0.60, TOP), 90, role="obj_studio", col=B_,
      note="faces the chair at the return")
-part("mstand", "Laptop stand", "Rain Design mStand, silver", (0.26, 0.235, 0.15),
-     (-RX + 0.03 + 0.248 / 2, 0.60, TOP), 90, col=G_, note="UNSURE height")
+part("mstand", "Laptop stand", "Rain Design mStand, silver", (0.253, 0.262, 0.15),
+     (-RX + 0.03 + 0.248 / 2, 0.60, TOP), 90, col=G_, note="25.3 x 26.2 x 15 (Rain Design)")
 part("laptop", "Laptop", "MacBook Pro 16, silver, open", (0.356, 0.248, 0.24),
      (-RX + 0.03 + 0.248 / 2, 0.60, TOP + 0.15), 90, col=G_, note="behind the decks, as a DJ laptop", glow="#cfe0ff")
 part("lightstick", "K-pop lightstick", "generic, our own shape, standing in a cradle", (0.07, 0.07, 0.27),
@@ -190,7 +190,7 @@ part("neon", "Neon sign (our words)", "custom white neon, text from content", (0
      (-RX + 0.03, 0.90, 1.98), 90, shape="slab", col="#ffffff", glow="#ffffff",
      note="placeholder text; read from content/")
 part("nanoleaf", "Light panels", "Nanoleaf Shapes Triangles, 7 panels", (0.58, 0.01, 0.52),
-     (-RX + 0.01, 1.78, 1.70), 90, shape="slab", glow="#86a8ff", note="23 cm triangles, UNSURE")
+     (-RX + 0.01, 1.78, 1.70), 90, shape="slab", glow="#86a8ff", note="23 x 20 cm triangles (Nanoleaf)")
 LEDGE = dict(x0=XM - 0.575, x1=XM + 0.575, z=1.92, d=0.12, t=0.04)
 part("ledge", "Floating ledge", "white floating shelf 115 x 12", (1.15, LEDGE["d"], LEDGE["t"]),
      (XM, RY - LEDGE["d"] / 2, LEDGE["z"]))
@@ -198,7 +198,7 @@ for i, dx in enumerate((-0.38, 0.0, 0.38)):
     part(f"frame_{i + 1}", f"Frame {i + 1}", "black frame, 30 x 40 portrait (3:4)", (0.30, 0.03, 0.40),
          (XM + dx, RY - 0.04, LEDGE["z"] + LEDGE["t"]), role="obj_frames", col="#26262a",
          note=["GitHub", "LinkedIn", "X"][i])
-part("chair", "Chair", "Herman Miller Aeron size B, Mineral", (0.686, 0.69, 1.06), (XM + 0.125, 1.00, 0), 200,
+part("chair", "Chair", "Herman Miller Aeron size B, Mineral", (0.686, 0.686, 1.044), (XM + 0.125, 1.00, 0), 200,
      shape="special", col="#c9ccd0")
 # --- the music side
 part("piano", "Upright piano", "our approved black upright (constants.PIANO)", (1.53, 0.60, 1.217),

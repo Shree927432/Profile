@@ -672,3 +672,23 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Owner: "go for bigger option": the Apollo x4 instead of the Twin X. It fits under the 34-inch
   screen with only 1.3 cm to spare; the next plan revision raises the screen or moves the
   interface forward.
+
+## 2026-10-23, afternoon: references for every AI-lab component
+
+- Owner: "do deep research and download the best reference image of each component for AI
+  lab and save it", then "you also find the best free 3d models of component that can be used
+  for our work if needed". Four research agents (Sonnet), one per group. 27 folders in
+  `docs/moodboard/local/ai-lab/` (local only, 152 MB), each with images, a SOURCES.md
+  (official dimensions with sources, UNSURE marks) and a MODELS.md (free models, licence,
+  triangles, verdict). No 3D file downloaded; a shortlist waits for the owner.
+- Owner sent IKEA's desk page: IKEA's own 3D file measured 2000.7 x 600.6 x 735.5 mm, so the
+  desk is 73.5 cm high, not the 75 the plan assumed (no pucks under the top).
+- Went wrong: the first research run died when the app restarted. Its images survived (all
+  valid) but every notes file was lost, because the agents wrote notes last. The rerun wrote
+  each component in full before the next. Many sites blocked scripted downloads (Sony, B&H,
+  Audio-Technica, Unsplash, Pexels; Nanoleaf rate-limited), worked around through makers' CDNs
+  and the browser pane. One "white" Stream Deck image was the wrong product.
+- Findings that change the plan: the Hue Play strip is made for the back of a monitor, not under
+  a desk; the current Apollo x4 (Gen 2) is silver with white buttons; the ISO-155's short
+  setting (76 mm) tilted up puts the tweeters near ear height; the PC case is 30.4 x 48 x 46.5.
+  Plan v2 now uses the confirmed sizes; sheet and blockout redrawn, 36 checks pass.

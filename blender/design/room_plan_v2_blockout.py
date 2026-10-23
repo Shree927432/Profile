@@ -174,7 +174,7 @@ def build_desk():
         for j in range(5):
             zz = h * (j + 0.5) / 5
             box(f"alex{k}_h{j}", -0.05, 0.05, -d / 2 - 0.006, -d / 2, zz - 0.004, zz + 0.004, mat("#c8c8c4"), M)
-        for sx in (-1, 1):
+        for sx in (-1, 1) if P.PUCK > 0 else ():
             for sy in (-1, 1):
                 cyl(f"puck{k}", 0.015, (M @ Vector((sx * (w / 2 - 0.04), sy * (d / 2 - 0.05), h)))[:],
                     (M @ Vector((sx * (w / 2 - 0.04), sy * (d / 2 - 0.05), h + P.PUCK)))[:], chrome, 10)

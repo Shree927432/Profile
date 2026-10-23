@@ -444,7 +444,7 @@ def elevations(px, py, pw, ph):
     dim(xq, vb.p(0, 0)[1], xq, vb.p(0, WIN["sill"])[1], "105", side=-1, size=11)
     dim(xq, vb.p(0, WIN["sill"])[1], xq, vb.p(0, WIN["head"])[1], "105", side=-1, size=11)
     xq = vb.p(U(BACK["x0"]) + 0.06, 0)[0]
-    dim(xq, vb.p(0, 0)[1], xq, vb.p(0, P.TOP)[1], "75", side=-1, size=11)
+    dim(xq, vb.p(0, 0)[1], xq, vb.p(0, P.TOP)[1], "73.5", side=-1, size=11)
     sp = P.SPEAKERS_V2[1]
     tw = sp["z"] + P.TWEETER_UP
     xq = vb.p(U(sp["x"]) + 0.16, 0)[0]
@@ -667,8 +667,8 @@ def numbers_panel(px, py, pw, ph):
     lines = [
         ("Desk (option A, refined)", INK, 650),
         f"Back run 155 × 80, x {cm(BACK['x0'], 0)} to {cm(BACK['x1'], 0)}, 5 cm short of the window.",
-        f"Return 180 × 60 from the back wall (100 past the corner). Top 75, 3 cm.",
-        f"Drawer units 36 × 58 × 70 on 2 cm pucks (70 + 2 + 3 = 75).",
+        f"Return 180 × 60 from the back wall (100 past the corner). Top 73.5, 3.5 cm.",
+        f"Drawer units 36 × 58 × 70, top straight on them (70 + 3.5 = 73.5, as IKEA's file).",
         f"Knee space {cm(P.KNEE_BACK[1] - P.KNEE_BACK[0], 0)} under the back run, {cm(P.KNEE_RET[1] - P.KNEE_RET[0], 0)} under the return.",
         f"Screens centred on the back knee space, x {cm(P.XM, 1)}.",
         f"Speakers {cm(2 * P.SPK_DX, 0)} apart, {cm(d_ear, 0)} from the ear, toed in {abs(sp['yaw']):.0f}°,",
