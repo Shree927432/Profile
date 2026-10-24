@@ -735,3 +735,16 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Owner: "render the components first and then decide the layout", then "do one component for
   now" (the Mac was on battery at 33%). The screens on their pole went first; the desk and speaker
   builds were stopped before they wrote anything.
+
+## 2026-10-24, overnight to morning: the first AI-lab component, the screens
+
+- One builder (designer, Opus) built the screens on their pole: the Samsung G8 34-inch on its
+  1800R curve, the Apple Studio Display 27-inch (VESA version, the posts screen), a white desk pole
+  of our own design, the ScreenBar Halo 2 on the top screen as in the owner's photo. Silhouette
+  matches against the makers' photos: 0.99 for the G8, 0.999 for the Studio Display. TOP upright on
+  both screens. Rich 1.7 MB / 81k triangles, lite 468 KB / 7.6k.
+- Went wrong: the Metal GPU stopped returning Cycles renders while three builders and the plan
+  designer rendered at once; the builder fell back to the CPU. The Mac was on battery all night and
+  reached 2% at 7 am; the coordinator stopped the last slow re-render and committed the scripts
+  early. In the morning a re-export "did nothing": macOS has no `timeout` command, so the wrapped
+  Blender never started.
