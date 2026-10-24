@@ -760,3 +760,16 @@ site or the room. Keep each entry short. No polishing; the post does that.
   and the stand top too big and too far back. That is the hub the owner already asked to fix.
 - Owner mid-task: "Blender is reopening its window again and again, and it's interrupting my
   flow". Everything now runs headless.
+
+## 2026-10-24: the speakers, four rounds to "near identical"
+
+- The white A7V pair passed the outline test from 14 angles on the first run (0.98 to 0.996),
+  but close-ups told a different story. Round 2 rebuilt the tweeter plate from a 29 x 28 point
+  trace, pleated the ribbon, re-traced the ports, re-measured the facets. Two of the coordinator's
+  notes were wrong and the photos said so: the green dot is ADAM's real status LED, and the "chin"
+  under the plate is just the logo band. Round 3 fixed the woofer centre and the port insides.
+  Round 4, after the owner's "it should look like the photo's fine swirl": the first new cone
+  matched the photo's numbers and looked like snow; moving the strokes from colour into normal
+  and sheen made it read like brushed fibre. Owner: "Speakers approved, gloss white."
+- The coordinator gave feedback in three pieces instead of one full review; the owner asked
+  "why these tasks are taking so long". Rule since then: one complete review per round.
