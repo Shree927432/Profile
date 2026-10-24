@@ -66,14 +66,23 @@ G8_G_TABLE = [(0.0, 0.0), (0.0117, 0.119), (0.0313, 0.253), (0.0508, 0.375), (0.
               (0.773, 0.996), (0.793, 0.967), (0.8125, 0.937), (0.832, 0.922), (0.8516, 0.907), (0.871, 0.888),
               (0.8906, 0.859), (0.910, 0.792), (0.9297, 0.688), (0.949, 0.550), (0.969, 0.383), (0.9785, 0.294),
               (0.988, 0.190), (0.998, 0.074), (1.0, 0.0)]
-# The hub (the round "core lighting" ring the stand or VESA arm fixes to), back photo g8-02 at 0.435 mm/px
-G8_HUB_ZC = G8_H - 180 * MM    # MEASURED: centre 180 mm below the top
-G8_HUB_R = 132 * MM            # MEASURED: outer radius of the black rim (264 mm across)
-G8_HUB_RIM_IN = 123 * MM       # MEASURED: the light starts 9 mm in
-G8_HUB_BACK_R = 80 * MM        # MEASURED (side photo slope): the flat back disc the VESA plate fixes to
+# The hub (the round "core lighting" ring the stand or VESA arm fixes to). Round 2 (2026-10-24): rebuilt as
+# the real one is, a black rim, a flat lit ring, then a smoked trumpet that narrows to a small round back
+# (gallery g8-02/03 brightness profiles through the centre at 0.4355 mm/px; g8-05 top; g8-07 three-quarter).
+G8_HUB_ZC = G8_H - 180 * MM    # MEASURED: centre 180 mm below the top (round 1, camera fit on g8-02)
+G8_HUB_R = 133 * MM            # MEASURED g8-03: outer radius of the black rim (306 px)
+G8_HUB_RIM_IN = 116.7 * MM     # MEASURED g8-03: the rim is 16.3 mm wide (36 px), then the light ring starts
+G8_HUB_STEP_R = 91.0 * MM      # MEASURED g8-02/03: the light ring ends at a small step (210 px), the trumpet starts
+G8_HUB_BACK_R = 58 * MM        # MEASURED g8-05 top (102 to 110 across, perspective) and g8-07 (116 across): the lip
 G8_HUB_BACK_Y = G8_DEPTH - G8_SAG   # 81.5 mm behind the centre of the glass: the official 128.1 depth
 G8_HUB_RIM_Y = 54.5 * MM       # MEASURED: the rim's face, a little proud of the shell
+G8_HUB_LIGHT_Y = (55.0 * MM, 57.5 * MM)   # EST: the lit ring, a shallow cone from the rim to the step
+G8_HUB_FUNNEL_Y0 = 59.0 * MM   # EST: where the trumpet starts, behind the step
+G8_HUB_FUNNEL_P = 2.6          # EST: the trumpet's flare (g8-07, g8-08): flat at the ring, nearly axial at the lip
+G8_HUB_RECESS = 3.0 * MM       # EST: the dark back inside the lip
 G8_VESA = 100 * MM             # OFFICIAL: VESA 100 x 100
+RING_BASE = 0.35               # the lit ring's base colour = its light x this (the lite GLB's glow undoes it)
+G8_RING = "rgb"                # the ring's light: "rgb" (default, a soft colour wheel as in the photos) or "white"
 # The vent slot across the top of the back (g8-02)
 G8_SLOT_L, G8_SLOT_H, G8_SLOT_Z = 535 * MM, 5 * MM, G8_H - 40 * MM      # MEASURED
 # The lower back panel, a trapezoid standing 0.8 mm proud (g8-02)
@@ -88,10 +97,21 @@ G8_PORTS_W, G8_PORTS_H, G8_PORTS_Z = 150 * MM, 26 * MM, G8_H - 335 * MM   # MEAS
 G8_PORTS = [(-62.0, "dc", 9, 9), (-43.6, "dp", 7.5, 16), (-26.1, "hdmi", 5, 14), (-8.9, "hdmi", 5, 14),
             (6.9, "usbb", 8.5, 8.5), (23.4, "usba", 5.5, 12.5), (41.3, "usba", 5.5, 12.5), (60.8, "button", 13, 13)]
 # Its own stand (optional part): a slab neck and a thin plate foot
-G8_STAND_LOW = 522.3 * MM - G8_H   # OFFICIAL height with stand 522.3 (taken as the lowest position): 158.8 mm
+G8_STAND_LOW = 522.3 * MM - G8_H   # OFFICIAL height with stand 522.3: 158.8 mm. Round 2: this is the TOP of the 120 mm
+                                   # travel (g8-08/g8-09 and g8-02: neck top 74 mm above the hub at this height); the
+                                   # name is kept for the callers
 G8_STAND_DEPTH = 192.8 * MM        # OFFICIAL depth with stand, from the edges' front to the stand's back
 G8_FOOT = (171 * MM, 6 * MM)       # MEASURED front graphic: foot width; EST thickness
-G8_NECK = (152 * MM, 188 * MM, 18 * MM)   # MEASURED widths at the top and bottom (photo fit); EST thickness
+# Round 2: the neck is graphite on the front, sides and its sloped top, with a silver back plate (g8-05 top,
+# g8-07, g8-08 side). Widths from g8-02 (143 / 200 px-scaled, the neck is nearer the camera than the panel).
+G8_NECK = (142 * MM, 190 * MM, 22 * MM)   # MEASURED widths at the top and bottom; depth from g8-08 (bracket:neck 70:38
+                                          # of the official 64.7 mm from the hub's back to the stand's back)
+G8_NECK_PLATE = 2.5 * MM           # MEASURED g8-08: the silver back plate seen as a light edge from the side
+G8_NECK_TOP = 74 * MM              # MEASURED g8-02: the back plate's top above the hub centre (77 px-scaled)
+G8_NECK_CHAMFER = 15 * MM          # MEASURED g8-08: the top slopes down 15 mm to the front
+G8_NECK_CORNER = 18 * MM           # MEASURED g8-02: rounded top corners
+G8_BRACKET = (52 * MM, 30 * MM, 5 * MM)   # MEASURED g8-05 width, g8-08 height; centre 5 mm above the hub's (EST)
+G8_WINDOW = (67 * MM, 22 * MM, 180 * MM)  # MEASURED g8-02: the cable window, w, h, centre above the foot
 
 # ---------------------------------------------------------------------------
 # Apple Studio Display 27-inch, VESA mount adapter version
@@ -210,6 +230,39 @@ def g8_back(s, z, extra=0.0):
 
 def x_to_s(x):
     return G8_R * math.asin(max(-1.0, min(1.0, x / G8_R)))
+
+
+def g8_hub_profile(n=16):
+    """The hub's lathe profile, from the shell outwards: [(radius m, depth behind the glass centre m)] and
+    one material key per span. Black rim, the lit ring (a shallow cone), a small dark step, the smoked
+    trumpet r = lip + (step - lip) * (1 - t) ** p (flat at the ring, nearly axial at the lip), the lip, then
+    the dark recessed back."""
+    R, Ri, Rs, Rb = G8_HUB_R, G8_HUB_RIM_IN, G8_HUB_STEP_R, G8_HUB_BACK_R
+    yr, (yl0, yl1), yf, yb = G8_HUB_RIM_Y, G8_HUB_LIGHT_Y, G8_HUB_FUNNEL_Y0, G8_HUB_BACK_Y
+    pts = [(R, 0.030), (R, yr - 0.002), (R - 0.0006, yr - 0.0006), (R - 0.002, yr), (Ri + 0.0008, yr),
+           (Ri, yl0), (Rs + 0.0008, yl1), (Rs, yl1 + 0.0004), (Rs - 0.0005, yf)]
+    keys = ["black", "black", "black", "black", "black", "hub_light", "black", "black"]
+    lip = yb - 0.0015
+    for k in range(1, n + 1):
+        t = k / n
+        pts.append((Rb + (Rs - 0.0005 - Rb) * (1 - t) ** G8_HUB_FUNNEL_P, yf + (lip - yf) * t))
+        keys.append("hub_funnel")
+    pts += [(Rb - 0.0004, yb - 0.0002), (Rb - 0.0025, yb), (Rb - 0.0032, yb - 0.0006),
+            (Rb - 0.0032, yb - G8_HUB_RECESS), (0.0, yb - G8_HUB_RECESS)]
+    keys += ["hub_lip", "hub_lip", "hub_lip", "hub_back", "hub_back"]
+    return pts, keys
+
+
+def ring_hue(phi):
+    """The ring's colour wheel as in Samsung's photos, by the angle round the hub seen from behind the
+    model frame (phi from +X towards +Z, radians): +X red, top magenta, -X blue, bottom green, and between
+    them yellow (lower +X) and cyan (lower -X). Returns a hue in degrees."""
+    a = math.degrees(phi) % 360.0
+    anchors = [(0, 360), (90, 300), (180, 232), (270, 128), (360, 0)]
+    for (a0, h0), (a1, h1) in zip(anchors, anchors[1:]):
+        if a <= a1:
+            return (h0 + (h1 - h0) * (a - a0) / (a1 - a0)) % 360.0
+    return 0.0
 
 
 def halo_bar_section():
@@ -408,12 +461,76 @@ if bpy is not None:
         m.diffuse_color = M.rgba("#8a8b8d")
         return m
 
-    def _hub_light(name):
-        """The ring's light: a soft cool white, brighter towards the rim (no product RGB cycle)."""
+    def ring_image(mode=None, w=256, h=32):
+        """The ring's light as a small image on the hub's own UVs (UVHub): U = the angle round the hub, V =
+        0..0.25 the lit ring (brighter towards its inner edge, as in g8-02), 0.3..1 the trumpet from its base
+        to the lip (fading). mode "rgb": the soft colour wheel of Samsung's photos; "white": a neutral white."""
+        import colorsys
+        import numpy as np
+        mode = mode or G8_RING
+        name = f"screens_ring_{mode}"
+        img = bpy.data.images.get(name) or bpy.data.images.new(name, w, h)
+        px = np.ones((h, w, 4), np.float32)
+        for i in range(w):
+            if mode == "white":
+                c = (0.92, 0.94, 1.0)
+            else:
+                c = colorsys.hsv_to_rgb(ring_hue(2 * math.pi * (i + 0.5) / w) / 360.0, 1.0, 1.0)
+            for j in range(h):
+                v = (j + 0.5) / h
+                if v < 0.27:
+                    k = 0.45 + 0.55 * (v / 0.27) ** 1.5           # the lit ring, outer edge to inner
+                else:
+                    t = min(1.0, max(0.0, (v - 0.3) / 0.7))
+                    k = 0.62 * (1 - t) ** 1.6 + 0.04               # the trumpet, base to lip
+                px[j, i, :3] = [ch * k ** (1 / 2.2) for ch in c]    # sRGB image, k a linear brightness
+        img.pixels.foreach_set(px.ravel())
+        img.pack()
+        return img
+
+    def _uv_image(nt, img):
+        uvn = nt.nodes.new("ShaderNodeUVMap")
+        uvn.uv_map = "UVHub"
+        tx = nt.nodes.new("ShaderNodeTexImage")
+        tx.image = img
+        tx.extension = "REPEAT"
+        nt.links.new(uvn.outputs["UV"], tx.inputs["Vector"])
+        return tx
+
+    def _hub_light(name, mode=None):
+        """The lit ring: the ring image as both colour and light (exports as a glTF emissive texture)."""
         m, nt, b = M._new(name)
-        M._set(b, base="#3a4a66", rough=0.35, emit="#7fa6ee", emit_strength=1.6)
-        m.diffuse_color = M.rgba("#9fb9e6")
+        M._set(b, rough=0.3, emit_strength=0.9)
+        tx = _uv_image(nt, ring_image(mode))
+        # the colour itself dimmed (a light reflects little); a bright base under the studio washes it out
+        dim = nt.nodes.new("ShaderNodeMix")
+        dim.data_type, dim.blend_type = "RGBA", "MULTIPLY"
+        dim.inputs["Factor"].default_value = 1.0
+        nt.links.new(tx.outputs["Color"], dim.inputs[6])                 # the colour sockets: A 6, B 7, Result 2
+        dim.inputs[7].default_value = (RING_BASE, RING_BASE, RING_BASE, 1.0)
+        nt.links.new(dim.outputs[2], b.inputs["Base Color"])
+        nt.links.new(tx.outputs["Color"], b.inputs["Emission Color"])
+        m.diffuse_color = M.rgba("#c070d0" if (mode or G8_RING) == "rgb" else "#e8eeff")
         return m
+
+    def _hub_funnel(name, mode=None):
+        """The smoked trumpet: dark glossy plastic carrying the ring's glow, fading to the lip."""
+        m, nt, b = M._new(name)
+        M._set(b, base="#07080b", rough=0.12, spec=0.5, coat=1.0, coat_rough=0.05, emit_strength=0.5)
+        tx = _uv_image(nt, ring_image(mode))
+        nt.links.new(tx.outputs["Color"], b.inputs["Emission Color"])
+        m.diffuse_color = M.rgba("#1a1424")
+        return m
+
+    def set_ring(mode):
+        """Switch the ring between "rgb" and "white" on the built materials (the option still)."""
+        img = ring_image(mode)
+        for n in ("mat_screens_g8_hub_light", "mat_screens_g8_hub_funnel"):
+            mat = bpy.data.materials.get(n)
+            if mat:
+                for nd in mat.node_tree.nodes:
+                    if nd.type == "TEX_IMAGE":
+                        nd.image = img
 
     def placeholder_image(name, w, h):
         """Neutral dark blue: a soft vertical gradient and a faint glow, no UI, no logo."""
@@ -444,7 +561,10 @@ if bpy is not None:
             "glass_g8": p("mat_screens_g8_glass", base="#060708", rough=0.24, spec=0.45),
             "black": p("mat_screens_black_plastic", base="#0d0e0f", rough=0.32, spec=0.5),
             "hub_light": _hub_light("mat_screens_g8_hub_light"),
-            "hub_back": p("mat_screens_g8_hub_back", base="#2a2c2f", rough=0.45, metal=0.2),
+            "hub_funnel": _hub_funnel("mat_screens_g8_hub_funnel"),
+            "hub_lip": p("mat_screens_g8_hub_lip", base="#8e9196", rough=0.35, metal=0.6),
+            "hub_back": p("mat_screens_g8_hub_back", base="#16171a", rough=0.5, metal=0.1),
+            "window": p("mat_screens_g8_stand_window", base="#8b8e93", rough=0.5, metal=0.3),
             "port": p("mat_screens_port", base="#030303", rough=0.7),
             "chrome": M.chrome("mat_screens_chrome"),
             "white": _bead(p("mat_screens_powder_white", base="#eceeef", rough=0.48, spec=0.5), 1800, 0.08),
@@ -454,8 +574,8 @@ if bpy is not None:
             "halo_glossy": p("mat_screens_halo_glossy", base="#08090a", rough=0.06, coat=1.0, coat_rough=0.02),
             "led": M.emission("mat_screens_halo_led", "#fff3e6", 1.2),
             "led_back": M.emission("mat_screens_halo_backlight", "#f2f6ff", 0.6),
-            "stand_dark": p("mat_screens_g8_stand_dark", base="#2c2e31", rough=0.4, metal=0.4),
-            "stand_silver": _bead(p("mat_screens_g8_stand_silver", base="#cfd1d4", metal=1.0, rough=0.3), 2200, 0.03),
+            "stand_dark": p("mat_screens_g8_stand_dark", base="#2a2b2e", rough=0.38, metal=0.35, spec=0.5),
+            "stand_silver": _bead(p("mat_screens_g8_stand_silver", base="#cfd1d4", metal=1.0, rough=0.42), 2200, 0.03),
         }
         mats["led"].diffuse_color = M.rgba("#fff3e6")
         mats["led_back"].diffuse_color = M.rgba("#f2f6ff")
@@ -524,6 +644,7 @@ if bpy is not None:
         _g8_hub(A, lite)
         _g8_ports(A, lite)
         body = A.finish("rig_display", mats, coll, parent)
+        hub_uvs(body)
         # the picture, on the arc, just in front of the glass
         n = 40 if lite else 120
         ss = [-G8_ACT_W / 2 + G8_ACT_W * i / n for i in range(n + 1)]
@@ -592,24 +713,37 @@ if bpy is not None:
         A.strip(a, b, "shell", want=lambda i: (0, 0, -1))
 
     def _g8_hub(A, lite):
-        seg = 32 if lite else 96
+        seg = 40 if lite else 128
         fr = frame((0, 0, G8_HUB_ZC), (1, 0, 0), (0, 0, 1), (0, 1, 0))   # axis along +Y
-        y0, yr, yb = 0.030, G8_HUB_RIM_Y, G8_HUB_BACK_Y
-        cone = []
-        for k in range(1, 9):
-            t = k / 8
-            cone.append((G8_HUB_RIM_IN - (G8_HUB_RIM_IN - G8_HUB_BACK_R - 0.002) * t,
-                         yr + (yb - yr - 0.002) * (0.7 * t + 0.3 * t * t)))
-        prof = ([(G8_HUB_R, y0), (G8_HUB_R, yr - 0.0015), (G8_HUB_R - 0.0012, yr), (G8_HUB_RIM_IN, yr)] + cone +
-                [(G8_HUB_BACK_R - 0.0008, yb), (0.0, yb)])
-        keys = ["black", "black", "black"] + ["hub_light"] * 8 + ["hub_back", "hub_back"]
+        prof, keys = g8_hub_profile(6 if lite else 16)
         A.lathe(prof, fr, seg, keys, cap_start=True, cap_end=False)
-        # VESA holes in the back disc
-        if not lite:
-            for sx in (-1, 1):
-                for sz in (-1, 1):
-                    p = (sx * G8_VESA / 2, yb + 0.0001, G8_HUB_ZC + sz * G8_VESA / 2)
-                    A.cyl(0.003, p, (p[0], p[1] + 0.0003, p[2]), 12, "port")
+
+    def hub_uvs(obj):
+        """UVHub on the lit ring and the trumpet: U = the angle round the hub / 2 pi (continuous across each
+        face, the image repeats), V = 0.12 on the ring, 0.3..1 down the trumpet (see ring_image)."""
+        me = obj.data
+        uv = me.uv_layers.new(name="UVHub")
+        # a new layer starts as one square per face, which would stop the exporter sharing any vertex: zero it
+        uv.data.foreach_set("uv", [0.0] * (2 * len(uv.data)))
+        lit ={i for i, m in enumerate(me.materials) if m and m.name.startswith(("mat_screens_g8_hub_light",
+                                                                                  "mat_screens_g8_hub_funnel"))}
+        y0, y1 = G8_HUB_FUNNEL_Y0, G8_HUB_BACK_Y - 0.0015
+        for poly in me.polygons:
+            if poly.material_index not in lit:
+                continue
+            funnel = me.materials[poly.material_index].name.startswith("mat_screens_g8_hub_funnel")
+            c = poly.center
+            pc = math.atan2(c.z - G8_HUB_ZC, c.x)
+            for li, vi in zip(poly.loop_indices, poly.vertices):
+                co = me.vertices[vi].co
+                p = math.atan2(co.z - G8_HUB_ZC, co.x)
+                while p - pc > math.pi:
+                    p -= 2 * math.pi
+                while pc - p > math.pi:
+                    p += 2 * math.pi
+                v = 0.3 + 0.7 * max(0.0, min(1.0, (co.y - y0) / (y1 - y0))) if funnel else \
+                    0.02 + 0.23 * (G8_HUB_RIM_IN - math.hypot(co.x, co.z - G8_HUB_ZC)) / (G8_HUB_RIM_IN - G8_HUB_STEP_R)
+                uv.data[li].uv = (p / (2 * math.pi), v)
 
     def _surface_frame(s, z, flip_u=True):
         p = V(g8_back(s, z))
@@ -661,26 +795,44 @@ if bpy is not None:
         neck_t = G8_NECK[2]
         A.prism(rr(fw, y_back - y_front, 0.012, 6), frame((0, (y_front + y_back) / 2, zf), (1, 0, 0), (0, 1, 0),
                                                            (0, 0, 1)), 0.0, ft, "stand_silver")
-        # neck: tapered slab, dark front, silver back
+        # neck: a tapered slab, graphite front, sides and sloped top, a silver plate on its back (round 2)
         y0, y1 = y_back - neck_t, y_back
-        ztop = G8_HUB_ZC + 0.060
+        yp = y1 - G8_NECK_PLATE
+        ztop = G8_HUB_ZC + G8_NECK_TOP
         wt, wb = G8_NECK[0], G8_NECK[1]
-        outline = [(-wb / 2, zf + ft), (wb / 2, zf + ft), (wt / 2, ztop - 0.02)]
-        for k in range(1, 7):
-            a = math.pi / 2 * k / 6
-            outline.append((wt / 2 - 0.02 + 0.02 * math.cos(a), ztop - 0.02 + 0.02 * math.sin(a)))
-        for k in range(0, 7):
-            a = math.pi / 2 + math.pi / 2 * k / 6
-            outline.append((-wt / 2 + 0.02 + 0.02 * math.cos(a), ztop - 0.02 + 0.02 * math.sin(a)))
+        cr = G8_NECK_CORNER
+
+        def outline(zt):
+            o = [(-wb / 2, zf + ft), (wb / 2, zf + ft), (wt / 2, zt - cr)]
+            for k in range(1, 7):
+                a = math.pi / 2 * k / 6
+                o.append((wt / 2 - cr + cr * math.cos(a), zt - cr + cr * math.sin(a)))
+            for k in range(1, 7):
+                a = math.pi / 2 + math.pi / 2 * k / 6
+                o.append((-wt / 2 + cr + cr * math.cos(a), zt - cr + cr * math.sin(a)))
+            return o
         fr = frame((0, 0, 0), (1, 0, 0), (0, 0, 1), (0, -1, 0))    # outline in (x, z), extrude towards -Y
-        A.prism(outline, fr, -y1, -y0 - 0.002, "stand_silver", cap_key="stand_dark", cap0_key="stand_silver")
-        A.prism(outline, fr, -y0 - 0.002, -y0, "stand_dark")
-        # cable hole: a dark stadium on the back
-        hole = frame((0, y1 + 0.0002, zf + 0.180), (-1, 0, 0), (0, 0, 1), (0, 1, 0))
-        A.prism(stadium(0.067, 0.022), hole, -0.0005, 0.0, "port")
-        # the bracket from the neck to the hub's back disc
-        A.prism(rr(0.07, 0.05, 0.006), frame((0, 0, G8_HUB_ZC), (1, 0, 0), (0, 0, 1), (0, 1, 0)),
-                G8_HUB_BACK_Y, y0, "stand_dark")
+        A.prism(outline(ztop), fr, -y1, -yp, "stand_silver")          # the silver back plate
+        # the graphite body: its top slopes from the plate (ztop) down to the front (ztop - chamfer)
+        n = 8
+        rows = []
+        for i in range(n + 1):
+            t = i / n
+            yy = yp - (yp - y0) * t
+            rows.append([(x, yy, z) for x, z in outline(ztop - G8_NECK_CHAMFER * t)])
+        loops = [A.verts(r) for r in rows]
+        for i in range(n):
+            A.strip(loops[i], loops[i + 1], "stand_dark", closed_loop=True, solid=True)
+        A.face(loops[0], "stand_dark", closed=True)
+        A.face(list(reversed(loops[-1])), "stand_dark", closed=True)
+        # the cable window through the neck: a grey stadium on the back plate (the inside of the opening)
+        ww, wh, wz = G8_WINDOW
+        hole = frame((0, y1 + 0.0002, zf + wz), (-1, 0, 0), (0, 0, 1), (0, 1, 0))
+        A.prism(stadium(ww, wh), hole, -0.0005, 0.0, "window")
+        # the bracket from the neck to the hub's back
+        bw, bh, bz = G8_BRACKET
+        A.prism(rr(bw, bh, 0.004), frame((0, 0, G8_HUB_ZC + bz), (1, 0, 0), (0, 0, 1), (0, 1, 0)),
+                G8_HUB_BACK_Y - G8_HUB_RECESS, y0 + 0.001, "stand_dark")
         return A.finish("rig_stand", mats, coll, parent, bevel=None if lite else 0.0012)
 
     # -----------------------------------------------------------------------

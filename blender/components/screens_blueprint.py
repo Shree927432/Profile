@@ -19,7 +19,7 @@ sys.path.insert(0, HERE)
 import screens as S  # noqa: E402  (no Blender: numbers and profile maths only)
 
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
-FOOT = os.path.join(REPO, "video-local", "footage", "2026-10-24-components", "screens")
+FOOT = os.path.join(REPO, "video-local", "footage", "2026-10-24-components", "screens", "round2")
 QUICK = "--quick" in sys.argv
 MM = 1000.0
 INK, DIM, HID, ACC = "#1d2733", "#2f6db5", "#8a96a3", "#c2410c"
@@ -115,10 +115,8 @@ def blueprint():
     ax.plot([edge_y, edge_y], [g8z, g8z + H], color=HID, ls="--", lw=1)
     ax.plot([edge_y, edge_y + S.G8_EDGE_T * MM], [g8z + H, g8z + H], color=HID, lw=1)
     hc = g8z + S.G8_HUB_ZC * MM
-    hub = [(S.G8_HUB_RIM_Y * MM, hc + S.G8_HUB_R * MM), (S.G8_HUB_RIM_Y * MM, hc + S.G8_HUB_RIM_IN * MM),
-           (S.G8_HUB_BACK_Y * MM, hc + S.G8_HUB_BACK_R * MM), (S.G8_HUB_BACK_Y * MM, hc - S.G8_HUB_BACK_R * MM),
-           (S.G8_HUB_RIM_Y * MM, hc - S.G8_HUB_RIM_IN * MM), (S.G8_HUB_RIM_Y * MM, hc - S.G8_HUB_R * MM),
-           (40, hc - S.G8_HUB_R * MM), (40, hc + S.G8_HUB_R * MM)]
+    prof, _ = S.g8_hub_profile(16)          # round 2: the rim, the lit ring and the trumpet, as built
+    hub = [(y * MM, hc + r * MM) for r, y in prof] + [(y * MM, hc - r * MM) for r, y in reversed(prof)]
     ax.add_patch(Polygon(hub, fc="#3b4250", ec=INK, lw=1))
     rrect(ax, 0, zsd, S.SD_T * MM, S.SD_H * MM, 3, fc="#e7e9ec", ec=INK, lw=1.5)
     ax.add_patch(Polygon([(S.SD_T * MM, zsd + S.SD_H * MM - 319), (S.SD_DEPTH * MM, zsd + S.SD_H * MM - 319),
@@ -171,8 +169,8 @@ def blueprint():
     bk = np.array([[S.g8_front(s, 0)[0] + S.g8_n(s)[0] * S.g8_T(s), S.g8_front(s, 0)[1] + S.g8_n(s)[1] * S.g8_T(s)]
                    for s in ss]) * MM
     ax.add_patch(Polygon(np.vstack([fr[:, :2], bk[::-1]]), fc="#e7e9ec", ec=INK, lw=1.5))
-    ax.add_patch(Polygon([(-S.G8_HUB_R * MM, 40), (S.G8_HUB_R * MM, 40), (S.G8_HUB_BACK_R * MM, S.G8_HUB_BACK_Y * MM),
-                          (-S.G8_HUB_BACK_R * MM, S.G8_HUB_BACK_Y * MM)], fc="#3b4250", ec=INK, lw=1))
+    ax.add_patch(Polygon([(r * MM, y * MM) for r, y in prof] + [(-r * MM, y * MM) for r, y in reversed(prof)],
+                         fc="#3b4250", ec=INK, lw=1))
     ax.add_patch(Polygon([(-S.SD_W * MM / 2, 0), (S.SD_W * MM / 2, 0), (S.SD_W * MM / 2, S.SD_T * MM),
                           (-S.SD_W * MM / 2, S.SD_T * MM)], fill=False, ec=INK, lw=1, ls=":"))
     ax.add_patch(Circle((0, py), 17.5, fc="white", ec=INK, lw=1.2))
