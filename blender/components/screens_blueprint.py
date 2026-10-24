@@ -13,6 +13,7 @@ import os
 import sys
 
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -281,6 +282,90 @@ def compare_sheets():
         print("compare", name, c["iou"], out)
 
 
+# ---------------------------------------------------------------------------
+# round 2: close-up pair sheets (photo crop vs render crop, same compare camera and scale)
+#   python3 screens_blueprint.py closeups [compare dir] [out.jpg]
+# ---------------------------------------------------------------------------
+# (title, view name, photo crop box x0, y0, x1, y1 in photo pixels)
+CLOSEUPS = [
+    ("G8 side profile (g8-08)", "g8-side", (840, 200, 1360, 1500)),
+    ("G8 side profile, top of the shell (g8-08)", "g8-side", (840, 200, 1200, 760)),
+    ("G8 ring and hub, straight on (g8-02)", "g8-back", (650, 250, 1400, 1000)),
+    ("G8 ring and hub, three-quarter (g8-06)", "g8-3q-back", (560, 330, 1200, 1050)),
+    ("G8 ring and hub, from the side (g8-07)", "g8-3q-back-side", (1050, 420, 1450, 1050)),
+    ("G8 front foot and neck (Samsung drawing)", "g8-front", (820, 880, 1230, 1080)),
+    ("G8 front foot and neck (g8-01)", "g8-front-photo", (780, 1150, 1300, 1450)),
+    ("G8 front foot (g8-04, three-quarter)", "g8-3q-front", (750, 1100, 1450, 1450)),
+    ("G8 front rim and chin (Samsung drawing)", "g8-front", (548, 880, 900, 960)),
+    ("Studio Display back adapter (Apple diagram)", "sd-back", (330, 200, 560, 580)),
+    ("Studio Display back, ports and power (Apple diagram)", "sd-back", (100, 480, 520, 590)),
+    ("Studio Display side, adapter standoff (Apple diagram)", "sd-side", (0, 40, 70, 600)),
+    ("Studio Display front glass, left edge (Apple photo)", "sd-front", (0, 0, 700, 1426)),
+]
+
+
+def pair(e, box, th=520):
+    ph = Image.open(e["photo"]).convert("RGBA")
+    bg = Image.new("RGBA", ph.size, (236, 237, 240, 255))
+    bg.alpha_composite(ph)
+    ph = bg.convert("RGB")
+    rd0 = Image.open(e["render"]).convert("RGBA")
+    rd = Image.new("RGBA", rd0.size, (236, 237, 240, 255))
+    rd.alpha_composite(rd0)
+    rd = rd.convert("RGB")
+    t = e["transform"]
+    s, tx, ty = t["scale"], t["tx"], t["ty"]
+    x0, y0, x1, y1 = box
+    pc = ph.crop(box)
+    rbox = tuple(int(round(v)) for v in ((x0 - tx) / s, (y0 - ty) / s, (x1 - tx) / s, (y1 - ty) / s))
+    rc = rd.crop(rbox).resize(pc.size, Image.LANCZOS)
+    k = th / pc.height
+    w = max(1, int(pc.width * k))
+    return pc.resize((w, th), Image.LANCZOS), rc.resize((w, th), Image.LANCZOS)
+
+
+def closeups(cdir, out):
+    rep = json.load(open(os.path.join(cdir, "screens-compare.json")))
+    views = {e["name"]: e for e in rep["views"]}
+    try:
+        f = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 26)
+        f2 = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 18)
+    except OSError:
+        f = f2 = ImageFont.load_default()
+    rows = []
+    for title, name, box in CLOSEUPS:
+        e = views.get(name)
+        if not e or not e.get("render"):
+            continue
+        a, b = pair(e, box)
+        if a.width > 900:
+            k = 900 / a.width
+            a = a.resize((900, int(a.height * k)))
+            b = b.resize((900, int(b.height * k)))
+        rows.append((title, a, b))
+    W = 1920
+    H = sum(r[1].height + 60 for r in rows) + 20
+    sheet = Image.new("RGB", (W, H), (244, 243, 239))
+    d = ImageDraw.Draw(sheet)
+    y = 10
+    for title, a, b in rows:
+        d.text((16, y), title, fill=(30, 30, 40), font=f)
+        d.text((16 + 960, y + 4), "photo left, our render right: same camera and scale", fill=(60, 100, 170), font=f2)
+        y += 40
+        sheet.paste(a, (960 - a.width - 10, y))
+        sheet.paste(b, (970, y))
+        y += a.height + 20
+    sheet.save(out, quality=90)
+    print("closeups", out, len(rows))
+
+
+
 if __name__ == "__main__":
+    if sys.argv[1:2] == ["closeups"]:
+        _R2 = os.path.join(FOOT)
+        _a = sys.argv[2:]
+        closeups(_a[0] if _a else os.path.join(_R2, "compare-after"),
+                 _a[1] if len(_a) > 1 else os.path.join(_R2, "screens-closeups.jpg"))
+        sys.exit(0)
     blueprint()
     compare_sheets()

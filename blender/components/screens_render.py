@@ -344,6 +344,30 @@ def stage_stills2():
             log(f"still {k} ({ring}) in {round(dt)} s: {path}")
     S.set_ring("rgb")
     stand_view(False)
+    # the Studio Display alone (its arm, the pole and the other screen hidden so the adapter shows)
+    zc = S.sd_z0() + S.SD_H / 2
+    sd_cams = {
+        "sd-back-3q": looks.camera("still_cam_r2_sdback", (0.62, 1.05, zc + 0.22), (0.0, 0.02, zc - 0.02), lens=50,
+                                   coll=coll),
+        "sd-adapter": looks.camera("still_cam_r2_sdadapter", (0.20, 0.55, zc - 0.02), (0.0, 0.02, zc - 0.08), lens=60,
+                                   fstop=8, coll=coll),
+        "sd-front": looks.camera("still_cam_r2_sdfront", (0.0, -1.6, zc), (0.0, 0.0, zc), lens=60, coll=coll),
+    }
+    hide = [o for o in objs if o.type == "MESH" and o.name not in ("monitor_body", "monitor_screen", "still_desk")
+            and not o.hide_render]
+    for o in hide:
+        o.hide_render = True
+    for k, cam in sd_cams.items():
+        if STILLS is not None and k not in STILLS:
+            continue
+        scene.camera = cam
+        scene.cycles.samples = 24 if QUICK else 160
+        path = os.path.join(ROUND2, f"screens-{k}{'-quick' if QUICK else ''}.png")
+        dt = yield from run.render_to(path)
+        times[k] = round(dt)
+        log(f"still {k} in {round(dt)} s: {path}")
+    for o in hide:
+        o.hide_render = False
 
 
 def stand_view(on):
@@ -643,8 +667,8 @@ G8_SHOW = ["rig_display", "rig_screen", "rig_stand"]
 SD_SHOW = ["monitor_body", "monitor_screen"]
 _G8R = os.path.join(REF, "odyssey-g8-samsung")
 _SDR = os.path.join(REF, "ai-lab", "03-top-screen")
-POSE_EXPLAIN = ("a close perspective product shot at an angle (Samsung's renders): the model's turn is searched in "
-                "steps and a thin curved panel makes IoU harsh; the differences are listed in NOTE.md round 2")
+POSE_EXPLAIN = ("Samsung's turned product render: no single camera fits both its panel and its stand (the foot reads "
+                "edge-on while the panel is seen from its own height); free camera, differences listed in NOTE.md")
 
 
 def _panel_only(m):
@@ -673,42 +697,44 @@ def round2_views():
     x0, x1, y0, y1 = refs.bbox(mt)
     top_ref = refs.ref_record(top_ph, st, ((x0 + x1 + 1) / 2, y1 + 1), (0.0, -S.G8_SAG * 1000), view="top",
                               note="scale from the official 813.6 mm chord")
-    g8 = dict(objects=G8_SHOW, fit_mask=_panel_only)
+    g8 = dict(objects=G8_SHOW, fit_mask=_panel_only, fill=False)
     v = [
         (dict(name="g8-front", title="G8 front: Samsung dimension drawing", mask=0.92, crop=(548, 1295, 585, 1075),
               photo=os.path.join(REF, "ai-lab", "02-main-screen", "dimensions-official-samsung-au.png"),
-              camera={"mode": "fit", "view": "front"}, **g8), None),
+              camera={"mode": "fit", "view": "front", "h_range": (-0.14, 0.0)}, **dict(g8, fill=True, free=True)), [0]),
         (dict(name="g8-front-photo", title="G8 front: gallery g8-01", mask="alpha", crop=(0, 1705, 0, 9999),
               photo=os.path.join(_G8R, "g8-01.png"), camera={"mode": "fit", "view": "front"},
               explain="this photo's panel reads about 6% taller than Samsung's own drawing and back photo "
                       "(round 1); we follow the official sizes", **g8), None),
         (dict(name="g8-back", title="G8 back: gallery g8-02", mask="alpha", photo=os.path.join(_G8R, "g8-02.png"),
               camera={"mode": "fit", "view": "back"}, **g8), None),
-        (dict(name="g8-top", title="G8 top: gallery g8-05 (true scale, orthographic)", mask="alpha", photo=top_ph,
+        (dict(name="g8-top", title="G8 top: gallery g8-05 (true scale, orthographic)", mask="alpha", fill=False, photo=top_ph,
               objects=G8_SHOW, camera={"mode": "placed", "ref": top_ref},
               explain="Samsung's top shot is a perspective view from above the front, ours orthographic at true "
                       "scale: parts lower down (the foot, the hub) shrink in the photo; a thin arc makes IoU harsh"),
          None),
         (dict(name="g8-side", title="G8 side: gallery g8-08 (stand at the top of its travel, as built)",
-              mask="alpha", photo=os.path.join(_G8R, "g8-08.png"), camera={"mode": "fit", "view": "front"},
+              mask="alpha", fill=False, free=True, photo=os.path.join(_G8R, "g8-08.png"),
+              camera={"mode": "fit", "view": "front"},
               explain=POSE_EXPLAIN, objects=G8_SHOW), [-80, -90, -100]),
-        (dict(name="g8-side-low", title="G8 side: gallery g8-09 (stand at the bottom of its travel)", mask="alpha",
+        (dict(name="g8-side-low", title="G8 side: gallery g8-09 (stand at the bottom of its travel)", mask="alpha", fill=False, free=True,
               photo=os.path.join(_G8R, "g8-09.png"), camera={"mode": "fit", "view": "front"},
               explain="the panel is 120 mm lower on the neck in this photo; our stand is built at the top of its "
                       "travel (the official 522.3 mm) and its bracket cannot slide in this test", objects=G8_SHOW),
          [-80, -90, -100]),
-        (dict(name="g8-3q-front", title="G8 three-quarter front: gallery g8-04", mask="alpha",
+        (dict(name="g8-3q-front", title="G8 three-quarter front: gallery g8-04", mask="alpha", fill=False, free=True,
               photo=os.path.join(_G8R, "g8-04.png"), camera={"mode": "fit", "view": "front"},
               explain=POSE_EXPLAIN, objects=G8_SHOW), [-40, -52, -64]),
-        (dict(name="g8-3q-back", title="G8 three-quarter back: gallery g8-06", mask="alpha",
+        (dict(name="g8-3q-back", title="G8 three-quarter back: gallery g8-06", mask="alpha", fill=False, free=True,
               photo=os.path.join(_G8R, "g8-06.png"), camera={"mode": "fit", "view": "back"},
-              explain=POSE_EXPLAIN, objects=G8_SHOW), [-38, -50, -62]),
-        (dict(name="g8-3q-back-side", title="G8 back, from the side: gallery g8-07", mask="alpha",
+              explain=POSE_EXPLAIN, objects=G8_SHOW), [-26, -38, -50]),
+        (dict(name="g8-3q-back-side", title="G8 back, from the side: gallery g8-07", mask="alpha", fill=False, free=True,
               photo=os.path.join(_G8R, "g8-07.png"), camera={"mode": "fit", "view": "back", "tilts": [-35, -25, -15]},
               explain=POSE_EXPLAIN + "; this one is shot from well above", objects=G8_SHOW),
          [55, 65, 75]),
         (dict(name="sd-front", title="Studio Display front: Apple photo, screen off (true scale)", mask=0.8,
-              crop=(0, 9999, 0, 1426), photo=sd_ph, objects=SD_SHOW, camera={"mode": "placed", "ref": sd_ref}), None),
+              crop=(0, 9999, 0, 1426), photo=sd_ph, objects=SD_SHOW, camera={"mode": "placed", "ref": sd_ref},
+              screen_off=True), None),
         (dict(name="sd-back", title="Studio Display back: Apple VESA adapter diagram", mask=0.93,
               crop=(0, 9999, 50, 9999), photo=os.path.join(_SDR, "diagram-back-vesa-adapter.jpg"), objects=SD_SHOW,
               camera={"mode": "ortho", "view": "back"}), None),
@@ -722,12 +748,18 @@ def round2_views():
     return v
 
 
-def _pose(yaw_deg, stand, lift=0.0):
+def _pose(yaw_deg, stand, lift=0.0, screen_off=False):
     """Turn the component about Z; with the stand, show the G8 on it, the panel slid up `lift` m (the
     stand's 120 mm travel: Samsung's side shots use both ends)."""
     r = root()
     old = r.rotation_euler.z
     objs = bpy.data.objects
+    swaps = []
+    if screen_off:          # Apple's front photo has the screen off: the posts canvas shows as the same black glass
+        for n in ("monitor_screen", "rig_screen"):
+            o = objs[n]
+            swaps.append((o, o.data.materials[0]))
+            o.data.materials[0] = bpy.data.materials["mat_screens_sd_off"]     # the canvas off = the off area
     if stand:
         stand_view(True)
         for n in ("rig_display", "rig_screen"):
@@ -735,6 +767,8 @@ def _pose(yaw_deg, stand, lift=0.0):
 
     def undo():
         r.rotation_euler.z = old
+        for o, m in swaps:
+            o.data.materials[0] = m
         if stand:
             for n in ("rig_display", "rig_screen"):
                 objs[n].location.z -= lift
@@ -743,6 +777,102 @@ def _pose(yaw_deg, stand, lift=0.0):
     r.rotation_euler.z = math.radians(yaw_deg)
     bpy.context.view_layer.update()
     return undo
+
+
+def free_fit(view, out, stand, yaws, tilts):
+    """A fuller perspective fit than the toolkit's for Samsung's turned shots: distance, height, a sideways offset
+    (lens shift, as product renders use), the model's turn and the camera's tilt, searched on the silhouette at
+    quarter size; then scored at full size like compare.score_view (same report entry)."""
+    from lib import backdrops, compare
+    from mathutils import Matrix, Vector
+    t0 = time.time()
+    scene = bpy.context.scene
+    name = view["name"]
+    os.makedirs(os.path.join(out, "measure"), exist_ok=True)
+    photo = compare.photo_mask(view)
+    H, W = photo.shape
+    p4 = photo[::4, ::4]
+    cam0 = scene.camera
+    undo = _pose(0, stand, 0.0, view.get("screen_off", False))
+    undo_vis = compare.visible_only(view["objects"])
+    lo, hi = compare.world_bbox(view["objects"])
+    C = (lo + hi) / 2
+    F = 1.2 * max(hi - lo)
+    cd = bpy.data.cameras.get("r2_free") or bpy.data.cameras.new("r2_free")
+    cam = bpy.data.objects.get("r2_free") or bpy.data.objects.new("r2_free", cd)
+    if cam.name not in scene.collection.objects:
+        scene.collection.objects.link(cam)
+    scene.camera = cam
+    r = root()
+    R0, U0, N0 = backdrops.axes(view["camera"]["view"])
+
+    def place(D, h, l, yaw, tilt):
+        r.rotation_euler.z = math.radians(yaw)
+        bpy.context.view_layer.update()
+        R, U, N = Vector(R0), Vector(U0), Vector(N0)
+        if tilt:
+            rot = Matrix.Rotation(math.radians(tilt), 3, R)
+            U, N = rot @ U, rot @ N
+        cd.type, cd.sensor_fit, cd.sensor_width = "PERSP", "HORIZONTAL", 36
+        cd.lens, cd.shift_x, cd.shift_y = 36 * D / F, -l / F, -h / F
+        cd.clip_start, cd.clip_end = 0.01, 100
+        c = Matrix.Rotation(math.radians(yaw), 4, "Z") @ C
+        cam.matrix_world = Matrix.Translation(c + N * D + U * h + R * l) @ Matrix((R, U, N)).transposed().to_4x4()
+    sil = compare._Silhouette(os.path.join(out, "measure", f"sil-{name}.png"))
+
+    def sc(p):
+        place(*p)
+        return compare.align_iou(p4, sil(p4.shape[1], p4.shape[0]))[0]
+    best = None
+    try:
+        hr = view["camera"].get("h_range", (-0.3, 0.3))
+        hs = sorted(set([h for h in (-0.15, -0.05, 0.05, 0.15) if hr[0] <= h <= hr[1]] +
+                        (list(hr) if "h_range" in view["camera"] else [])))
+        for D in (1.0, 1.6, 2.5, 4.0):
+            for h in hs:
+                for l in (-0.2, 0.0, 0.1, 0.2):
+                    for yaw in yaws:
+                        for tl in tilts:
+                            p = (D, h, l, yaw, tl)
+                            v = sc(p)
+                            if best is None or v > best[0]:
+                                best = (v, p)
+        steps = [0.25, 0.05, 0.06, 4.0, 4.0 if len(tilts) > 1 else 0.0]
+        for _ in range(5):
+            for i in range(5):
+                if not steps[i]:
+                    continue
+                for sgn in (1, -1):
+                    p = list(best[1])
+                    p[i] = p[i] * (1 + sgn * steps[0]) if i == 0 else p[i] + sgn * steps[i]
+                    p[1] = min(hr[1], max(hr[0], p[1]))
+                    v = sc(tuple(p))
+                    if v > best[0]:
+                        best = (v, tuple(p))
+                        break
+            steps = [x / 2 for x in steps]
+        place(*best[1])
+        rm = sil(W, H)
+        v, tf = compare.align_iou(photo, rm, refine=True)
+        sil.restore()
+        rpath = os.path.join(out, "measure", f"render-{name}.png")
+        compare.ensure_studio()
+        compare.look(rpath, W, H, "BLENDER_EEVEE", 24)
+    finally:
+        undo_vis()
+        undo()
+        scene.camera = cam0
+    D, h, l, yaw, tl = best[1]
+    e = {"name": name, "title": view.get("title", name), "photo": view["photo"], "mask": view.get("mask"),
+         "crop": view.get("crop"), "fill": view.get("fill", True), "camera_mode": "free", "objects": list(view["objects"]),
+         "camera": {"view": view["camera"]["view"], "distance_m": round(D, 3), "height_offset_m": round(h, 3),
+                    "sideways_m": round(l, 3), "turn_deg": round(yaw, 1), "tilt_deg": round(tl, 1),
+                    "lens_mm": round(36 * D / F, 1)},
+         "iou": round(v, 4), "transform": tf, "silhouette": os.path.join(out, "measure", f"sil-{name}.png"),
+         "render": rpath, "threshold": compare.THRESHOLD, "pass": bool(v >= compare.THRESHOLD),
+         "explain": view.get("explain", ""), "seconds": round(time.time() - t0, 1), "yaw_deg": round(yaw, 1)}
+    log(f"compare {name} (free camera): IoU {v:.4f}, {e['camera']}")
+    return e
 
 
 def stage_compare2():
@@ -768,6 +898,13 @@ def stage_compare2():
         # the toolkit frames a perspective fit on the box's width across the view; for a turned model that
         # can be the thin depth, cutting the panel off. Frame on the largest side instead (runtime only).
         compare.world_bbox = _cube_bbox if yaws else _orig_bbox
+        if view.pop("free", False):
+            view.pop("lifts", None)
+            tilts = view["camera"].get("tilts", [0.0])
+            e = free_fit(view, out, stand, yaws or [0], tilts)
+            e["title"] += f" (model turned {e['yaw_deg']} deg, free camera)"
+            entries.append(e)
+            continue
         lifts = view.pop("lifts", [0.0]) if stand else [0.0]
         if yaws or len(lifts) > 1:
             yaws = yaws or [0]
@@ -788,7 +925,8 @@ def stage_compare2():
             yaw, lift = best[1], best[2]
         else:
             yaw, lift = 0, lifts[0]
-        v2 = dict(view, prepare=lambda y=yaw, lf=lift: _pose(y, stand, lf))
+        off = view.pop("screen_off", False)
+        v2 = dict(view, prepare=lambda y=yaw, lf=lift: _pose(y, stand, lf, off))
         e = compare.score_view(v2, out, look_engine="BLENDER_EEVEE", look_samples=24, log=log)
         e["yaw_deg"], e["stand_lift_m"] = yaw, lift
         if yaw:
@@ -1009,7 +1147,7 @@ def export_lite(size=1024, orm_size=512):
     tg.image = base
     gnt.links.new(tg.outputs["Color"], gb.inputs["Base Color"])
     gnt.links.new(tg.outputs["Color"], gb.inputs["Emission Color"])
-    M._set(gb, rough=0.3, emit_strength=round(0.9 / S.RING_BASE, 2))     # the atlas holds light x RING_BASE
+    M._set(gb, rough=0.6, emit_strength=round(1.1 / S.RING_BASE, 2))     # the atlas holds light x RING_BASE
     for o in baked:
         o.data.materials.clear()
         o.data.materials.append(m)

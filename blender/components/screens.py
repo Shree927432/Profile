@@ -48,7 +48,8 @@ G8_R = 1800 * MM           # OFFICIAL: 1800R
 G8_SAG = G8_R - math.sqrt(G8_R ** 2 - (G8_W / 2) ** 2)          # 46.6 mm, centre behind the edges
 G8_S = G8_R * math.asin(G8_W / 2 / G8_R)                        # half the arc length, 410.2 mm
 G8_EDGE_T = 3.9 * MM       # MEASURED: the panel at its edges, top-view photo g8-05 (9 px at 0.436 mm/px)
-G8_RIM = 1.2 * MM          # MEASURED: the silver lip round the glass seen from the front, g8-01 (about 1.5 mm)
+G8_RIM = 1.6 * MM          # MEASURED g8-01 (round 2): the silver lip round the top and sides, 3.5 px at 0.465 mm/px
+G8_RIM_BOTTOM = 2.5 * MM   # MEASURED g8-01 (round 2): the silver strip along the bottom is wider, about 5 px
 G8_ACT_W = 797.0 * MM      # COMPUTED: 34-inch 21:9 active width (arc); MESHES.md rig_screen 79.7 cm
 G8_ACT_H = 333.4 * MM      # COMPUTED: active height; MESHES.md 33.4 cm
 G8_BEZEL_TOP = 10.0 * MM   # MEASURED ratio: top border : chin = 1 : 2 in g8-01; total from the official sizes
@@ -59,13 +60,16 @@ G8_T_TABLE = [(0, 50.8), (40, 50.2), (80, 47.8), (120, 43.6), (137, 40.5), (155,
               (207, 31.8), (224, 29.6), (242, 27.0), (259, 24.0), (276, 20.9), (294, 18.3), (311, 15.3),
               (329, 12.2), (346, 8.7), (363, 6.1), (381, 4.8), (398, 4.2), (406.8, 3.9)]
 # The shell's profile down the height, side photo g8-08 normalised: (fraction from the top, 0..1 of T)
-G8_G_TABLE = [(0.0, 0.0), (0.0117, 0.119), (0.0313, 0.253), (0.0508, 0.375), (0.0703, 0.483), (0.0898, 0.576),
-              (0.1094, 0.647), (0.1289, 0.703), (0.1484, 0.736), (0.168, 0.770), (0.1875, 0.799), (0.207, 0.833),
-              (0.2266, 0.862), (0.246, 0.881), (0.285, 0.903), (0.324, 0.922), (0.363, 0.937), (0.402, 0.948),
-              (0.441, 0.959), (0.480, 0.967), (0.520, 0.974), (0.559, 0.981), (0.598, 0.993), (0.637, 1.0),
-              (0.773, 0.996), (0.793, 0.967), (0.8125, 0.937), (0.832, 0.922), (0.8516, 0.907), (0.871, 0.888),
-              (0.8906, 0.859), (0.910, 0.792), (0.9297, 0.688), (0.949, 0.550), (0.969, 0.383), (0.9785, 0.294),
-              (0.988, 0.190), (0.998, 0.074), (1.0, 0.0)]
+# Round 2b: the same side profile eased 8 % in the upper middle and 12 % in the lower middle, from the side shot
+# g8-08 matched with a free camera (distance, height, sideways offset, turn; stand included): there the round-1
+# shell stood 4 to 10 mm proud of the photo's outline in those two bands while the top shoulder already matched.
+G8_G_TABLE = [(0.0, 0.000), (0.0117, 0.120), (0.0313, 0.256), (0.0508, 0.379), (0.0703, 0.488), (0.0898, 0.582),
+              (0.1094, 0.654), (0.1289, 0.710), (0.1484, 0.740), (0.168, 0.767), (0.1875, 0.786), (0.207, 0.808),
+              (0.2266, 0.824), (0.246, 0.832), (0.285, 0.840), (0.324, 0.862), (0.363, 0.896), (0.402, 0.933),
+              (0.441, 0.964), (0.48, 0.977), (0.52, 0.984), (0.559, 0.991), (0.598, 1.000), (0.637, 0.980),
+              (0.68, 0.933), (0.72, 0.897), (0.773, 0.891), (0.793, 0.885), (0.8125, 0.879), (0.832, 0.873),
+              (0.8516, 0.868), (0.871, 0.864), (0.8906, 0.850), (0.91, 0.799), (0.9297, 0.695), (0.949, 0.556),
+              (0.969, 0.387), (0.9785, 0.297), (0.988, 0.192), (0.998, 0.075), (1.0, 0.000)]
 # The hub (the round "core lighting" ring the stand or VESA arm fixes to). Round 2 (2026-10-24): rebuilt as
 # the real one is, a black rim, a flat lit ring, then a smoked trumpet that narrows to a small round back
 # (gallery g8-02/03 brightness profiles through the centre at 0.4355 mm/px; g8-05 top; g8-07 three-quarter).
@@ -75,13 +79,14 @@ G8_HUB_RIM_IN = 116.7 * MM     # MEASURED g8-03: the rim is 16.3 mm wide (36 px)
 G8_HUB_STEP_R = 91.0 * MM      # MEASURED g8-02/03: the light ring ends at a small step (210 px), the trumpet starts
 G8_HUB_BACK_R = 58 * MM        # MEASURED g8-05 top (102 to 110 across, perspective) and g8-07 (116 across): the lip
 G8_HUB_BACK_Y = G8_DEPTH - G8_SAG   # 81.5 mm behind the centre of the glass: the official 128.1 depth
-G8_HUB_RIM_Y = 54.5 * MM       # MEASURED: the rim's face, a little proud of the shell
-G8_HUB_LIGHT_Y = (55.0 * MM, 57.5 * MM)   # EST: the lit ring, a shallow cone from the rim to the step
-G8_HUB_FUNNEL_Y0 = 59.0 * MM   # EST: where the trumpet starts, behind the step
-G8_HUB_FUNNEL_P = 2.6          # EST: the trumpet's flare (g8-07, g8-08): flat at the ring, nearly axial at the lip
+G8_HUB_RIM_Y = 47.5 * MM       # MEASURED round 2b (side shot, free camera): the rim's face 7 mm nearer the glass than
+                               # round 1, so the trumpet stands out longer (g8-07)
+G8_HUB_LIGHT_Y = (48.0 * MM, 50.5 * MM)   # EST: the lit ring, a shallow cone from the rim to the step
+G8_HUB_FUNNEL_Y0 = 52.0 * MM   # EST: where the trumpet starts, behind the step
+G8_HUB_FUNNEL_P = 1.5          # EST round 2b: the trumpet's flare, a long smoky cone (g8-07, g8-08; 2.6 read as a bulb)
 G8_HUB_RECESS = 3.0 * MM       # EST: the dark back inside the lip
 G8_VESA = 100 * MM             # OFFICIAL: VESA 100 x 100
-RING_BASE = 0.35               # the lit ring's base colour = its light x this (the lite GLB's glow undoes it)
+RING_BASE = 0.15               # the lit ring's base colour = its light x this (the lite GLB's glow undoes it)
 G8_RING = "rgb"                # the ring's light: "rgb" (default, a soft colour wheel as in the photos) or "white"
 # The vent slot across the top of the back (g8-02)
 G8_SLOT_L, G8_SLOT_H, G8_SLOT_Z = 535 * MM, 5 * MM, G8_H - 40 * MM      # MEASURED
@@ -101,7 +106,11 @@ G8_STAND_LOW = 522.3 * MM - G8_H   # OFFICIAL height with stand 522.3: 158.8 mm.
                                    # travel (g8-08/g8-09 and g8-02: neck top 74 mm above the hub at this height); the
                                    # name is kept for the callers
 G8_STAND_DEPTH = 192.8 * MM        # OFFICIAL depth with stand, from the edges' front to the stand's back
-G8_FOOT = (171 * MM, 6 * MM)       # MEASURED front graphic: foot width; EST thickness
+G8_FOOT_AHEAD = -6 * MM            # the foot's front 6 mm behind the curved edges (round 1). Round 2b tried it 20 mm
+                                   # ahead (the neck 20 mm forward), as the top view g8-05 seemed to say: g8-04 fell from
+                                   # 0.970 to 0.938 and Samsung's drawing from 0.9895 to 0.9835, so it was perspective
+G8_FOOT = (171 * MM, 4.5 * MM)     # MEASURED front graphic: foot width; thickness MEASURED round 2 (drawing: a 4 to 5 px
+                                   # plate edge at 1.1 mm/px)
 # Round 2: the neck is graphite on the front, sides and its sloped top, with a silver back plate (g8-05 top,
 # g8-07, g8-08 side). Widths from g8-02 (143 / 200 px-scaled, the neck is nearer the camera than the panel).
 G8_NECK = (142 * MM, 190 * MM, 22 * MM)   # MEASURED widths at the top and bottom; depth from g8-08 (bracket:neck 70:38
@@ -118,7 +127,7 @@ G8_WINDOW = (67 * MM, 22 * MM, 180 * MM)  # MEASURED g8-02: the cable window, w,
 # ---------------------------------------------------------------------------
 SD_W, SD_H = 623 * MM, 362 * MM     # OFFICIAL (Apple tech specs)
 SD_DEPTH = 31 * MM                  # OFFICIAL: with the VESA adapter
-SD_T = 20.5 * MM                    # MEASURED: the body alone, Apple's side diagram (UNSURE about 1 mm)
+SD_T = 19.6 * MM                    # MEASURED round 2: Apple side diagram, adapter 16 px of the 43 px total (31 mm official)
 SD_CORNER = 5.3 * MM                # MEASURED: corner radius in front-screen-off.jpg (0.254 mm/px)
 SD_BACK_ROUND = 3.0 * MM            # EST: the back edge's round (hinge close-up)
 SD_FRONT_ROUND = 0.5 * MM           # EST
@@ -132,7 +141,10 @@ SD_H_RAIL = (18.5, 50.5, 123.5, 319.0)   # MEASURED: rail width, rail centre fro
 SD_H_BAR = (261.0, 282.0)                # MEASURED: the crossbar's top and bottom
 SD_H_CORNER = 6.0                        # MEASURED: inner corner radius
 SD_H_T = SD_DEPTH - SD_T                 # 10.5 mm: OFFICIAL 31 less the body
-SD_POWER = (30.6 * MM, 17 * MM, SD_H - 335 * MM)  # MEASURED: the round power inlet, outer and inner, height
+SD_H_EDGE = 1.5 * MM                     # MEASURED round 2: the rounded top edge (diagram highlight bands, 3 to 4 px)
+SD_H_SCREWS = (130.6, 230.6)             # MEASURED round 2: the four screws (VESA 100), mm below the top, on the rails
+SD_POWER = (30.6 * MM, 11.3 * MM, SD_H - 335 * MM)  # MEASURED: the power inlet, outer, its fine inner ring (round 2b:
+                                                   # 0.37 of the disc in the diagram), height
 SD_PORTS_X = [172.5 * MM, 188.0 * MM, 202.9 * MM, 218.4 * MM]   # MEASURED: four USB-C slots, +X (seen from behind: left)
 
 # ---------------------------------------------------------------------------
@@ -241,7 +253,7 @@ def g8_hub_profile(n=16):
     yr, (yl0, yl1), yf, yb = G8_HUB_RIM_Y, G8_HUB_LIGHT_Y, G8_HUB_FUNNEL_Y0, G8_HUB_BACK_Y
     pts = [(R, 0.030), (R, yr - 0.002), (R - 0.0006, yr - 0.0006), (R - 0.002, yr), (Ri + 0.0008, yr),
            (Ri, yl0), (Rs + 0.0008, yl1), (Rs, yl1 + 0.0004), (Rs - 0.0005, yf)]
-    keys = ["black", "black", "black", "black", "black", "hub_light", "black", "black"]
+    keys = ["rim_black"] * 5 + ["hub_light", "black", "hub_funnel"]
     lip = yb - 0.0015
     for k in range(1, n + 1):
         t = k / n
@@ -482,7 +494,7 @@ if bpy is not None:
                     k = 0.45 + 0.55 * (v / 0.27) ** 1.5           # the lit ring, outer edge to inner
                 else:
                     t = min(1.0, max(0.0, (v - 0.3) / 0.7))
-                    k = 0.62 * (1 - t) ** 1.6 + 0.04               # the trumpet, base to lip
+                    k = 0.85 - 0.5 * t ** 1.3                      # the trumpet glows nearly as the ring (g8-02)
                 px[j, i, :3] = [ch * k ** (1 / 2.2) for ch in c]    # sRGB image, k a linear brightness
         img.pixels.foreach_set(px.ravel())
         img.pack()
@@ -500,7 +512,7 @@ if bpy is not None:
     def _hub_light(name, mode=None):
         """The lit ring: the ring image as both colour and light (exports as a glTF emissive texture)."""
         m, nt, b = M._new(name)
-        M._set(b, rough=0.3, emit_strength=0.9)
+        M._set(b, rough=0.6, emit_strength=1.1)
         tx = _uv_image(nt, ring_image(mode))
         # the colour itself dimmed (a light reflects little); a bright base under the studio washes it out
         dim = nt.nodes.new("ShaderNodeMix")
@@ -516,7 +528,7 @@ if bpy is not None:
     def _hub_funnel(name, mode=None):
         """The smoked trumpet: dark glossy plastic carrying the ring's glow, fading to the lip."""
         m, nt, b = M._new(name)
-        M._set(b, base="#07080b", rough=0.12, spec=0.5, coat=1.0, coat_rough=0.05, emit_strength=0.5)
+        M._set(b, base="#07080b", rough=0.18, spec=0.4, coat=0.3, coat_rough=0.1, emit_strength=0.9)
         tx = _uv_image(nt, ring_image(mode))
         nt.links.new(tx.outputs["Color"], b.inputs["Emission Color"])
         m.diffuse_color = M.rgba("#1a1424")
@@ -552,9 +564,11 @@ if bpy is not None:
     def make_materials():
         p = M.principled
         mats = {
-            "alu": _bead(p("mat_screens_sd_alu", base="#babcbf", metal=1.0, rough=0.42)),
+            "alu": _bead(p("mat_screens_sd_alu", base="#c4c6c9", metal=0.75, rough=0.45)),
             "glass_sd": p("mat_screens_sd_glass", base="#040405", rough=0.03, spec=0.5, coat=1.0, coat_rough=0.01),
-            "off_sd": p("mat_screens_sd_off", base="#101113", rough=0.05, spec=0.5, coat=1.0, coat_rough=0.01),
+            # round 2: the inactive glass is the same black glass as the border (no band round the posts area)
+            # (Apple's screen-off photo: the active area a touch lighter than the border, #1e vs #11 in the photo)
+            "off_sd": p("mat_screens_sd_off", base="#151617", rough=0.03, spec=0.5, coat=1.0, coat_rough=0.01),
             "perf": _perforated("mat_screens_sd_perforated"),
             "shell": _bead(p("mat_screens_g8_shell", base="#c6c8cb", metal=0.55, rough=0.48), 2200, 0.05),
             "seam": p("mat_screens_g8_seam", base="#6e7176", rough=0.6, metal=0.3),
@@ -562,7 +576,16 @@ if bpy is not None:
             "black": p("mat_screens_black_plastic", base="#0d0e0f", rough=0.32, spec=0.5),
             "hub_light": _hub_light("mat_screens_g8_hub_light"),
             "hub_funnel": _hub_funnel("mat_screens_g8_hub_funnel"),
-            "hub_lip": p("mat_screens_g8_hub_lip", base="#8e9196", rough=0.35, metal=0.6),
+            "hub_lip": p("mat_screens_g8_hub_lip", base="#3c3f44", rough=0.4, metal=0.4),
+            "rim": p("mat_screens_g8_rim", base="#d4d6d9", metal=0.3, rough=0.35),
+            "rim_black": p("mat_screens_g8_hub_rim", base="#09090a", rough=0.5, spec=0.4),
+            "sd_inlet": p("mat_screens_sd_inlet", base="#040404", rough=0.45, spec=0.3),
+            "screw": p("mat_screens_sd_screw", base="#b9bbbe", metal=0.6, rough=0.32),
+            # round 2b: the H plate reads a touch brighter than the back in Apple's diagram; the back's rounded edge in a
+            # light, low-metal finish so it never reads as a dark line from behind
+            "alu_h": _bead(p("mat_screens_sd_alu_adapter", base="#d3d5d8", metal=0.5, rough=0.4)),
+            "alu_edge": p("mat_screens_sd_alu_edge", base="#d0d2d5", metal=0.3, rough=0.45),
+            "sd_ring": p("mat_screens_sd_inlet_ring", base="#0f1011", rough=0.5),
             "hub_back": p("mat_screens_g8_hub_back", base="#16171a", rough=0.5, metal=0.1),
             "window": p("mat_screens_g8_stand_window", base="#8b8e93", rough=0.5, metal=0.3),
             "port": p("mat_screens_port", base="#030303", rough=0.7),
@@ -581,6 +604,11 @@ if bpy is not None:
         mats["led_back"].diffuse_color = M.rgba("#f2f6ff")
         mats["posts"] = M.screen_image("mat_screens_posts", placeholder_image("screens_posts_placeholder", 512, 320), 1.0)
         mats["rig"] = M.screen_image("mat_screens_rig", placeholder_image("screens_rig_placeholder", 512, 214), 1.0)
+        # round 2: each picture takes its glass's own gloss, so the screen and the glass round it reflect alike
+        # (no lighter or darker band round the posts area when the picture is dark)
+        for k, glass in (("posts", dict(rough=0.03, coat=1.0, coat_rough=0.01)), ("rig", dict(rough=0.24))):
+            b = next(n for n in mats[k].node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+            M._set(b, **glass)
         return mats
 
     # -----------------------------------------------------------------------
@@ -615,14 +643,15 @@ if bpy is not None:
         rows = g8_rows(16 if lite else 90)
         S = G8_S
         # front glass: a cylinder, rows only where the material changes
-        frows = _uniq([0.0, G8_RIM, G8_ACT_Z0, G8_ACT_Z0 + G8_ACT_H, G8_H - G8_RIM, G8_H])
+        frows = _uniq([0.0, G8_RIM_BOTTOM, G8_ACT_Z0, G8_ACT_Z0 + G8_ACT_H, G8_H - G8_RIM, G8_H])
         F = [[g8_front(s, z) for s in cols] for z in frows]
 
         def fkey(i, j):
             s0, s1 = cols[i], cols[i + 1]
             z0, z1 = frows[j], frows[j + 1]
-            rim = s0 < -S + G8_RIM - 1e-6 or s1 > S - G8_RIM + 1e-6 or z0 < G8_RIM - 1e-6 or z1 > G8_H - G8_RIM + 1e-6
-            return "shell" if rim else "glass_g8"
+            rim = (s0 < -S + G8_RIM - 1e-6 or s1 > S - G8_RIM + 1e-6 or z0 < G8_RIM_BOTTOM - 1e-6 or
+                   z1 > G8_H - G8_RIM + 1e-6)
+            return "rim" if rim else "glass_g8"
         A.grid(F, None, want=lambda i, j: (-math.sin(cols[i] / G8_R), -math.cos(cols[i] / G8_R), 0), keyfn=fkey)
         # back shell
         B = [[g8_back(s, z) for s in cols] for z in rows]
@@ -790,8 +819,8 @@ if bpy is not None:
         A = Acc()
         zf = -G8_STAND_LOW
         fw, ft = G8_FOOT
+        y_front = -G8_SAG - G8_FOOT_AHEAD
         y_back = G8_STAND_DEPTH - G8_SAG
-        y_front = -G8_SAG + 0.006
         neck_t = G8_NECK[2]
         A.prism(rr(fw, y_back - y_front, 0.012, 6), frame((0, (y_front + y_back) / 2, zf), (1, 0, 0), (0, 1, 0),
                                                            (0, 0, 1)), 0.0, ft, "stand_silver")
@@ -858,7 +887,7 @@ if bpy is not None:
             pts = rr(SD_W - 2 * ins, SD_H - 2 * ins, SD_CORNER - ins, nc)
             rings.append(A.verts([(u, v, y) for u, v in pts], fr))
         for i in range(len(rings) - 1):
-            A.strip(rings[i], rings[i + 1], "alu", closed_loop=True, solid=True)
+            A.strip(rings[i], rings[i + 1], "alu" if i < 2 else "alu_edge", closed_loop=True, solid=True)
         A.face(list(reversed(rings[0])), "glass_sd", closed=True)
         A.face(rings[-1], "alu", closed=True)
         # active area (pixels off): a touch lighter than the border
@@ -879,36 +908,58 @@ if bpy is not None:
                 A.prism(stadium(0.0026, 0.0084, 4), f2, 0.0, 0.00005, "port")
             pw = frame((0, SD_T, SD_POWER[2]), (1, 0, 0), (0, 0, 1), (0, 1, 0))
             ro, ri = SD_POWER[0] / 2, SD_POWER[1] / 2
-            A.lathe([(ro, -0.0005), (ro, 0.0006), (ro - 0.0008, 0.0011), (ri + 0.001, 0.0011), (ri, 0.0007), (0.0, 0.0007)],
-                    pw, 48, "black")
-        # VESA mount adapter: the H plate
-        A.prism(sd_h_outline(), frame((0, 0, SD_H), (1, 0, 0), (0, 0, 1), (0, 1, 0)), SD_T - 0.0005, SD_DEPTH, "alu")
+            # round 2: a flat matte black disc with a fine ring (Apple's diagram), not a dome
+            A.lathe([(ro, -0.0005), (ro, 0.00025), (0.0, 0.00025)], pw, 64, "sd_inlet")
+            A.lathe([(ri, 0.00025), (ri, 0.0003), (0.0, 0.0003)], pw, 64, "sd_ring", cap_start=False)
+        # VESA mount adapter: the H plate, raised 10.5 mm, its top edge rounded (round 2: it read flat)
+        fr_h = frame((0, 0, SD_H), (1, 0, 0), (0, 0, 1), (0, 1, 0))
+        re_ = SD_H_EDGE
+        layers = [(SD_T - 0.0005, 0.0), (SD_DEPTH - re_, 0.0)]
+        for k in range(1, (3 if lite else 6) + 1):
+            a = math.pi / 2 * k / (3 if lite else 6)
+            layers.append((SD_DEPTH - re_ + re_ * math.sin(a), re_ * (1 - math.cos(a))))
+        hl = [A.verts([(u, v, w) for u, v in sd_h_outline(3 if lite else 6, d / MM)], fr_h) for w, d in layers]
+        for i in range(len(hl) - 1):
+            A.strip(hl[i], hl[i + 1], "alu_h", closed_loop=True, solid=True)
+        A.face(list(reversed(hl[0])), "alu_h", closed=True)
+        A.face(hl[-1], "alu_h", closed=True)
+        if not lite:          # the four screws (VESA 100), silver heads with a dark socket
+            for sx in (-1, 1):
+                for zt in SD_H_SCREWS:
+                    f3 = frame((sx * SD_H_RAIL[1] * MM, SD_DEPTH, SD_H - zt * MM), (1, 0, 0), (0, 0, 1), (0, 1, 0))
+                    # flush in a counterbore (Apple's side diagram shows nothing proud of the rails)
+                    A.lathe([(0.0062, 0.0), (0.0062, 0.00004), (0.0, 0.00004)], f3, 32, "port", cap_start=False)
+                    A.lathe([(0.0056, 0.00004), (0.0056, 0.00008), (0.0048, 0.00012), (0.0, 0.00012)], f3, 32, "screw",
+                            cap_start=False)
+                    A.lathe([(0.0017, 0.00013), (0.0, 0.00013)], f3, 6, "port", cap_start=False)
         body = A.finish("monitor_body", mats, coll, parent, bevel=None if lite else 0.0007)
         scr = geo.screen_plane(nm("monitor_screen"), POSTS_W, POSTS_H, (0.0, -0.0002, SD_H / 2), collection=coll,
                                parent=parent, material=mats["posts"])
         return body, scr
 
-    def sd_h_outline(n=6):
-        """The adapter's H in (x, z) mm -> m, z measured up from the display's top (negative)."""
+    def sd_h_outline(n=6, d=0.0):
+        """The adapter's H in (x, z) mm -> m, z measured up from the display's top (negative); d (mm) insets it
+        (the rounded top edge): the rail ends keep their centres, the inner corners grow by d."""
         rw, rc, rt, rbot = SD_H_RAIL
         bt, bb = SD_H_BAR
-        c = SD_H_CORNER
-        hw = rw / 2
+        c = SD_H_CORNER + d
+        hw = rw / 2 - d
         pts = []
 
         def arc(cx, cz, r, a0, a1, k=n):
             for i in range(k + 1):
                 a = math.radians(a0 + (a1 - a0) * i / k)
                 pts.append((cx + r * math.cos(a), cz + r * math.sin(a)))
-        xi, xo = rc - hw, rc + hw
-        arc(-rc, -(rt + hw), hw, 180, 0, 2 * n)                     # left rail top
-        arc(-xi + c, -bt + c, c, 180, 270)                          # inner corner, top of the bar
-        arc(xi - c, -bt + c, c, 270, 360)
-        arc(rc, -(rt + hw), hw, 180, 0, 2 * n)                      # right rail top
-        arc(rc, -(rbot - hw), hw, 0, -180, 2 * n)                   # right rail bottom
-        arc(xi - c, -bb - c, c, 0, 90)
-        arc(-xi + c, -bb - c, c, 90, 180)
-        arc(-rc, -(rbot - hw), hw, 0, -180, 2 * n)                  # left rail bottom
+        hc = rw / 2                                                 # the rail ends' centres stay put
+        arc(-rc, -(rt + hc), hw, 180, 0, 2 * n)                     # left rail top
+        c0 = SD_H_CORNER
+        arc(-(rc - rw / 2) + c0, -bt + c0, c, 180, 270)            # inner corner, top of the bar
+        arc((rc - rw / 2) - c0, -bt + c0, c, 270, 360)
+        arc(rc, -(rt + hc), hw, 180, 0, 2 * n)                      # right rail top
+        arc(rc, -(rbot - hc), hw, 0, -180, 2 * n)                   # right rail bottom
+        arc((rc - rw / 2) - c0, -bb - c0, c, 0, 90)
+        arc(-(rc - rw / 2) + c0, -bb - c0, c, 90, 180)
+        arc(-rc, -(rbot - hc), hw, 0, -180, 2 * n)                  # left rail bottom
         return [(x * MM, z * MM) for x, z in pts]
 
     # -----------------------------------------------------------------------
