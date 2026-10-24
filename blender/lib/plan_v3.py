@@ -68,7 +68,7 @@ SEAT = (MAIN["x1"] + 0.45, YM)                   # the Aeron's post, parked at t
 EAR_SEATED = (SEAT[0] - 0.06, YM, 1.18)          # seat 46 + seated ear about 72
 EAR_STANDING = 1.55                              # standing ear of a 170 cm person
 POLE = (-RX + 0.04, YM)                          # the dual monitor pole, clamped at the back edge
-UW = dict(w=0.8136, d=0.128, h=0.364, z=0.86)    # Samsung G8 34: 813.6 wide, 128.1 deep (no stand); h UNSURE
+UW = dict(w=0.8136, d=0.128, h=0.364, z=0.89)    # Samsung G8 34: 813.6 wide, 128.1 deep (no stand); h UNSURE
 UW["x"] = POLE[0] + 0.02 + 0.02 + UW["d"] / 2    # 2 cm behind it for the VESA arm
 SD = dict(w=0.623, d=0.031, h=0.362)             # Apple Studio Display 27, VESA (Apple: 362 x 623 x 31)
 SD["z"] = UW["z"] + UW["h"] + 0.04
@@ -177,7 +177,7 @@ PC_SIZE = (0.304, 0.480, 0.4645)                 # Lian Li O11 Vision W x D x H 
 PC_AT = (RET["x0"] + 0.02 + PC_SIZE[0] / 2, RY - 0.04 - PC_SIZE[1] / 2, TOP)
 LAPTOP_AT = (RET["x1"] - 0.24, RY - 0.29)
 LAPTOP_YAW = _aim(*LAPTOP_AT, *SEAT)             # turned to the chair, as in the photo
-PEG = dict(w=0.76, h=0.56, x1=WINDOW_V3["x0"] - 0.06, z=1.25, off=0.04)   # SKADIS, 4 cm off the wall, backlit
+PEG = dict(w=0.76, h=0.56, x1=WINDOW_V3["x0"] - 0.06, z=1.28, off=0.04)   # SKADIS, 4 cm off the wall, backlit
 PEG["x"] = PEG["x1"] - PEG["w"] / 2
 
 # ---------------------------------------------------------------------------
