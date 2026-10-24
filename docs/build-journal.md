@@ -748,3 +748,15 @@ site or the room. Keep each entry short. No polishing; the post does that.
   reached 2% at 7 am; the coordinator stopped the last slow re-render and committed the scripts
   early. In the morning a re-export "did nothing": macOS has no `timeout` command, so the wrapped
   Blender never started.
+
+## 2026-10-24: a toolkit for faster, more precise modelling
+
+- Owner: "make things faster and more precise". A designer built `blender/lib/{refs,backdrops,
+  compare,parts,renderqueue}.py` and `blender/tools/` (outline check, component template, a
+  demo). Proved on the approved screens: the generic compare reproduces their scores (G8 front
+  0.9894 vs 0.9893, Studio Display 0.9993 vs 0.9985); the lens fit recovers a known 6% barrel
+  bend; 30 parts build in 0.1 s; the outline gate takes 37 s and catches a wrong top view.
+- It also found something new: Samsung's top photo scores only 0.81 against the G8, the hub ring
+  and the stand top too big and too far back. That is the hub the owner already asked to fix.
+- Owner mid-task: "Blender is reopening its window again and again, and it's interrupting my
+  flow". Everything now runs headless.

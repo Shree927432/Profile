@@ -144,3 +144,66 @@ lamp, renders seven Cycles stills, exports `out/guitar_02-rich.glb` and `out/gui
 and renders a 7 s EEVEE build preview. Outputs go to `video-local/footage/2026-10-23-guitar-02/`.
 `build.py` builds the same guitar onto its hanger (`guitars_hook_02`, static) under
 `obj_guitars`, in place of its footprint, and puts the lite model in `room.glb`.
+
+## Component pipeline (the toolkit, 2026-10-24)
+
+Every Blender run is headless: always `-b`. The window opens only when the owner asks to watch.
+
+    B="/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup --python"
+
+Start a component by copying `tools/component_template.py` to `components/<name>.py` (it runs as it is,
+on an example). The steps, in order:
+
+1. **References.** Official photos and drawings in `docs/moodboard/local/...` with a SOURCES.md that gives
+   the official sizes. Each number in the component is tagged OFFICIAL, MEASURED or EST.
+2. **Lens correction** (`lib/refs.py`, plain Python or Blender): for a real camera photo, mark a few
+   edges that are straight in the world, `refs.edge_points()` snaps them, and `refs.fit_lens()` fits one
+   or two radial terms (or a homography and the lens terms from points with known positions, as for
+   Number One). Use the fit only when it is `significant`. `refs.undistort_image()` writes
+   `<photo>-lens.<ext>` plus a .json next to the original (or in `out_dir`) and never touches the original.
+   Maker renders and drawings need none. `refs.rectify()` maps a photographed flat face to a square-on,
+   true-scale image from four or more points. `refs.mm_per_px_extent()` and `mm_per_px_between()` give
+   the scale from an official size.
+3. **Backdrops** (`lib/backdrops.py`): `backdrops.add(refs.ref_record(...))` puts the photo behind the model
+   at true scale for front, back, right, left or top (a textured plane, or `kind="empty"` for a viewport-only
+   image empty). `backdrops.ortho_camera()` frames it pixel for pixel. Model straight onto it.
+4. **Outline check, about 15 minutes in** (`tools/outline_check.py`): build `rough=True` (the silhouettes
+   from `lib/parts.py`, official outer sizes only). It renders front, side, top and three-quarter in quick
+   EEVEE and scores the photo views. One review sheet comes out of it. The gate is 0.96. **The owner or the
+   coordinator approves the proportions before any detail.**
+
+       $B blender/tools/outline_check.py -- blender/components/<name>.py
+       $B blender/components/<name>.py -- outline
+
+5. **Detail** with `lib/parts.py`: rounded_box (separate radii), rounded_panel, knob (plain, knurled, with
+   an indicator, with a skirt), push_button, port (usb_a, usb_c, hdmi, displayport, jack_35, jack_635,
+   xlr_combo, iec, dc_barrel; "decal" or a real "cut" with port_cutter + cut), screw (phillips, hex,
+   hexbolt, flat), grille (real holes with clean shared topology, or a texture tile with alpha for lite),
+   driver (+ driver_cutter), tube, pole, desk_clamp, vesa_plate (75/100), rubber_feet, cable (Bezier).
+   They are all in metres, named, wound outward, `lite=True` for the web, and `facing` / `at` to place
+   them. The sheet is `video-local/footage/2026-10-24-toolkit/parts-sheet.png`.
+6. **The every-angle compare test** (`lib/compare.py`): a view per reference photo, with a `placed` camera
+   (true scale and position from the photo's ref record; the strictest), `ortho` (box-aligned) or `fit`
+   (a perspective camera searched to the photo, for the makers' perspective renders). It passes at 0.98
+   IoU, or the view carries an `explain` and shows as EXPLAINED. It writes `<name>-compare.json` and
+   `.md` (angle, IoU, pass) and `<name>-compare-<view>.png` (photo, render, 50/50, outlines).
+7. **The photo-vs-model sheet:** `<name>-photo-vs-model.jpg`, every view stacked with the photo on the left,
+   the render on the right and a title per row, top view included. It comes out of the same run.
+8. **Export:** rich and lite GLBs (template stage `export`; the baked lite atlas is
+   `components/screens_render.py export_lite`).
+
+       $B blender/components/<name>.py                    build, stills, compare, export
+       $B blender/components/<name>.py -- compare         one stage (opens the saved .blend)
+
+**Render queue** (`lib/renderqueue.py`): only one Cycles render runs on this Mac at a time, across
+processes. It is a file lock in `out/render-queue.lock`, and the OS frees it if Blender dies. Wrap every
+Cycles render or bake in `with renderqueue.slot("label"):`, or `dt = yield from
+renderqueue.render_to(path, "label")` in run.drive() jobs. While waiting it logs who holds the GPU,
+once a minute. `python3 blender/lib/renderqueue.py` says who holds it now. EEVEE and Workbench do
+not need it. The toolkit renders in EEVEE and Workbench by default; `--cycles` in the template opts in.
+
+Proof on the approved screens (nothing in `components/` changed):
+
+    $B blender/tools/demo_screens_toolkit.py              parts, outline, compare, backdrop, lens: about 2 min
+
+Output and numbers are in `video-local/footage/2026-10-24-toolkit/NOTE.md`.
