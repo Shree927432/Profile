@@ -187,6 +187,13 @@ on an example). The steps, in order:
    (a perspective camera searched to the photo, for the makers' perspective renders). It passes at 0.98
    IoU, or the view carries an `explain` and shows as EXPLAINED. It writes `<name>-compare.json` and
    `.md` (angle, IoU, pass) and `<name>-compare-<view>.png` (photo, render, 50/50, outlines).
+   Changed 2026-10-24 (from the screens builder's workarounds, now in the toolkit): an `alpha` photo mask
+   is no longer hole-filled unless the view says `fill=True` (filling closed real gaps such as panel to
+   stand); threshold masks still fill by default. `fit` also tries a sideways lens shift and keeps it only
+   when the full-size score is higher. A new `free` camera (or `fit` with `yaws`) searches distance,
+   height, sideways shift, the model's turn and tilt, framed on the largest side, for turned shots. On the
+   demo: g8-front 0.9894 (same), g8-back 0.9893 (+0.0001), g8-top 0.8268 (+0.017, the unfilled mask),
+   sd-front 0.9993 (same); Samsung's turned g8-04 went from 0.42 (`fit`) to 0.947 (`free`).
 7. **The photo-vs-model sheet:** `<name>-photo-vs-model.jpg`, every view stacked with the photo on the left,
    the render on the right and a title per row, top view included. It comes out of the same run.
 8. **Export:** rich and lite GLBs (template stage `export`; the baked lite atlas is

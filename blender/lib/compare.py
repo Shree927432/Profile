@@ -14,7 +14,9 @@ A view is a dict:
     photo     path to the reference image
     mask      "alpha" or a brightness threshold (0.92: darker than that on a white page)
     crop      (x0, x1, y0, y1) or None           only this box of the photo counts
-    fill      True                               fill holes in the photo mask (bright screen content)
+    fill      optional: fill holes in the photo mask (bright screen content). Default (2026-10-24): True for a
+              brightness-threshold mask, False for an "alpha" mask: an alpha mask already holds the true
+              silhouette, and filling it closed real gaps (panel to stand) that the render keeps open
     objects   object names to show (all others are hidden for the render)
     prepare   optional callable() -> undo()      e.g. move a part into the photo's pose
     camera    one of
@@ -24,7 +26,15 @@ A view is a dict:
                   orthographic, framed on the objects; scored after aligning the boxes (proportions)
               {"mode": "fit", "view": "front", "tilts": [0], "distances": None, "heights": None}
                   perspective: the camera distance, height (and tilt) searched to fit the photo, as
-                  screens did for Samsung's perspective renders; scored after aligning the boxes
+                  screens did for Samsung's perspective renders, then (2026-10-24) a sideways lens shift
+                  refined from that best (kept only where it scores higher; "shift": False turns it off);
+                  scored after aligning the boxes
+              {"mode": "free", "view": "front", "yaws": [-40, -30], "tilts": [0], "h_range": (-0.3, 0.3),
+               "distances": None (metres; default 0.85 to 5 frame widths)}
+                  the fuller search for turned shots (2026-10-24, from screens_render.free_fit): distance,
+                  height, sideways lens shift, the model's turn about Z ("yaws", degrees, + = counter-
+                  clockwise from above; done by orbiting the camera, the model is not moved) and tilt,
+                  framed on the box's largest side. A "fit" view that gives "yaws" runs this search too.
     fit_mask  optional callable(mask) -> mask used while searching the camera (e.g. the panel only)
     threshold optional, overrides the run's
     explain   optional: why this view may stay under the threshold (shown as EXPLAINED, not FAIL)
@@ -108,10 +118,18 @@ def align_iou(photo, rend, refine=False, identity=False):
     return best
 
 
+def fill_default(view):
+    """Hole-fill the photo mask? The view's own "fill" if given; else only for brightness-threshold masks
+    (bright content inside a dark body), never for alpha masks (their holes are real gaps)."""
+    if view.get("fill") is not None:
+        return bool(view["fill"])
+    return view.get("mask", "alpha") != "alpha"
+
+
 def photo_mask(view):
     img = refs.load(view["photo"])
     m = refs.mask(img, view.get("mask", "alpha"), view.get("crop"))
-    if view.get("fill", True):
+    if fill_default(view):
         m = refs.fill_holes(m)
     return m
 
@@ -209,21 +227,68 @@ def _cam(name="cmp_cam"):
     return cam, cd
 
 
-def _place_persp(cam, cd, view, centre, F, D, dz, tilt):
+def _place_persp(cam, cd, view, centre, F, D, dz, tilt, side=0.0, yaw=0.0):
+    """A perspective camera D from centre along the view's normal, raised dz and moved sideways `side`
+    with the lens shifted back so the centre stays framed (as product renders do), tilted `tilt` degrees
+    about its right axis; yaw (degrees) orbits it about world Z through the centre by -yaw, which shows
+    the model as if turned +yaw."""
     from mathutils import Matrix, Vector
     from . import backdrops
     R, U, N = backdrops.axes(view)
     if tilt:
         rot = Matrix.Rotation(math.radians(tilt), 3, R)
         U, N = rot @ U, rot @ N
+    if yaw:
+        rz = Matrix.Rotation(math.radians(-yaw), 3, "Z")
+        R, U, N = rz @ R, rz @ U, rz @ N
     cd.type = "PERSP"
     cd.sensor_fit = "HORIZONTAL"
     cd.sensor_width = 36
     cd.lens = 36 * D / F
-    cd.shift_x, cd.shift_y = 0.0, -dz / F
+    cd.shift_x, cd.shift_y = -side / F, -dz / F
     cd.clip_start = 0.01
     cd.clip_end = D * 4 + 10
-    cam.matrix_world = Matrix.Translation(Vector(centre) + N * D + U * dz) @ Matrix((R, U, N)).transposed().to_4x4()
+    cam.matrix_world = (Matrix.Translation(Vector(centre) + N * D + U * dz + R * side)
+                        @ Matrix((R, U, N)).transposed().to_4x4())
+
+
+def _free_search(score, F, yaws, tilts, h_range=(-0.3, 0.3), tries=None, distances=None):
+    """The fuller camera search (screens_render.free_fit, made generic): a grid over distance, height,
+    sideways shift, turn and tilt (lengths in units of the frame width F), then a pattern search that halves
+    its steps. score(D, dz, side, yaw, tilt) -> IoU. Returns (iou, (D, dz, side, yaw, tilt))."""
+    hr = (h_range[0] * F, h_range[1] * F)
+    hs = sorted(set([h * F for h in (-0.15, -0.05, 0.05, 0.15) if h_range[0] <= h <= h_range[1]] + list(hr)))
+    best = None
+    for D in (distances or (0.85 * F, 1.35 * F, 2.1 * F, 3.4 * F, 5.0 * F)):
+        for h in hs:
+            for side in (-0.17 * F, 0.0, 0.08 * F, 0.17 * F):
+                for yaw in yaws:
+                    for tl in tilts:
+                        p = (D, h, side, yaw, tl)
+                        v = score(*p)
+                        if tries is not None:
+                            tries.append((round(v, 4),) + tuple(round(x, 3) for x in p))
+                        if best is None or v > best[0]:
+                            best = (v, p)
+    ystep = abs(yaws[1] - yaws[0]) / 2 if len(yaws) > 1 else 0.0
+    tstep = abs(tilts[1] - tilts[0]) / 2 if len(tilts) > 1 else 0.0
+    steps = [0.25, 0.04 * F, 0.05 * F, ystep, tstep]
+    for _ in range(7):
+        for i in range(5):
+            if not steps[i]:
+                continue
+            for sgn in (1, -1):
+                p = list(best[1])
+                p[i] = p[i] * (1 + sgn * steps[0]) if i == 0 else p[i] + sgn * steps[i]
+                p[1] = min(hr[1], max(hr[0], p[1]))
+                v = score(*p)
+                if tries is not None:
+                    tries.append((round(v, 4),) + tuple(round(x, 3) for x in p))
+                if v > best[0]:
+                    best = (v, tuple(p))
+                    break
+        steps = [x / 2 for x in steps]
+    return best
 
 
 def score_view(view, out_dir, look_engine="BLENDER_EEVEE", look_samples=16, threshold=THRESHOLD, log=print):
@@ -245,7 +310,7 @@ def score_view(view, out_dir, look_engine="BLENDER_EEVEE", look_samples=16, thre
     mode = camcfg["mode"]
     fitm = view.get("fit_mask")
     entry = {"name": name, "title": view.get("title", name), "photo": view["photo"], "mask": view.get("mask", "alpha"),
-             "crop": view.get("crop"), "fill": view.get("fill", True), "camera_mode": mode,
+             "crop": view.get("crop"), "fill": fill_default(view), "camera_mode": mode,
              "objects": list(view["objects"])}
     tries = []
     try:
@@ -268,11 +333,36 @@ def score_view(view, out_dir, look_engine="BLENDER_EEVEE", look_samples=16, thre
             rm = S(W, H)
             v, tf = align_iou(photo, rm, refine=True)
             entry["camera"] = {"view": camcfg["view"], "ortho_scale": cam.data.ortho_scale}
+        elif mode == "free" or camcfg.get("yaws"):              # the fuller search (turned shots)
+            lo, hi = world_bbox(view["objects"])
+            centre = (lo + hi) / 2
+            F = 1.2 * max(max(hi - lo), 0.05) * max(1.0, W / H)     # the largest side fits both ways
+            cam, cd = _cam()
+            scene.camera = cam
+            p4 = photo[::4, ::4]
+
+            def score4(D, dz, side, yaw, tl):
+                _place_persp(cam, cd, camcfg["view"], centre, F, D, dz, tl, side, yaw)
+                return align_iou(p4, S(p4.shape[1], p4.shape[0]))[0]
+            _, (D, dz, side, yaw, tl) = _free_search(score4, F, list(camcfg.get("yaws") or [0.0]),
+                                                     list(camcfg.get("tilts") or [0.0]),
+                                                     camcfg.get("h_range", (-0.3, 0.3)), tries,
+                                                     camcfg.get("distances"))
+            _place_persp(cam, cd, camcfg["view"], centre, F, D, dz, tl, side, yaw)
+            rm = S(W, H)
+            v, tf = align_iou(photo, rm, refine=True)
+            entry["camera"] = {"view": camcfg["view"], "distance_m": round(D, 4), "height_offset_m": round(dz, 4),
+                               "sideways_m": round(side, 4), "turn_deg": round(yaw, 1), "tilt_deg": round(tl, 1),
+                               "frame_width_m": round(F, 4), "lens_mm": round(36 * D / F, 2)}
+            entry["yaw_deg"] = round(yaw, 1)
+            entry["tries_best"] = sorted(tries)[-5:]
         else:                                                   # perspective fit
             lo, hi = world_bbox(view["objects"])
             centre = (lo + hi) / 2
             R, U, N = backdrops.axes(camcfg["view"])
-            F = 1.3 * max(abs((hi - lo).dot(R)), 0.05)
+            # the frame's width; 2026-10-24: wide enough that the height fits a landscape photo too (a tall
+            # object in a 16:9 photo was cut off at the top and bottom before; unchanged when it fits)
+            F = 1.3 * max(abs((hi - lo).dot(R)), abs((hi - lo).dot(U)) * W / H, 0.05)
             cam, cd = _cam()
             scene.camera = cam
             quick = camcfg.get("quick")
@@ -324,15 +414,16 @@ def score_view(view, out_dir, look_engine="BLENDER_EEVEE", look_samples=16, thre
                                 best = (v, *cand)
                                 break
                     st = {k: x / 2 for k, x in st.items()}
-            _, D, dz, tl = best
-            if fitm:
-                # the fit part (say the panel) barely fixes the camera's height at long range; the rest
-                # (the stand) does: one more pass on the whole silhouette, height only
+            _, D0, dz0, tl = best
+
+            def height_pass(dz, side):
+                """the fit part (say the panel) barely fixes the camera's height at long range; the rest
+                (the stand) does: one more pass on the whole silhouette, height only"""
                 full2 = photo[::q, ::q]
                 bh = None
 
                 def hscore(h):
-                    _place_persp(cam, cd, camcfg["view"], centre, F, D, h, tl)
+                    _place_persp(cam, cd, camcfg["view"], centre, F, D0, h, tl, side)
                     return align_iou(full2, S(full2.shape[1], full2.shape[0]))[0]
                 for h in sorted(set([dz] + list(heights))):
                     v = hscore(h)
@@ -342,12 +433,40 @@ def score_view(view, out_dir, look_engine="BLENDER_EEVEE", look_samples=16, thre
                     v = hscore(h)
                     if v > bh[0]:
                         bh = (v, h)
-                dz = bh[1]
-            _place_persp(cam, cd, camcfg["view"], centre, F, D, dz, tl)
-            rm = S(W, H)
-            v, tf = align_iou(photo, rm, refine=True)
+                return bh[1]
+
+            def final(dz, side):
+                _place_persp(cam, cd, camcfg["view"], centre, F, D0, dz, tl, side)
+                rm = S(W, H)
+                return align_iou(photo, rm, refine=True) + (rm, dz, side)
+            # the search as before (no sideways shift)
+            res = final(height_pass(dz0, 0.0) if fitm else dz0, 0.0)
+            if camcfg.get("shift", True) and not quick:
+                # 2026-10-24: a sideways lens shift refined from that best (product renders are often shot
+                # off-centre; the grid cannot see it). The final full-size score decides, so the result is
+                # never worse than the search without it.
+                bs = (best[0], 0.0)
+                st = 0.08 * F
+                for _ in range(5):
+                    for sgn in (1, -1):
+                        _place_persp(cam, cd, camcfg["view"], centre, F, D0, dz0, tl, bs[1] + sgn * st)
+                        r = S(p2.shape[1], p2.shape[0])
+                        v = align_iou(target, fitm(r) if fitm else r)[0]
+                        tries.append((round(v, 4), round(D0, 3), round(dz0, 3), tl, round(bs[1] + sgn * st, 3)))
+                        if v > bs[0]:
+                            bs = (v, bs[1] + sgn * st)
+                            break
+                    st /= 2
+                if bs[1]:
+                    res2 = final(height_pass(dz0, bs[1]) if fitm else dz0, bs[1])
+                    if res2[0] > res[0]:
+                        res = res2
+            v, tf, rm, dz, side = res
+            D = D0
+            _place_persp(cam, cd, camcfg["view"], centre, F, D, dz, tl, side)    # the look render's camera
             entry["camera"] = {"view": camcfg["view"], "distance_m": round(D, 4), "height_offset_m": round(dz, 4),
-                               "tilt_deg": tl, "frame_width_m": round(F, 4), "lens_mm": round(36 * D / F, 2)}
+                               "tilt_deg": tl, "sideways_m": round(side, 4), "frame_width_m": round(F, 4),
+                               "lens_mm": round(36 * D / F, 2)}
             if fitm:
                 entry["iou_fit_part"] = round(align_iou(fitm(photo), fitm(rm), refine=True)[0], 4)
             entry["tries_best"] = sorted(tries)[-5:]
@@ -549,7 +668,7 @@ def _layers(e):
     rend = Image.new("RGBA", (W, H), bgc)
     rend.alpha_composite(layer)
     pm = refs.mask(np.asarray(src, np.float32) / 255.0, e["mask"], e.get("crop"))
-    if e.get("fill", True):
+    if fill_default(e):
         pm = refs.fill_holes(pm)
     rm = np.asarray(layer)[..., 3] > 128
     return ph, rend, pm, rm
