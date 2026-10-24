@@ -773,3 +773,14 @@ site or the room. Keep each entry short. No polishing; the post does that.
   and sheen made it read like brushed fibre. Owner: "Speakers approved, gloss white."
 - The coordinator gave feedback in three pieces instead of one full review; the owner asked
   "why these tasks are taking so long". Rule since then: one complete review per round.
+
+## 2026-10-24: the screens, approved, then reopened, then approved
+
+- After round 2 the coordinator called the screens ready; the owner: "still there are lot of
+  problems in screen". A full review found ten (the G8's side, ring, foot, rim; the Studio
+  Display's banded glass, flat bracket, domed inlet, dark edge, side). Fixing them showed that
+  part of the trouble was the comparison itself: hole-filled masks and a side camera 0.7 m away on
+  a 25 mm lens had drawn our shell as a wedge and the foot as a block. Owner: "Screens approved
+  now."
+- Lesson: review the close-ups before calling anything ready, and distrust a comparison that
+  disagrees with your eyes.
