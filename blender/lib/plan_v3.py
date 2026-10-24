@@ -39,14 +39,16 @@ WINDOW_V3 = dict(x0=-0.30, x1=1.10, sill=0.95, head=2.35, ledge_d=0.25, ledge_ho
 LEDGE_IN = WINDOW_V3["ledge_d"] - 0.05           # 20 cm into the room
 
 # ---------------------------------------------------------------------------
-# The desk: one continuous white top, 3.5 cm, at 73.5 (IKEA LAGKAPTEN on ALEX, no pucks).
+# The desk: one continuous white top, 3.5 cm, at 76.5: IKEA LAGKAPTEN on ALEX with 3 cm metal risers
+# (owner, 2026-10-24: "Option B: short 3 cm risers, desk at about 76.5 cm").
 # ---------------------------------------------------------------------------
-TOP, TOP_T = 0.735, 0.035
+RISER = 0.03
+TOP, TOP_T = 0.70 + RISER + 0.035, 0.035      # 0.765
 ALEX = (0.36, 0.58, 0.70)                        # IKEA ALEX w, d, h (official 36 x 58 x 70)
 MAIN_LEN, MAIN_D, RET_D = 1.85, 0.80, 0.60
 MAIN = dict(x0=-RX, x1=-RX + MAIN_D, y0=RY - MAIN_LEN, y1=RY)                       # y 25 to 210
 RET = dict(x0=-RX + MAIN_D, x1=WINDOW_V3["x0"] - 0.08, y0=RY - RET_D, y1=RY)       # x -140 to -38
-RET_LEN = RET["x1"] - RET["x0"]                  # beyond the main run: 102 (172 from the left wall)
+RET_LEN = RET["x1"] - RET["x0"]                  # beyond the main run: 102 (182 from the left wall)
 DESK_L = [(MAIN["x0"], MAIN["y0"]), (MAIN["x1"], MAIN["y0"]), (MAIN["x1"], RET["y0"]), (RET["x1"], RET["y0"]),
           (RET["x1"], RET["y1"]), (MAIN["x0"], MAIN["y1"])]                         # the top, as one outline
 LED_IN = 0.05                                    # LED strip under both front edges, 5 cm in
