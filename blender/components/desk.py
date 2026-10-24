@@ -104,8 +104,8 @@ TOP_CORNER_R = 3.0     # EST: the outer corners in plan ("tiny rounded corners",
 TOP_INNER_R = 8.0      # EST: the L's inner corner, one router pass
 # LED strip (plan v3: under both front edges, 5 cm in). EST size: a flat diffused strip.
 LED_W, LED_T = 16.0, 5.0
-LED_COLOUR = "#8fd0ff"  # EST: the owner's photo's white-blue under the front edge
-LED_STRENGTH = 450.0   # EST: bright enough to wash the wall and floor below, as in the photo (round 1 had 30: no glow)
+LED_COLOUR = "#3aa6ff"  # EST: the owner's photo's cyan-blue glow (checked on the riser close-up pair)
+LED_STRENGTH = 300.0   # EST: washes the unit tops, the riser gap, the wall and floor as in the owner's photo
 
 # The desk's plan from room plan v3 (read only), in the desk's frame (wall corner at the origin)
 try:
@@ -115,10 +115,19 @@ try:
     RET_REACH = P3.RET["x1"] + _RX                                     # 1.82 from the left wall
     DRAWERS_AT = [(x + _RX, y - _RY, yaw) for x, y, yaw in P3.DRAWERS]
     LED_IN = P3.LED_IN
-    TOP_Z = P3.TOP
 except Exception:            # plan v3 unreadable: its numbers on 2026-10-24
-    MAIN_LEN, MAIN_D, RET_D, RET_REACH, LED_IN, TOP_Z = 1.85, 0.80, 0.60, 1.82, 0.05, 0.735
+    MAIN_LEN, MAIN_D, RET_D, RET_REACH, LED_IN = 1.85, 0.80, 0.60, 1.82, 0.05
     DRAWERS_AT = [(0.50, -1.66, 90), (0.99, -0.30, 0), (1.63, -0.30, 0)]
+
+# Risers between each unit and the top (owner, 2026-10-24: "Option B: short 3 cm risers, desk at about 76.5 cm,
+# LED along the whole front edge"). The look is the owner's photo (ai-desk-reference-1.jpg): round
+# brushed-steel posts standing on small square plates, one near each corner of a unit's top.
+RISER_H = 30.0         # OWNER 2026-10-24: 3 cm between the ALEX top (700) and the desk top's underside
+RISER_D = 36.0         # EST: the photo's posts are about a tenth of the unit's width across
+RISER_PLATE, RISER_PLATE_T = 50.0, 3.0   # EST: square plates under the post and under the desk top
+RISER_IN = (40.0, 75.0)  # EST: post centres in from the unit's sides (photo: about 40) and from its front and
+                         # back (75: keeps the top plate clear of the LED strip 5 cm in from the desk's edge)
+TOP_Z = (AH + RISER_H + TOP_T) * MM   # 0.765: ALEX 700 + risers 30 + LAGKAPTEN 35 (plan v3 had 0.735, no risers)
 
 DESK_AT = (1.5, 1.0, 0.0)    # where the L desk stands in the build file (the unit is at the origin)
 CMP_AT = (0.0, 3.0, 0.0)     # IKEA's 200 x 60 layout for the compare
@@ -199,24 +208,12 @@ def _round_poly(cs, rc, ri, n_c, n_i):
 
 
 def led_segments():
-    """The strip's runs in the desk frame (m): ((x0, y0), (x1, y1)), in the knee spaces only: plan v3
-    puts it 5 cm in, where the units (1 cm in) stand under the top, so it stops 1 cm short of them."""
-    hw, hd = AW * MM / 2, AD * MM / 2
-    foot = []
-    for x, y, yaw in DRAWERS_AT:
-        if yaw == 90:
-            foot.append((x - hd, x + hd, y - hw, y + hw))
-        else:
-            foot.append((x - hw, x + hw, y - hd, y + hd))
+    """The strip's runs in the desk frame (m): ((x0, y0), (x1, y1)) along the WHOLE front edge of both arms,
+    LED_IN in from the edge (owner, 2026-10-24); over the units it runs through the 30 mm riser gap."""
     xm = MAIN_D - LED_IN                       # main run: along y at x = 0.75
     yr = -RET_D + LED_IN                       # return: along x at y = -0.55
-    u1 = foot[0]
-    segs = [((xm, u1[3] + 0.01), (xm, yr))]   # from unit 1 to the corner
-    u2, u3 = foot[1], foot[2]
-    if u2[0] - 0.01 > xm:
-        segs.append(((xm, yr), (u2[0] - 0.01, yr)))
-    segs.append(((u2[1] + 0.01, yr), (u3[0] - 0.01, yr)))
-    return segs
+    e = 0.01                                   # stops 1 cm short of the top's ends
+    return [((xm, -MAIN_LEN + e), (xm, yr - LED_W * MM / 2)), ((xm - LED_W * MM / 2, yr), (RET_REACH - e, yr))]
 
 
 # ---------------------------------------------------------------------------
@@ -251,9 +248,10 @@ def materials():
         "white": _alex_white(),
         "top": get("mat_desk_top_white") or M.principled("mat_desk_top_white", base="#f2f2ee", rough=0.42, spec=0.5),
         "black": get("mat_desk_feet") or M.principled("mat_desk_feet", base="#141414", rough=0.6),
-        "steel": get("mat_desk_runner") or M.principled("mat_desk_runner", base="#a3a6aa", rough=0.35, metal=1.0),
+        "runner": get("mat_desk_runner") or M.principled("mat_desk_runner", base="#a3a6aa", rough=0.35, metal=1.0),
         "led": get("mat_desk_led") or M.principled("mat_desk_led", base="#e9f2ff", rough=0.4, emit=LED_COLOUR,
                                                     emit_strength=LED_STRENGTH),
+        "steel": get("mat_desk_riser") or M.principled("mat_desk_riser", base="#b8bbbf", rough=0.3, metal=1.0),
         "led_body": get("mat_desk_led_body") or M.principled("mat_desk_led_body", base="#e6e6e6", rough=0.4),
     }
 
@@ -349,7 +347,7 @@ def alex_unit(prefix, coll, parent=None, at=(0, 0, 0), yaw=0.0, rough=False, lit
             zr = (z0 + BOX_UP + 4.0) * s
             for sx in (-1, 1):
                 x0, x1 = sorted((sx * (hw - PANEL_T * s), sx * (hw - PANEL_T * s - RUNNER[0] * s * 0.5)))
-                _box(A, x0, x1, -hd + 50 * s, -hd + 50 * s + RUNNER[1] * s, zr, zr + RUNNER[2] * s, "steel")
+                _box(A, x0, x1, -hd + 50 * s, -hd + 50 * s + RUNNER[1] * s, zr, zr + RUNNER[2] * s, "runner")
     carcass = _finish(A, prefix + "_carcass" + sfx, mats, coll, root, bevel=None if lite else EDGE_R * s, segs=2)
     _mark_inside(carcass, hw - PANEL_T * s, hd, OPEN_Z0 * s, OPEN_Z1 * s)
     out["carcass"].append(carcass)
@@ -401,6 +399,30 @@ def _mark_inside(o, xi, hd, z0, z1, eps=1e-4):
     a.data.foreach_set("value", vals)
 
 
+def riser_set(name, coll, parent, lite=False, share=None):
+    """Four risers on a unit's top (unit frame: centred, front -Y, z from the unit's top): a square plate,
+    a round post, a square plate under the desk top. One mesh, brushed steel. share: reuse a mesh."""
+    from lib import names, parts as P
+    if share is not None:
+        o = bpy.data.objects.new(name, share.data)
+        coll.objects.link(o)
+        o.parent = parent
+        names.set_name(o, name, data=False)
+        o.location = (0, 0, AH * MM)
+        return o
+    A = P.Mesh()
+    s = MM
+    hp, t, r = RISER_PLATE / 2 * s, RISER_PLATE_T * s, RISER_D / 2 * s
+    for fx in (-1, 1):
+        for fy in (-1, 1):
+            cx, cy = fx * (AW / 2 - RISER_IN[0]) * s, fy * (AD / 2 - RISER_IN[1]) * s
+            _box(A, cx - hp, cx + hp, cy - hp, cy + hp, 0.0, t, "steel")
+            _cyl(A, cx, cy, r, t, RISER_H * s - t, 10 if lite else 32, "steel")
+            _box(A, cx - hp, cx + hp, cy - hp, cy + hp, RISER_H * s - t, RISER_H * s, "steel")
+    o = A.finish(name, materials(), "+Z", (0, 0, AH * MM), coll, parent, smooth=30)
+    return o if lite else _bevel(o, 0.0006, 2)
+
+
 def top_slab(name, outline, coll, parent, z0, lite=False, mat_key="top"):
     from lib import parts as P
     A = P.Mesh()
@@ -450,11 +472,14 @@ def build(rough=False, lite=False, collection=None, what=("unit",), suffix=""):
         root = _empty("set_desk" + suffix, coll, None, DESK_AT, size=0.4)
         top = top_slab("desk_top" + suffix, l_outline(), coll, root, TOP_Z - TOP_T * MM, lite)
         objs = [top]
-        share = None
+        share = rshare = None
         for i, (x, y, yaw) in enumerate(DRAWERS_AT):
             r, p, share = alex_unit(f"desk_drawers_{i + 1:02d}", coll, root, (x, y, 0.0), yaw, lite=lite,
                                     share=share, sfx=suffix)
             objs += [o for v in p.values() for o in v]
+            rs = riser_set(f"desk_drawers_{i + 1:02d}_risers{suffix}", coll, r, lite, rshare)
+            rshare = rshare or rs
+            objs.append(rs)
         led = led_strip("desk_led" + suffix, coll, root, lite)
         objs.append(led)
         names["desk_root"] = [root.name]

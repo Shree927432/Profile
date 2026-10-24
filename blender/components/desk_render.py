@@ -213,11 +213,12 @@ def cameras():
     c["corner"] = cam("still_cam_corner", desk_pt(2.15, -2.35, 1.55), desk_pt(0.85, -0.66, 0.58), lens=35, coll=coll)
     c["edge"] = cam("still_cam_edge", desk_pt(1.82 - 0.40, -0.60 - 0.95, 0.735 + 0.45), desk_pt(1.74, -0.63, 0.712),
                     lens=85, fstop=11.0, coll=coll)
+    c["riser"] = cam("still_cam_riser", desk_pt(2.35, -2.25, 0.98), desk_pt(1.05, -0.62, 0.70), lens=80, coll=coll)
     c["led"] = cam("still_cam_led", desk_pt(3.1, -3.6, 1.45), desk_pt(0.85, -0.8, 0.45), lens=32, coll=coll)
     return c
 
 
-def led_scene(on):
+def led_scene(on, ambient=0.0):
     """The LED still: two walls behind the desk, the studio dimmed, a dark carpet floor."""
     sc = bpy.context.scene
     walls = [bpy.data.objects.get(n) for n in ("still_wall_left", "still_wall_back")]
@@ -241,9 +242,9 @@ def led_scene(on):
     for n in ("lt_key", "lt_fill", "lt_rim", "lt_top", "lt_front"):
         L = bpy.data.objects[n].data
         L["e0"] = L.get("e0", L.energy)
-        L.energy = L["e0"] * (0.05 if on else 1.0)
+        L.energy = L["e0"] * ((0.05 + ambient) if on else 1.0)
     bg = sc.world.node_tree.nodes["Background"]
-    bg.inputs["Strength"].default_value = 0.03 if on else 0.55
+    bg.inputs["Strength"].default_value = (0.03 + ambient) if on else 0.55
 
 
 def render(path, cycles, samples, label):
@@ -290,6 +291,7 @@ def stage_stills():
         ("plinth", "plinth", ["alex"], (0, 0, 0), True, 128),
         ("corner", "corner", ["set_desk"], desk_pt(0.9, -0.9, 0), True, 128),
         ("led", "led", ["set_desk"], desk_pt(0.9, -0.9, 0), True, 256),
+        ("riser", "riser", ["set_desk"], desk_pt(0.9, -0.9, 0), True, 192),
         ("clay", "hero", ["set_desk"], desk_pt(0.9, -0.9, 0), False, 0),
         ("wire", "hero", ["set_desk"], desk_pt(0.9, -0.9, 0), False, 0),
     ]
@@ -305,14 +307,14 @@ def stage_stills():
             looks.clay_on()
         if name == "wire":
             undo = looks.wire_look(thickness=0.0012, skip={"still_floor"})
-        if name == "led":
-            led_scene(True)
+        if name in ("led", "riser"):
+            led_scene(True, 0.0 if name == "led" else 0.3)
         times[name] = render(os.path.join(FOOT, f"desk-{name}.png"), cyc, spp, name)
         if name == "clay":
             looks.clay_off()
         if undo:
             undo()
-        if name == "led":
+        if name in ("led", "riser"):
             led_scene(False)
     drawer.location.y = y0
     show(["alex", "set_desk"])
@@ -430,11 +432,18 @@ def stage_closeups():
     with renderqueue.slot("desk corner"):
         bpy.ops.render.render(write_still=True)
     show(["alex", "set_desk"])
-    extra = [dict(title="the L's inner corner and the units under it (the owner's desk stands on metal risers; "
-                        "plan v3 has none)", left="owner's photo (crop, low resolution)",
-                  right="our desk, a similar angle (plan v3)",
+    extra = [dict(title="the L's inner corner and the units under it (owner's photo: taller risers; ours: 3 cm, owner 2026-10-24"
+                        ")", left="owner's photo (crop, low resolution)",
+                  right="our desk, a similar angle (plan v3 with 3 cm risers)",
                   photo=os.path.join(D.REPO, "docs", "moodboard", "local", "ai-desk-reference-1.jpg"),
                   box=[200, 330, 521, 520], render=cp, rbox=None)]
+    rz = os.path.join(FOOT, "desk-riser.png")
+    if os.path.exists(rz):
+        extra.append(dict(title="risers and the LED over the units (owner's choice: 3 cm risers, strip along the whole edge)",
+                          left="owner's photo (crop, low resolution; its risers are taller)",
+                          right="our desk, LED on, a similar angle",
+                          photo=os.path.join(D.REPO, "docs", "moodboard", "local", "ai-desk-reference-1.jpg"),
+                          box=[320, 352, 521, 432], render=rz, rbox=None))
     spec = {"sets": sets, "extra": extra, "out": os.path.join(FOOT, "desk-closeups.jpg")}
     sp = os.path.join(FOOT, "closeups", "closeups.json")
     with open(sp, "w") as f:
