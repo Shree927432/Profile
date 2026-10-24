@@ -280,6 +280,7 @@ def compare_sheets():
         print("compare", name, c["iou"], out)
     photo_vs_model(rep)
     closeup_sheet(rep)
+    woofer_texture_sheet(rep)
 
 
 def photo_vs_model(rep):
@@ -371,6 +372,83 @@ def closeup_sheet(rep):
     out = os.path.join(FOOT, f"speakers-closeups{'-quick' if QUICK else ''}.jpg")
     sheet.save(out, quality=92)
     print("closeups", out, sheet.size)
+
+
+def _cone_stats(gray, cx, cy, sx, sz, r0=34, r1=52):
+    """Mean, 90th percentile, and the stroke orientation histogram (degrees off tangential, 12 bins over
+    -90..90, coherent pixels only) on the cone ring r0..r1 mm."""
+    from scipy import ndimage as nd
+    a = gray.astype(float)
+    g = nd.gaussian_filter(a, 0.7)
+    gx, gy = nd.sobel(g, 1), nd.sobel(g, 0)
+    j11, j22, j12 = (nd.gaussian_filter(v, 2) for v in (gx * gx, gy * gy, gx * gy))
+    ang = -(0.5 * np.arctan2(2 * j12, j11 - j22) + np.pi / 2)
+    coh = np.sqrt((j11 - j22) ** 2 + 4 * j12 ** 2) / (j11 + j22 + 1e-6)
+    H, W = a.shape
+    yy, xx = np.mgrid[0:H, 0:W]
+    dx, dz = (xx - cx) / sx, -(yy - cy) / sz
+    r = np.hypot(dx, dz)
+    dev = (ang - (np.arctan2(dz, dx) + np.pi / 2) + np.pi / 2) % np.pi - np.pi / 2
+    ring = (r >= r0) & (r < r1)
+    m = ring & (coh > 0.3)
+    h, _ = np.histogram(np.degrees(dev[m]), bins=12, range=(-90, 90))
+    return {"mean": float(a[ring].mean()), "p90": float(np.percentile(a[ring], 90)),
+            "hist": (h / max(1, h.sum()) * 100).round().astype(int).tolist()}
+
+
+def woofer_texture_sheet(rep):
+    """The cone's fibre texture: photo crop vs ours, the white front, the black front and a raking light,
+    with the mean, 90th percentile and orientation histogram of the cone ring printed under each pair."""
+    from PIL import Image, ImageDraw
+    font, small = _fonts()
+    rows = []
+    geo = {"white-front": (541.4, 990.5 - S.WF_Z * 2.668, 2.705, 2.668),
+           "front-above": (800.0, 1471 - S.WF_Z * 3.985, 3.985, 3.985)}
+    for name, (cx, cy, sx, sz) in geo.items():
+        c = rep.get("compare", {}).get(name)
+        if not c:
+            continue
+        ph, rend, _, _ = _pair(c)
+        gp, gr = np.array(ph.convert("L")), np.array(rend.convert("L"))
+        sp, sr = _cone_stats(gp, cx, cy, sx, sz), _cone_stats(gr, cx, cy, sx, sz)
+        h = int(60 * sz)
+        box = (int(cx - 60 * sx), int(cy - 60 * sz), int(cx + 60 * sx), int(cy + 60 * sz))
+        rows.append((TITLES[name].split(" vs ")[0] + ": the cone, same camera and scale", ph.convert("RGB").crop(box),
+                     rend.convert("RGB").crop(box), sp, sr))
+    tech = os.path.join(REPO, "docs", "moodboard", "local", "ai-lab", "08-studio-monitors", "tech-woofer.png")
+    rk = os.path.join(FOOT, "speakers-woofer-raking.png")
+    if os.path.exists(tech) and os.path.exists(rk):
+        a = Image.open(tech).convert("RGBA")
+        bg = Image.new("RGBA", a.size, (0, 0, 0, 255))
+        bg.alpha_composite(a)
+        b = Image.open(rk).convert("RGB")
+        b = b.crop((b.size[0] // 2 - 540, 0, b.size[0] // 2 + 540, 1080))
+        rows.append(("Raking light: ADAM's woofer close-up (tech-woofer.png) vs our cone under a grazing light "
+                     "(different camera; texture only)", bg.convert("RGB"), b, None, None))
+    colw, rowh, head, foot = 940, 760, 70, 70
+    sheet = Image.new("RGB", (2 * colw + 40, len(rows) * (rowh + head + foot) + 20), (246, 244, 238))
+    d = ImageDraw.Draw(sheet)
+    y = 10
+    for title, a, b, sp, sr in rows:
+        d.text((14, y), title, fill=(29, 39, 51), font=font)
+        d.text((14, y + 38), "official photo", fill=(47, 109, 181), font=small)
+        d.text((colw + 34, y + 38), "ours", fill=(47, 109, 181), font=small)
+        for k, im in enumerate((a, b)):
+            sc = min(colw / im.size[0], rowh / im.size[1])
+            im = im.resize((int(im.size[0] * sc), int(im.size[1] * sc)), Image.LANCZOS)
+            sheet.paste(im, (14 + k * (colw + 20) + (colw - im.size[0]) // 2, y + head))
+        if sp:
+            for k, st in enumerate((sp, sr)):
+                d.text((14 + k * (colw + 20), y + head + rowh + 6),
+                       f"cone ring r 34-52 mm: mean {st['mean']:.0f}, 90th pct {st['p90']:.0f}", fill=(29, 39, 51),
+                       font=small)
+                d.text((14 + k * (colw + 20), y + head + rowh + 32),
+                       "strokes off tangential, % per 15 deg from -90 to 90: " + " ".join(str(v) for v in st["hist"]),
+                       fill=(29, 39, 51), font=small)
+        y += rowh + head + foot
+    out = os.path.join(FOOT, "speakers-woofer-texture.jpg")
+    sheet.save(out, quality=92)
+    print("woofer texture", out, [(r[0][:30], r[3], r[4]) for r in rows if r[3]])
 
 
 if __name__ == "__main__":

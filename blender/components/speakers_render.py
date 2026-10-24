@@ -289,6 +289,24 @@ def stage_stills():
     yield from still("detail-woofer", "still_cam_woofer", 256)
     yield from still("detail-rear", "still_cam_rear", 256)
     yield from still("detail-ports", "still_cam_port", 256)
+    if STILLS is None or "woofer-raking" in STILLS:
+        # the cone under a grazing light from the left, the studio lights down (as tech-woofer.png)
+        dims = [(o, o.data.energy) for o in objs if o.type == "LIGHT"]
+        for o, e in dims:
+            o.data.energy = e * 0.15
+        cab_x = S.PAIR_X * MM
+        zw = S.POLE_CAB_Z * MM + S.WF_Z * MM
+        ld = bpy.data.lights.new("lt_raking", "AREA")
+        ld.size, ld.energy = 0.08, 6.0
+        lo = bpy.data.objects.new("lt_raking", ld)
+        scene.collection.objects.link(lo)
+        lo.location = (-cab_x - 0.40, -0.16, zw + 0.03)
+        tgt = Vector((-cab_x, -0.14, zw))
+        lo.rotation_euler = (tgt - lo.location).to_track_quat("-Z", "Y").to_euler()
+        yield from still("woofer-raking", "still_cam_woofer", 256)
+        bpy.data.objects.remove(lo)
+        for o, e in dims:
+            o.data.energy = e
     if STILLS is None or "iso" in STILLS:
         S.set_mount(root(), "iso")
         yield from still("iso", "still_cam_iso", 192)
@@ -615,7 +633,9 @@ def stage_compare():
         scene.render.resolution_percentage = 100 * (1 if QUICK else hires)
         scene.render.film_transparent = True
         scene.render.image_settings.color_mode = "RGBA"
-        scene.cycles.samples = 24 if QUICK else (96 if hires == 1 else 160)
+        scene.cycles.samples = 24 if QUICK else (96 if hires == 1 else 512)
+        if hires > 1 and not QUICK:
+            scene.cycles.use_denoising = False   # the denoiser smears the cone's 0.2 mm fibres into blotches
         rpath = os.path.join(MEASURE, f"render-{name}.png")
         log(f"compare {name}: IoU {iou_full:.4f} (dark parts {feat_iou}) at yaw={yaw} D={D:.2f} dz={dz:.3f} tilt={tl}; "
             f"rendering")
@@ -764,7 +784,8 @@ def export_lite(size=1024, orm_size=512):
     for o in bpy.context.view_layer.objects:
         o.select_set(False)
     for o in baked:
-        o.data.uv_layers.new(name="UVMap")
+        lay = o.data.uv_layers.new(name="UVMap")
+        o.data.uv_layers.active = lay            # the atlas UV; the woofer keeps ConeUV for the bake source
         o.select_set(True)
     bpy.context.view_layer.objects.active = baked[0]
     with _ctx(baked[0], baked):
@@ -840,6 +861,10 @@ def export_lite(size=1024, orm_size=512):
     for o in baked:
         o.data.materials.clear()
         o.data.materials.append(m)
+        cu = o.data.uv_layers.get("ConeUV")
+        if cu is not None:
+            o.data.uv_layers.remove(cu)          # the lite model has one UV: the atlas
+        o.data.uv_layers["UVMap"].active_render = True
     scene.render.engine = prev_engine
     rich = [root()] + [bpy.data.objects[k] for k in PARTS]
     for o in rich:

@@ -72,6 +72,10 @@ WF_SCREW_R = 85.5                  # MEASURED: six screws at 0, 60, ... 300 degr
 # the profile of the moving part, (r, a): a forward from the baffle plane, mm. Cone depth EST.
 WF_PROFILE = ([(0.0, -16.2), (8.0, -16.5), (16.0, -17.3), (22.0, -18.2), (27.0, -19.2), (29.2, -19.7)],
               [(30.6, -20.1), (35.0, -18.2), (40.0, -15.8), (45.0, -12.9), (50.0, -9.8), (53.6, -7.4)])
+CONE_LO, CONE_HI = 0.016, 0.0   # linear albedo of the charcoal (CONE_HI unused since round 4b)
+CONE_VAR, CONE_CAP_LIFT, CONE_WEAVE_MM = 0.95, 0.55, 0.45   # linear albedo: charcoal, a full stroke (fitted to the photos' mean and p90)
+CONE_BUMP_MM = 0.03               # stroke relief for the normal map
+CONE_ROUGH, CONE_ANISO, CONE_SPEC = 0.5, 0.6, 0.22 # the brushed sheen
 WF_ROLL_PEAK = -0.2                # EST: the top of the surround, just behind the baffle plane
 
 # tweeter (X-ART folded ribbon in the HPS waveguide). Re-traced 2026-10-24 (round 2) on white-front.jpg
@@ -316,6 +320,81 @@ def facet_meets_side_z():
     return z0 + (-W / 2 - x0) * (z1 - z0) / (x1 - x0)
 
 
+
+# ---------------------------------------------------------------------------
+# the woofer cone's fibre texture (round 4): an image of many short brushed strokes
+# ---------------------------------------------------------------------------
+# Measured on black-front-1600.png and white-front.jpg (structure tensor, cone ring r 34 to 52 mm): the
+# strokes run about 10 degrees off tangential (a slight spiral), spread about 22 degrees; 1 to 4 mm long,
+# about 0.2 mm wide, dense; grey mean 46 to 50 with a 90th percentile of 105 to 115. The cap (r < 30) is a
+# fine fabric with no main direction.
+CONE_TEX = dict(size=2048, span=144.0, n_cone=600000, n_cap=9000, dev_mean=12.0, dev_sd=38.0, seed=7)
+# dev_mean is +12 here because the woofer's local frame mirrors the front view; it renders about 10 degrees
+# the photos' way (checked with the same structure-tensor histogram on the renders)
+
+
+def cone_stroke_maps(size=None, seed=None):
+    """(albedo, height, cone_mask) as float32 arrays size x size, row 0 = v 0 (Blender's bottom); the image
+    spans CONE_TEX['span'] mm centred on the woofer's axis: u = x / span + 0.5, v = y / span + 0.5.
+    Round 4b (coordinator: "subtle, fine, dense; the contrast comes from the sheen"):
+      cone  hundreds of thousands of fine short strokes packed along arcs (about 10 degrees off tangential);
+            the albedo keeps only a little of them (0..1, low contrast); the height carries them for the
+            normal map, so the brushed sweep shows with the light, helped by a tangential anisotropic sheen
+      cap   a tight plain weave (0.45 mm), its own albedo and height"""
+    import numpy as np
+    size = size or CONE_TEX["size"]
+    rng = np.random.default_rng(CONE_TEX["seed"] if seed is None else seed)
+    span = CONE_TEX["span"]
+    px = size / span
+    acc = np.zeros((size, size), np.float32)
+
+    def splat(xs, ys, w):
+        u = xs * px + size / 2
+        v = ys * px + size / 2
+        i0 = np.floor(u).astype(int)
+        j0 = np.floor(v).astype(int)
+        fu, fv = u - i0, v - j0
+        for di, dj, ww in ((0, 0, (1 - fu) * (1 - fv)), (1, 0, fu * (1 - fv)), (0, 1, (1 - fu) * fv), (1, 1, fu * fv)):
+            ii, jj = i0 + di, j0 + dj
+            ok = (ii >= 0) & (jj >= 0) & (ii < size) & (jj < size)
+            np.add.at(acc, (jj[ok], ii[ok]), (w * ww)[ok])
+
+    S = 12
+    t = np.linspace(-0.5, 0.5, S, dtype=np.float32)
+    n_total = CONE_TEX["n_cone"]
+    for chunk in range(0, n_total, 100000):
+        n = min(100000, n_total - chunk)
+        r = np.sqrt(rng.uniform(28.0 ** 2, 57.0 ** 2, n)).astype(np.float32)
+        th = rng.uniform(0, 2 * np.pi, n).astype(np.float32)
+        L = rng.gamma(4.0, 0.35, n).astype(np.float32) + 0.6
+        dev = np.radians(rng.normal(CONE_TEX["dev_mean"], CONE_TEX["dev_sd"], n)).astype(np.float32)
+        amp = rng.gamma(6.0, 1 / 6.0, n).astype(np.float32)          # even: no isolated bright hairs
+        s = t[None, :] * L[:, None]
+        rr = r[:, None] + s * np.sin(dev)[:, None]
+        tt = th[:, None] + s * np.cos(dev)[:, None] / r[:, None]
+        splat((rr * np.cos(tt)).ravel(), (rr * np.sin(tt)).ravel(), np.repeat(amp, S))
+
+    def blur(img, sigma):
+        k = np.fft.fftfreq(size)
+        g = np.exp(-2 * (np.pi * sigma) ** 2 * (k[:, None] ** 2 + k[None, :] ** 2))
+        return np.real(np.fft.ifft2(np.fft.fft2(img) * g)).astype(np.float32)
+    strokes = blur(acc, 0.035 * px)
+    strokes -= blur(strokes, 1.2 * px)                     # keep the fine structure only (no blotches)
+    strokes /= np.percentile(np.abs(strokes), 99) + 1e-6
+    yy, xx = (np.mgrid[0:size, 0:size].astype(np.float32) - size / 2 + 0.5) / px
+    rad = np.hypot(xx, yy)
+    cone_mask = np.clip((rad - 30.0) / 0.8, 0, 1).astype(np.float32)
+    # the cap's weave: two sets of threads at right angles, over-under
+    p = CONE_WEAVE_MM
+    wx = 0.5 + 0.5 * np.cos(2 * np.pi * xx / p)
+    wy = 0.5 + 0.5 * np.cos(2 * np.pi * yy / p)
+    over = (np.floor(xx / p) + np.floor(yy / p)) % 2
+    weave = np.where(over > 0, wx * (0.6 + 0.4 * wy), wy * (0.6 + 0.4 * wx)).astype(np.float32)
+    albedo = cone_mask * (0.45 + 0.55 * np.clip(strokes * 1.8, -1, 1)) + (1 - cone_mask) * (0.55 + 0.45 * weave)
+    height = cone_mask * strokes + (1 - cone_mask) * 0.6 * weave
+    return albedo.astype(np.float32), height.astype(np.float32), cone_mask
+
+
 if bpy is not None:
     import os
     import sys
@@ -444,6 +523,71 @@ if bpy is not None:
         m.diffuse_color = M.rgba("#202020")
         return m
 
+    def _cone_images():
+        """The cone's albedo (RGBA: grey strokes, A = 1 on the cone and 0 on the cap) and normal map, built
+        once and packed into the .blend."""
+        import numpy as np
+        al, nm = bpy.data.images.get("speakers_cone_albedo"), bpy.data.images.get("speakers_cone_normal")
+        if al is not None and nm is not None:
+            return al, nm
+        size = CONE_TEX["size"]
+        strokes, height, mask = cone_stroke_maps(size)
+        lo, hi = CONE_LO, CONE_HI                          # linear albedo of the charcoal and of a full stroke
+        # low contrast in the base colour: the strokes vary it by +-CONE_VAR; the cap a touch lighter
+        base = mask * lo + (1 - mask) * lo * CONE_CAP_LIFT
+        grey = base * (1 + CONE_VAR * (2 * strokes - 1))
+        px = np.ones((size, size, 4), np.float32)
+        px[..., 0] = px[..., 1] = px[..., 2] = grey
+        px[..., 3] = mask
+        al = bpy.data.images.new("speakers_cone_albedo", size, size, alpha=True)
+        al.colorspace_settings.name = "Non-Color"         # values are linear already
+        al.pixels.foreach_set(px.ravel())
+        al.pack()
+        mmpp = CONE_TEX["span"] / size
+        gy, gx = np.gradient(height * CONE_BUMP_MM, mmpp)
+        n = np.stack([-gx, -gy, np.ones_like(gx)], -1)
+        n /= np.linalg.norm(n, axis=-1, keepdims=True)
+        px = np.ones((size, size, 4), np.float32)
+        px[..., :3] = n * 0.5 + 0.5
+        nm = bpy.data.images.new("speakers_cone_normal", size, size, alpha=False)
+        nm.colorspace_settings.name = "Non-Color"
+        nm.pixels.foreach_set(px.ravel())
+        nm.pack()
+        return al, nm
+
+    def _cone_mat(name):
+        """The MLM cone and cap: the stroke image on the planar UV `ConeUV`, its normal map, and an
+        anisotropic sheen brushed round the axis (the woofer's local Z), off on the cap."""
+        al, nmi = _cone_images()
+        m, nt, b = M._new(name)
+        uv = nt.nodes.new("ShaderNodeUVMap")
+        uv.uv_map = "ConeUV"
+        ta = nt.nodes.new("ShaderNodeTexImage")
+        ta.image = al
+        ta.interpolation = "Cubic"
+        nt.links.new(uv.outputs["UV"], ta.inputs["Vector"])
+        nt.links.new(ta.outputs["Color"], b.inputs["Base Color"])
+        tn = nt.nodes.new("ShaderNodeTexImage")
+        tn.image = nmi
+        nt.links.new(uv.outputs["UV"], tn.inputs["Vector"])
+        nmap = nt.nodes.new("ShaderNodeNormalMap")
+        nmap.uv_map = "ConeUV"
+        nmap.inputs["Strength"].default_value = 1.0
+        nt.links.new(tn.outputs["Color"], nmap.inputs["Color"])
+        nt.links.new(nmap.outputs["Normal"], b.inputs["Normal"])
+        tg = nt.nodes.new("ShaderNodeTangent")
+        tg.direction_type = "RADIAL"
+        tg.axis = "Z"
+        nt.links.new(tg.outputs["Tangent"], b.inputs["Tangent"])
+        an = _m(nt, "MULTIPLY", ta.outputs["Alpha"], CONE_ANISO)
+        nt.links.new(an, b.inputs["Anisotropic"])
+        M._set(b, rough=CONE_ROUGH, spec=CONE_SPEC)
+        # the cap is matte fabric: rougher where the alpha (the cone mask) is 0
+        rmix = _m(nt, "MULTIPLY_ADD", ta.outputs["Alpha"], CONE_ROUGH - 0.62, 0.62)
+        nt.links.new(rmix, b.inputs["Roughness"])
+        m.diffuse_color = M.rgba("#262628")
+        return m
+
     def make_materials(finish="white"):
         p = M.principled
         cab = {
@@ -465,8 +609,8 @@ if bpy is not None:
             "horn": _bump(p("mat_speakers_horn", base="#141415", rough=0.62, spec=0.35), 5200, 0.5, 0.00012),
             "screw": p("mat_speakers_screw", base="#1e1f21", metal=0.7, rough=0.45),
             "rubber": p("mat_speakers_surround", base="#060607", rough=0.66, spec=0.28),
-            "cone": _cone("mat_speakers_cone"),
-            "cap": _cone("mat_speakers_dust_cap"),      # the photos: the cap in the cone's tone and texture
+            "cone": _cone_mat("mat_speakers_cone"),
+            "cap": _cone_mat("mat_speakers_cone"),       # the photos: the cap in the cone's tone and texture
             "ribbon": _ribbon("mat_speakers_ribbon"),
             "bar": p("mat_speakers_ribbon_bar", base="#2e3033", metal=0.5, rough=0.45),
             "port_tube": _port_tube(f"mat_speakers_port_tube_{finish}", finish),
@@ -963,6 +1107,14 @@ if bpy is not None:
         # MESHES.md: the pulse is a move along local +Z, so local +Z points out of the cone (cabinet -Y)
         obj.data.transform(Matrix.Rotation(-math.pi / 2, 4, "X"))
         obj.rotation_euler = (math.pi / 2, 0.0, 0.0)
+        # planar UV over the cone (local XY, mm / span + 0.5) for the stroke image
+        me = obj.data
+        uvl = me.uv_layers.new(name="ConeUV")
+        span = CONE_TEX["span"] * m_
+        for poly in me.polygons:
+            for li in poly.loop_indices:
+                co = me.vertices[me.loops[li].vertex_index].co
+                uvl.data[li].uv = (co.x / span + 0.5, co.y / span + 0.5)
         return obj
 
     # -----------------------------------------------------------------------
