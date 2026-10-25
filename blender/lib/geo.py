@@ -262,3 +262,56 @@ def place(obj, loc=(0, 0, 0), yaw=0.0):
     obj.rotation_euler = (0, 0, math.radians(yaw))
     obj.location = loc
     return obj
+
+
+def rounded_box(name, w, d, h, r=0.01, at=(0, 0, 0), yaw=0.0, n=4, **kw):
+    """A box w x d x h with its vertical corners rounded (radius r), built standing on z = 0
+    in its own frame (front at -Y), then placed at `at` (bottom centre) and turned by yaw."""
+    r = max(0.0005, min(r, w / 2 - 1e-4, d / 2 - 1e-4))
+    o = prism(name, rounded_rect(w, d, r, n=n), "Z", 0.0, h, **kw)
+    return place(o, at, yaw)
+
+
+def uvtest_image(name, w, h):
+    """TOP and an up arrow on dark slate, with a red corner mark at the top left, for the
+    screen UV test (/?room&glb&uvtest). Row 0 of the array is the top of the picture.
+    Blender's row 0 is V = 0, and screen_plane() puts V = 0 on the plane's top edge, so it
+    goes in unflipped (as the piano's sheet music does). Opened in an image viewer the PNG
+    looks upside down; on the screen it is upright, in Blender and, through the exporter's
+    V flip, in three.js."""
+    import numpy as np
+    img = bpy.data.images.get(name) or bpy.data.images.new(name, w, h)
+    px = np.zeros((h, w, 4), dtype=np.float32)
+    px[...] = (0.10, 0.14, 0.20, 1.0)
+    ink = (0.95, 0.95, 0.92)
+    b = max(4, h // 64)
+    px[:b, :, :3] = px[-b:, :, :3] = px[:, :b, :3] = px[:, -b:, :3] = ink                 # border
+    m = h // 7
+    px[b + 6: b + 6 + m, b + 6: b + 6 + m, :3] = (0.85, 0.18, 0.14)                    # top-left mark
+    glyphs = {
+        "T": ["#####", "..#..", "..#..", "..#..", "..#..", "..#..", "..#.."],
+        "O": [".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."],
+        "P": ["####.", "#...#", "#...#", "####.", "#....", "#....", "#...."],
+    }
+    cell = h * 34 // 640
+    gap = max(1, cell // 17)
+    text_w = 3 * 5 * cell + 2 * cell
+    x = (w - text_w) // 2
+    y0 = h * 70 // 640
+    for ch in "TOP":
+        for r, row in enumerate(glyphs[ch]):
+            for c, on in enumerate(row):
+                if on == "#":
+                    px[y0 + r * cell + gap: y0 + (r + 1) * cell - gap,
+                       x + c * cell + gap: x + (c + 1) * cell - gap, :3] = ink
+        x += 6 * cell
+    # arrow under the word, pointing up at the top edge
+    cx, tip = w // 2, y0 + 7 * cell + h * 40 // 640
+    base, bottom = tip + h * 110 // 640, h - h * 50 // 640
+    for yy in range(tip, base):
+        half = int((yy - tip) * 0.9)
+        px[yy, cx - half: cx + half + 1, :3] = (0.45, 0.80, 1.0)
+    px[base:bottom, cx - h * 30 // 640: cx + h * 30 // 640, :3] = (0.45, 0.80, 1.0)
+    img.pixels.foreach_set(np.ascontiguousarray(px).ravel())
+    img.pack()
+    return img

@@ -38,7 +38,7 @@ import bmesh
 import bpy
 from mathutils import Matrix, Vector
 
-from lib import constants as C, guitar_wear as GW, materials as M, variant
+from lib import constants as C, guitar_wear as GW, materials as M, plan_v2, variant
 
 S = variant.load(os.path.join(C.BLENDER_DIR, "props", "guitar_02.py"),
                  [("guitar_02", "guitar_04"), ("GUITAR_02", "GUITAR_04")], "_guitar_04_strat")
@@ -48,7 +48,7 @@ VN, VS = S.VN, S.VS
 # ---------------------------------------------------------------------------
 # frame: the pivot at the rack contact
 # ---------------------------------------------------------------------------
-LEAN = C.LAYOUT["rack"]["lean"]
+LEAN = plan_v2.RACK_V2["lean"]
 _pu, _pv = BP.rack_pivot(LEAN)
 S.PIV = PIV = (_pu, _pv, -G["body_t"] / 2)
 S.SPEC = SPEC = Matrix(((MM, 0, 0, -PIV[0] * MM),
@@ -599,7 +599,7 @@ def rack_transform(slot=0):
     import sys
     sys.path.insert(0, os.path.join(C.BLENDER_DIR, "design"))
     import room_plan_sheet as PLAN
-    rk, _, slots = PLAN.rack_slots()
+    rk, _, slots = PLAN.rack_slots(plan_v2.RACK_V2)
     th = math.radians(rk["lean"])
     bar_x = -0.08 + 0.70 * math.sin(th)                 # the top bar's corner, as props/footprints.py builds it
     bar_z = rk["cradle"] + 0.70 * math.cos(th)

@@ -8,10 +8,14 @@ Stages (default build,export): `build` makes the scene and saves blender/out/roo
 scene/assets/room.glb and checks it. Progress lines start with MILESTONE; a report goes
 to blender/out/room-build-report.json.
 
-What is built (Phase 4 Step 1, the room shell):
-  set_room     props/set_room.py     floor, walls, ceiling, skirting, window and door openings
-  set_desk     props/set_desk.py     desk, keyboard, mouse
-  obj_monitor  props/obj_monitor.py  body, screen (with the TOP test texture), stand
+What is built (the room shell to room plan v2, 2026-10-24; every place and size from
+lib/plan_v2.py):
+  set_room     props/set_room.py     floor, walls, ceiling, skirting, the centred window and the door
+  set_desk     props/set_desk.py     the white L desk on three drawer units, its LED strip, and
+                                     stand-ins for everything set on it
+  obj_monitor  props/obj_monitor.py  the posts screen: the 27-inch top screen (TOP test texture), its arm
+  obj_rig      props/obj_rig.py      the training rig: PC case, card, fans, the 34-inch screen (stand-ins
+                                     with their MESHES.md names)
   obj_piano    props/obj_piano.py    the approved piano, in the .blend and the renders only;
                                      the GLB carries a stand-in box (the piano's web export
                                      is still an open question for the owner)
@@ -33,8 +37,8 @@ import bpy
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from lib import constants as C, geo, looks, materials as M, names, run  # noqa: E402
-from props import footprints, guitar_02, guitar_04, obj_monitor, obj_piano, set_desk, set_room  # noqa: E402
+from lib import constants as C, geo, looks, materials as M, names, plan_v2 as P, run  # noqa: E402
+from props import footprints, guitar_02, guitar_04, obj_monitor, obj_piano, obj_rig, set_desk, set_room  # noqa: E402
 
 ARGS = run.args()
 STAGE = next((a for a in ARGS if not a.startswith("--")), "build,export")
@@ -46,8 +50,9 @@ REPORT = {}
 T0 = time.time()
 
 # Roots in the GLB, in build order. obj_piano stays out (a stand-in goes in its place).
-EXPORT_ROOTS = ["set_room", "set_desk", "obj_monitor"]
+EXPORT_ROOTS = ["set_room", "set_desk", "obj_monitor", "obj_rig"]
 KEEP = {"monitor_body", "monitor_screen", "monitor_static",      # code-touched or already the static
+        "rig_case", "rig_gpu", "rig_fans", "rig_display", "rig_screen", "rig_static",
         "guitar_02_body", "guitar_02_strings", "guitar_04_body", "guitar_04_strings"}
 
 
@@ -71,7 +76,7 @@ def clear_scene():
 
 
 def place_piano(root):
-    p = C.LAYOUT["piano"]
+    p = P.PIANO_V2
     root.location = (p["x"], p["y"], 0.0)
     root.rotation_euler = (0, 0, math.radians(p["yaw"]))
     for o in root.children:
@@ -82,10 +87,9 @@ def place_piano(root):
 def review_cameras():
     coll = bpy.data.collections.new("still_cameras")
     bpy.context.scene.collection.children.link(coll)
-    h = C.HERO
+    h = P.HERO_V2
     looks.camera("still_cam_home", h["pos"], h["target"], vfov=h["vfov"], coll=coll)
-    mon = C.LAYOUT["monitor"]
-    looks.camera("still_cam_phone", h["pos"], (mon["x"], mon["y"], mon["z"]), vfov=h["phone_vfov"], coll=coll)
+    looks.camera("still_cam_phone", h["pos"], h["phone_target"], vfov=h["phone_vfov"], coll=coll)
 
 
 def stage_build():
@@ -101,6 +105,9 @@ def stage_build():
     yield
     obj_monitor.build()
     run.log("build: obj_monitor")
+    yield
+    obj_rig.build()
+    run.log("build: obj_rig")
     yield
     gen = obj_piano.build_steps()
     try:
@@ -149,6 +156,7 @@ def check_names():
     objs = bpy.data.objects
     out = {"set_room": names.check_set(objs["set_room"]), "set_desk": names.check_set(objs["set_desk"]),
            "obj_monitor": names.check_export(objs["obj_monitor"]),
+           "obj_rig": names.check_export(objs["obj_rig"], multi_material_ok=("rig_static",)),
            "guitar_02": guitar_02.check(objs["guitar_02"]), "guitar_04": guitar_04.check(objs["guitar_04"])}
     export, undo = obj_piano.export_prep(objs["obj_piano"])
     try:
@@ -170,18 +178,18 @@ def word(root_name):
 
 def piano_standin():
     """A black box in the piano's place for the GLB: case, keybed, toe blocks."""
-    P = C.PIANO
+    PN = C.PIANO
     r, coll = geo.root("set_piano_standin")
     m = bpy.data.materials.get("mat_standin_piano") or M.principled("mat_standin_piano", base="#0b0b0c",
                                                                       rough=0.25, coat=1.0, coat_rough=0.05)
-    hw = P["width"] / 2
-    specs = [(-hw, hw, P["panel_face_y"], P["lid_over_back"], P["panel_bottom"], P["case_top"] + P["lid_t"]),
-             (-hw + 0.03, hw - 0.03, P["slip_front_y"], P["panel_face_y"], P["slip_top"] - 0.05, C.KT),
-             (-hw, hw, P["lower_face_y"], 0.0, P["floor_gap"], P["panel_bottom"])]
-    specs += [(s * P["toe_x"] - P["toe_w"] / 2, s * P["toe_x"] + P["toe_w"] / 2, P["toe_front_y"], P["toe_back_y"],
-               0.0, P["cheek_top"]) for s in (-1, 1)]
+    hw = PN["width"] / 2
+    specs = [(-hw, hw, PN["panel_face_y"], PN["lid_over_back"], PN["panel_bottom"], PN["case_top"] + PN["lid_t"]),
+             (-hw + 0.03, hw - 0.03, PN["slip_front_y"], PN["panel_face_y"], PN["slip_top"] - 0.05, C.KT),
+             (-hw, hw, PN["lower_face_y"], 0.0, PN["floor_gap"], PN["panel_bottom"])]
+    specs += [(s * PN["toe_x"] - PN["toe_w"] / 2, s * PN["toe_x"] + PN["toe_w"] / 2, PN["toe_front_y"], PN["toe_back_y"],
+               0.0, PN["cheek_top"]) for s in (-1, 1)]
     o = geo.boxes("piano_standin_box", specs, collection=coll, parent=r, material=m)
-    p = C.LAYOUT["piano"]
+    p = P.PIANO_V2
     r.location = (p["x"], p["y"], 0.0)
     r.rotation_euler = (0, 0, math.radians(p["yaw"]))
     return r, [o]
@@ -199,7 +207,7 @@ def web_prep(objs, footprint=()):
         if o.type != "MESH":
             continue
         for m in o.modifiers:
-            if m.type == "BEVEL" and (m.width <= 0.002 or o.name in footprint) and m.show_viewport:
+            if m.type == "BEVEL" and (m.width <= 0.002 + 1e-6 or o.name in footprint) and m.show_viewport:   # float32: 0.002 is stored as 0.0020000001
                 m.show_viewport = False
                 mods.append(m)
     seen = set()
@@ -332,6 +340,8 @@ def check_glb(path, st):
     nodes = {n.get("name"): n for n in doc["nodes"]}
     need = ["set_room", "room_view", "room_view_target", "obj_monitor", "monitor_body", "monitor_screen",
             "monitor_static", "monitor_view", "monitor_view_target", "set_desk", "desk_static", "room_static",
+            "obj_rig", "rig_case", "rig_gpu", "rig_fans", "rig_display", "rig_screen", "rig_static", "rig_view",
+            "rig_view_target",
             "obj_guitars", "guitar_02", "guitar_02_body", "guitar_02_strings", "guitar_04", "guitar_04_body",
             "guitar_04_strings", "guitars_static"]
     missing = [n for n in need if n not in nodes]
@@ -339,9 +349,13 @@ def check_glb(path, st):
     leaked = [n for n in nodes if n.startswith(("lt_", "video_", "still_", "bake_"))]
     scr = doc["meshes"][nodes["monitor_screen"]["mesh"]]["primitives"]
     mat = doc["materials"][scr[0]["material"]]
+    rig = doc["meshes"][nodes["rig_screen"]["mesh"]]["primitives"] if "rig_screen" in nodes else [{}]
+    rmat = doc["materials"][rig[0]["material"]] if "material" in rig[0] else {}
     res = {"missing": missing, "bad_names": bad, "leaked": leaked, "screen_primitives": len(scr),
            "screen_has_uv": "TEXCOORD_0" in scr[0]["attributes"],
            "screen_textured": "baseColorTexture" in mat.get("pbrMetallicRoughness", {}),
+           "rig_screen_ok": len(rig) == 1 and "TEXCOORD_0" in rig[0].get("attributes", {})
+           and "baseColorTexture" in rmat.get("pbrMetallicRoughness", {}),
            "room_view": nodes["room_view"].get("translation"),
            "room_view_target": nodes["room_view_target"].get("translation")}
     if not missing:
@@ -358,7 +372,8 @@ def check_glb(path, st):
         res.update(guitar_04_body_primitives=len(gb4), guitar_04_strings_primitives=len(gs4),
                    guitar_04_textured="baseColorTexture" in gm4.get("pbrMetallicRoughness", {}),
                    guitar_04=nodes["guitar_04"].get("translation"), guitar_04_rotation=nodes["guitar_04"].get("rotation"))
-    ok = not missing and not bad and not leaked and len(scr) == 1 and res["screen_has_uv"] and res["screen_textured"]
+    ok = not missing and not bad and not leaked and len(scr) == 1 and res["screen_has_uv"] and res["screen_textured"] \
+        and res["rig_screen_ok"]
     ok = ok and res.get("guitar_02_body_primitives") == 1 and res.get("guitar_02_strings_primitives") == 1 \
         and res.get("guitar_02_textured")
     ok = ok and res.get("guitar_04_body_primitives") == 1 and res.get("guitar_04_strings_primitives") == 1 \

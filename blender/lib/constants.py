@@ -109,11 +109,13 @@ FINISHES = {
 
 
 # ---------------------------------------------------------------------------
-# The room (set_room and where every root stands). Proposed 2026-10-22 on the room
-# plan sheet (blender/design/room_plan_sheet.py); the owner approves the sheet before
-# any of it is modelled. World metres, Blender axes (MESHES.md section 1): origin on the
-# floor at the room's centre, back wall (window, desk) at +Y, viewer at -Y, left wall
-# (bed, frames) at -X, right wall (piano, guitars) at +X, Z up.
+# The room. ROOM, DOOR and SWITCH hold for both plans. WINDOW, LIGHT, LAYOUT, WALL_GUITARS and
+# HERO below are the 2026-10-22 plan (v1), replaced on 2026-10-24 by lib/plan_v2.py, which
+# is what blender/build.py and the props read. They stay here because plan_v2 takes the
+# window's size, the pendant, the rack's shape and the guitar hanging rule from them, and
+# design/room_plan_sheet.py (the v1 sheet, whose drawing helpers the v2 sheet reuses) draws
+# them. World metres, Blender axes (MESHES.md section 1): origin on the floor at the room's
+# centre, back wall (window) at +Y, viewer at -Y, left wall at -X, right wall at +X, Z up.
 #
 # A large master bedroom in an older Pune flat: 4.40 x 4.20 m (14 ft 5 in x 13 ft 9 in),
 # 3.00 m clear ceiling. Smaller than this and the bed, the desk chair and the piano

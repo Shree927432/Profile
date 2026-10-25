@@ -12,10 +12,10 @@ import math
 
 import bpy
 
-from . import constants as C, geo, materials as M
+from . import constants as C, geo, materials as M, plan_v2 as P
 
 RX, RY, H = C.RX, C.RY, C.ROOM["height"]
-WIN = C.WINDOW
+WIN = P.WINDOW_V2
 BT = C.ROOM["wall_back_t"]
 WIN_C = ((WIN["x0"] + WIN["x1"]) / 2, (WIN["sill"] + WIN["head"]) / 2)
 WIN_W, WIN_H = WIN["x1"] - WIN["x0"], WIN["head"] - WIN["sill"]
@@ -72,9 +72,9 @@ def build_lights():
     fl = _area("lt_storm_flash", night, (wx + 0.3, RY + 1.6, wz + 0.6), 2.0, 1.2, 0.0, "#dfe8ff", rot=(-105, 0, 8))
     fl.data.spread = math.radians(40)          # into the window, not over the outside of the walls
     _area("lt_night_fill", night, (0.2, -0.6, H - 0.25), 2.4, 2.0, 90, "#7d8db5", rot=(0, 0, 0))
-    mon = C.LAYOUT["monitor"]
-    lm = _area("lt_monitor", dawn, (mon["x"], mon["y"] - 0.02, mon["z"]), mon["screen_w"], mon["screen_w"] / 1.6,
-               4.0, "#cfe0ff")
+    sd = P.SD
+    lm = _area("lt_monitor", dawn, (P.XM, sd["y"] - sd["d"] / 2 - 0.02, sd["z"] + sd["h"] / 2), P.POSTS["w"],
+               P.POSTS["h"], 4.0, "#cfe0ff")
     night.objects.link(lm)
     # the sky beyond the window: a big emissive plane (never exported)
     sky = geo.mesh_obj("video_sky", [(-2.2, 0, -1.6), (2.2, 0, -1.6), (2.2, 0, 1.6), (-2.2, 0, 1.6)],

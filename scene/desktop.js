@@ -26,10 +26,13 @@
 // shows fps and the pixel ratio and switches the mode.
 //
 // With ?room&glb (Phase 4, behind a flag): the camera starts at the GLB's room_view (the hero view
-// on the approved room plan) and orbits the screen's centre. A lens shift keeps room_view_target in
-// the middle of the frame at the start distance and fades out as the camera nears the screen, so the
-// close-up and the glide are framed exactly as before. The start is the farthest zoom (the front
-// wall is right behind it). Portrait: 70 degrees and no shift, as the sheet's phone frame.
+// on the approved room plan) and orbits the screen's centre. An aim offset turns the view from the
+// screen to room_view_target at the start distance, so the room opens on the plan's composition
+// (room plan v2: the posts screen is about 20 degrees left of the view's centre), and fades out as
+// the camera nears the screen, so the close-up and the glide are framed exactly as before. A turn,
+// not a lens shift: a shift cannot undo 20 degrees of turn, the back wall would read in two-point
+// perspective. The start is the farthest zoom (the front wall is right behind it). Portrait:
+// 70 degrees and no offset, aimed at the screen, as the sheet's phone frame.
 //
 // Every word shown comes from content.site.room / content.site.screens.
 
@@ -76,9 +79,9 @@ const NARROW_BELOW = 480;
 const TAP_MAX_MOVE = 6;
 const TAP_MAX_MS = 500;
 const WHEEL_LINE_PX = 16; // deltaMode "lines" -> px, as in screen-host.js
-// The GLB room (?room&glb). Field of view from HERO in blender/lib/constants.py (vfov, phone_vfov).
+// The GLB room (?room&glb). Field of view from HERO_V2 in blender/lib/plan_v2.py (vfov, phone_vfov).
 const ROOM_GLB = "/scene/assets/room.glb";
-const ROOM_FOV = 50;
+const ROOM_FOV = 54;
 const ROOM_FOV_PORTRAIT = 70;
 
 export async function start({ canvas, content, overlay, params, reduce }) {
@@ -289,33 +292,31 @@ export async function start({ canvas, content, overlay, params, reduce }) {
 
   const clampZoom = (z) => THREE.MathUtils.clamp(z, zoomNear, zoomFar);
 
-  // Lens shift (GLB, landscape): where room_view_target appears, in NDC, when the camera at room_view
-  // looks at the screen's centre. Set by resize(); applyShift() moves the frame by it, scaled from 1 at
-  // the fitted distance to 0 at the close-up, so the screen is centred whenever the camera is near it.
-  const shiftNdc = new THREE.Vector2();
-  const _probe = new THREE.PerspectiveCamera();
-  function measureShift() {
-    shiftNdc.set(0, 0);
+  // Aim offset (GLB, landscape): the turn, in the camera's own frame, from looking at the screen's centre
+  // to looking at room_view_target, both from room_view. Set by resize(); applyAim() turns the camera
+  // by it every tick (after the controls or the glide have aimed it at the screen, before any pick or
+  // draw), scaled from 1 at the fitted distance to 0 at the close-up, so the screen is centred
+  // whenever the camera is near it.
+  const aimOffset = new THREE.Quaternion();
+  const _aimLook = new THREE.Quaternion();
+  const _aimNow = new THREE.Quaternion();
+  const _aimM = new THREE.Matrix4();
+  let aimOn = false;
+  function measureAim() {
+    aimOn = false;
+    aimOffset.identity();
     if (!viewPos || camera.aspect < 1) return;
-    _probe.copy(camera);
-    _probe.clearViewOffset();
-    _probe.position.copy(viewPos);
-    _probe.lookAt(lookAt);
-    _probe.updateMatrixWorld(true);
-    const p = viewTarget.clone().project(_probe);
-    shiftNdc.set(p.x, p.y);
+    _aimLook.setFromRotationMatrix(_aimM.lookAt(viewPos, lookAt, camera.up));
+    aimOffset.setFromRotationMatrix(_aimM.lookAt(viewPos, viewTarget, camera.up));
+    aimOffset.premultiply(_aimLook.invert()); // look^-1 * aim: the turn in the camera's frame
+    aimOn = true;
   }
-  function applyShift() {
-    if (!viewPos) return;
+  function applyAim() {
+    if (!aimOn) return;
     const near = closeUpDistance();
     const k = THREE.MathUtils.clamp((camera.position.distanceTo(lookAt) - near) / Math.max(1e-6, fitDistance - near), 0, 1);
-    const w = Math.max(1, canvas.clientWidth);
-    const h = Math.max(1, canvas.clientHeight);
-    if (k === 0 || (shiftNdc.x === 0 && shiftNdc.y === 0)) {
-      if (camera.view && camera.view.enabled) camera.clearViewOffset();
-      return;
-    }
-    camera.setViewOffset(w, h, (shiftNdc.x * k * w) / 2, (-shiftNdc.y * k * h) / 2, w, h);
+    camera.lookAt(controls.target);
+    if (k > 0) camera.quaternion.multiply(_aimNow.identity().slerp(aimOffset, k));
   }
 
   // Set where the zoom should end up (a fraction of the fit). instant skips the easing; with
@@ -344,7 +345,6 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     if (useGlb) camera.fov = camera.aspect < 1 ? ROOM_FOV_PORTRAIT : ROOM_FOV;
-    camera.clearViewOffset(); // applyShift() sets it again for the new size
     camera.updateProjectionMatrix();
 
     fitDistance = fittedDistance();
@@ -353,13 +353,13 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     zoomNow = clampZoom(zoomNow);
     controls.minDistance = fitDistance * zoomNear; // safety net only; zoomNow is already inside
     controls.maxDistance = fitDistance * zoomFar;
-    measureShift();
+    measureAim();
     needsRender = true;
-    if (glide.active) { applyShift(); return; } // the glide owns the camera; it reads closeUpDistance() each tick
+    if (glide.active) { applyAim(); return; } // the glide owns the camera; it reads closeUpDistance() each tick
     setCameraDistance(fitDistance * zoomNow);
     camera.lookAt(controls.target);
     controls.update();
-    applyShift();
+    applyAim();
   }
 
   // ---- glide (opening a post) ----
@@ -616,12 +616,12 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     } else {
       stepZoom(dt);
       controls.update();
-      updateHover();
     }
+    applyAim(); // after the controls or the glide aimed the camera at the screen, before any pick or draw
+    if (!glide.active) updateHover();
     if (screenHandle.frame(t, dt)) { screenTexture.needsUpdate = true; needsRender = true; }
     const drew = needsRender;
     if (drew) {
-      applyShift();
       renderer.render(scene, camera);
       needsRender = false;
       if (lastDrew && dt > 0) quality.frame(dt);

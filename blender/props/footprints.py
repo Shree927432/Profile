@@ -1,29 +1,31 @@
-"""Footprints: every root on the approved room plan that is not modelled yet, as simple
-named shapes to scale, so the room shell can be judged whole. Each later step replaces
-one root's footprint with the real prop.
+"""Footprints: every root on room plan v2 that is not modelled yet, as simple named stand-ins
+at their real size and place, so the room can be judged whole. Each later step replaces one
+root's footprint with the real prop.
 
-Positions and sizes come from LAYOUT, WALL_GUITARS, WINDOW, SWITCH and LIGHT in
-blender/lib/constants.py, through blender/design/room_plan_sheet.py where the sheet
-already derives them (speaker toe-in, rack slots, guitar outlines), so the sheet and the
-model cannot disagree. The real roots are used (obj_studio, set_bed, ...); their parts
-are named `<word>_footprint_*`, never a name from MESHES.md, and the export joins each
-root's footprint into `<word>_static`.
+Positions, sizes and colours come from blender/lib/plan_v2.py (COMPONENTS, WINDOW_V2,
+LIGHT_V2, RACK_V2, WALL_GUITARS_V2, PANEL_GUITAR_V2, MIC, LEDGE) and SWITCH; the guitar
+outline and the rack slots from blender/design/room_plan_sheet.py, as the sheet draws them.
+The real roots are used (obj_studio, set_chair, ...); their parts are named
+`<word>_footprint_*`, never a name from MESHES.md, and the export joins each root's footprint
+into `<word>_static`. No logos or words: the neon sign's strokes stand in for the owner's
+words, which will come from content/.
 """
 import math
 import os
 import sys
 
-import bpy
+import bmesh
+from mathutils import Matrix, Vector
 
-from lib import constants as C, geo, materials as M
+from lib import constants as C, geo, materials as M, plan_v2 as P
 
 sys.path.insert(0, os.path.join(C.BLENDER_DIR, "design"))
-import room_plan_sheet as PLAN  # noqa: E402
+import room_plan_sheet as PLAN  # noqa: E402  (guitar_outline, rack_slots)
 
-L, WG, WIN, H = C.LAYOUT, C.WALL_GUITARS, C.WINDOW, C.ROOM["height"]
+WG, WIN, H = P.WALL_GUITARS_V2, P.WINDOW_V2, P.H
 MODELLED = {"guitar_02", "guitar_04"}   # built by their own prop scripts (props/guitar_02.py, guitar_04.py)
-RX, RY = C.RX, C.RY
-TOP = L["desk"]["h"]
+RX, RY, TOP = P.RX, P.RY, P.TOP
+COMP = {c["key"]: c for c in P.COMPONENTS}
 ROOTS = []                      # (root name, [part objects]) in build order
 
 
@@ -39,6 +41,12 @@ def _root(name):
 def _done(root, parts):
     ROOTS.append((root.name, parts))
     return root
+
+
+def _at(c, local=(0, 0, 0)):
+    """World point of a component's local point (its own frame: front at -Y, bottom centre at 0)."""
+    m = Matrix.Translation(c["at"]) @ Matrix.Rotation(math.radians(c["yaw"]), 4, "Z")
+    return tuple(m @ Vector(local))
 
 
 def build_window():
@@ -62,7 +70,7 @@ def build_window():
 
 def build_light():
     r, kw = _root("obj_light")
-    lt, sw = C.LIGHT, C.SWITCH
+    lt, sw = P.LIGHT_V2, P.SWITCH
     white = _mat("mat_fp_light_shade", "#ecebe6", rough=0.5, sss=0.2)
     cord_m = _mat("mat_fp_light_cord", "#2a2a2a", rough=0.6)
     plate_m = _mat("mat_fp_switch", "#eeeeea", rough=0.35)
@@ -72,17 +80,16 @@ def build_light():
     cord = geo.cylinder("light_footprint_cord", 0.003, (lt["x"], lt["y"], zb + lt["shade_h"]), (lt["x"], lt["y"], H),
                         segments=8, material=cord_m, **kw)
     # dome shade: a lathe of a quarter ellipse, open below
-    import bmesh
     bm = bmesh.new()
     prof = [(lt["shade_d"] / 2 * math.cos(a), lt["shade_h"] * math.sin(a))
-            for a in [math.pi / 2 * i / 10 for i in range(11)]]
+            for a in [math.pi / 2 * i / 6 for i in range(7)]]
     rings = []
-    for k in range(40):
-        a = 2 * math.pi * k / 40
+    for k in range(28):
+        a = 2 * math.pi * k / 28
         rings.append([bm.verts.new((lt["x"] + max(rr, 0.004) * math.cos(a), lt["y"] + max(rr, 0.004) * math.sin(a),
                                     zb + zz)) for rr, zz in prof])
-    for k in range(40):
-        a, b = rings[k], rings[(k + 1) % 40]
+    for k in range(28):
+        a, b = rings[k], rings[(k + 1) % 28]
         for i in range(len(prof) - 1):
             bm.faces.new((a[i], b[i], b[i + 1], a[i + 1]))
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
@@ -95,195 +102,208 @@ def build_light():
     return _done(r, [canopy, cord, shade, plate])
 
 
-def build_chair():
-    r, kw = _root("set_chair")
-    ch = L["chair"]
-    m = _mat("mat_fp_chair", "#2c2d33", rough=0.7, sheen=0.3)
-    seat = geo.box("chair_footprint_seat", -0.25, 0.25, -0.25, 0.25, ch["seat"] - 0.07, ch["seat"], material=m, **kw)
-    back = geo.box("chair_footprint_back", -0.23, 0.23, 0.21, 0.26, ch["seat"] + 0.05, ch["h"], material=m, **kw)
-    for o in (seat, back):
-        geo.bevel(o, 0.02, segments=3)
-    legs = [(0.025, (0, 0, 0.08), (0, 0, ch["seat"] - 0.07))]
-    legs += [(0.014, (0, 0, 0.08), (0.31 * math.cos(2 * math.pi * k / 5), 0.31 * math.sin(2 * math.pi * k / 5), 0.04))
-             for k in range(5)]
-    base = geo.cylinders("chair_footprint_base", legs, segments=10, material=m, **kw)
-    for o in (seat, back, base):
-        geo.place(o, (ch["x"], ch["y"], 0), ch["yaw"])
-    return _done(r, [base, seat, back])
-
-
 def build_studio():
+    """A7V speakers on ISO stands, the audio interface, the DJ decks on the return, the lightstick in its
+    cradle on a small shelf on the pegboard."""
     r, kw = _root("obj_studio")
-    blk = _mat("mat_fp_speaker", "#1e1f23", rough=0.6)
-    cone = _mat("mat_fp_woofer", "#0c0c0d", rough=0.5)
-    pad_m = _mat("mat_fp_pad", "#3a3b40", rough=0.9)
-    dj_m = _mat("mat_fp_dj", "#2f3035", rough=0.55)
-    jog_m = _mat("mat_fp_jog", "#5a5c63", metal=0.6, rough=0.3)
-    box_m = _mat("mat_fp_interface", "#45474e", metal=0.3, rough=0.4)
+    white = _mat("mat_fp_speaker", "#f2f2ef", rough=0.35)
+    cone = _mat("mat_fp_woofer", "#1b1b1d", rough=0.5)
+    stand_m = _mat("mat_fp_iso", "#2a2a2c", rough=0.6)
+    dj_m = _mat("mat_fp_dj", "#1b1b1d", rough=0.5)
+    jog_m = _mat("mat_fp_jog", "#4a4c52", metal=0.6, rough=0.3)
+    silver = _mat("mat_fp_interface", "#b9bcc0", metal=0.7, rough=0.35)
     stick_w = _mat("mat_fp_stick_handle", "#f2f2f2", rough=0.3)
-    stick_h = _mat("mat_fp_stick_head", "#e9c6f2", rough=0.2, sss=0.3, emit="#e9c6f2", emit_strength=0.0)
-    spk = L["speakers"]
+    stick_h = _mat("mat_fp_stick_head", "#e9e3f5", rough=0.2, emit="#d9a0ff", emit_strength=2.0)
     parts = []
-    for i, s in enumerate(PLAN.SPEAKERS):
-        n = f"{i + 1:02d}"
-        pad = geo.box(f"studio_footprint_pad_{n}", -0.10, 0.10, -0.135, 0.135, TOP, TOP + spk["pad_h"],
-                      material=pad_m, **kw)
-        z0 = TOP + spk["pad_h"]
-        cab = geo.box(f"studio_footprint_speaker_{n}", -spk["w"] / 2, spk["w"] / 2, -spk["d"] / 2, spk["d"] / 2,
-                      z0, z0 + spk["h"], material=blk, **kw)
-        geo.bevel(cab, 0.012, segments=4)
-        woof = geo.cylinder(f"studio_footprint_woofer_{n}", 0.062, (0, -spk["d"] / 2 + 0.004, z0 + 0.10),
-                            (0, -spk["d"] / 2 - 0.004, z0 + 0.10), segments=32, material=cone, **kw)
-        tw = geo.box(f"studio_footprint_tweeter_{n}", -0.03, 0.03, -spk["d"] / 2 - 0.004, -spk["d"] / 2 + 0.002,
-                     z0 + 0.19, z0 + 0.24, material=cone, **kw)
-        for o in (pad, cab, woof, tw):
-            geo.place(o, (s["x"], s["y"], 0), s["yaw"])
-        parts += [pad, cab, woof, tw]
-    dj = L["dj"]
-    body = geo.box("studio_footprint_dj", dj["x"] - dj["w"] / 2, dj["x"] + dj["w"] / 2, dj["y"] - dj["d"] / 2,
-                   dj["y"] + dj["d"] / 2, TOP, TOP + dj["h"], material=dj_m, **kw)
-    geo.bevel(body, 0.006, segments=3)
-    jogs = geo.cylinders("studio_footprint_jogs", [
-        (0.065, (dj["x"] + sx * 0.12, dj["y"] + 0.03, TOP + dj["h"]), (dj["x"] + sx * 0.12, dj["y"] + 0.03,
-                                                                          TOP + dj["h"] + 0.012)) for sx in (-1, 1)],
-        segments=40, material=jog_m, **kw)
-    it = L["interface"]
-    iface = geo.box("studio_footprint_interface", it["x"] - it["w"] / 2, it["x"] + it["w"] / 2, it["y"] - it["d"] / 2,
-                    it["y"] + it["d"] / 2, TOP, TOP + it["h"], material=box_m, **kw)
-    geo.bevel(iface, 0.004, segments=3)
-    ls = L["lightstick"]
-    handle = geo.cylinder("studio_footprint_stick_handle", 0.016, (ls["x"] - ls["w"] / 2, ls["y"], TOP + 0.017),
-                          (ls["x"] + 0.03, ls["y"], TOP + 0.017), segments=16, material=stick_w, **kw)
-    head = geo.cylinder("studio_footprint_stick_head", ls["d"] / 2, (ls["x"] + 0.03, ls["y"], TOP + ls["h"] / 2),
-                        (ls["x"] + ls["w"] / 2, ls["y"], TOP + ls["h"] / 2), segments=8, material=stick_h, **kw)
-    geo.bevel(head, 0.01, segments=3)
-    parts += [body, jogs, iface, handle, head]
+    for i in (1, 2):
+        n = f"{i:02d}"
+        iso, spk = COMP[f"iso_{i}"], COMP[f"a7v_{i}"]
+        parts.append(geo.rounded_box(f"studio_footprint_stand_{n}", *iso["size"], 0.01, at=iso["at"], yaw=iso["yaw"],
+                                     material=stand_m, **kw))
+        w, d, h = spk["size"]
+        cab = geo.rounded_box(f"studio_footprint_speaker_{n}", w, d, h, 0.012, at=spk["at"], yaw=spk["yaw"],
+                              material=white, **kw)
+        geo.bevel(cab, 0.008, segments=3)
+        faces = [(0.075, _at(spk, (0, -d / 2 + 0.002, 0.11)), _at(spk, (0, -d / 2 - 0.004, 0.11))),
+                 (0.03, _at(spk, (0, -d / 2 + 0.002, 0.265)), _at(spk, (0, -d / 2 - 0.004, 0.265)))]
+        parts += [cab, geo.cylinders(f"studio_footprint_drivers_{n}", faces, segments=28, material=cone, **kw)]
+    it = COMP["interface"]
+    w, d, h = it["size"]
+    parts.append(geo.rounded_box("studio_footprint_interface", w, d, h, 0.008, at=it["at"], yaw=it["yaw"],
+                                 material=silver, **kw))
+    parts.append(geo.cylinder("studio_footprint_interface_knob", 0.024, _at(it, (0.05, 0, h)), _at(it, (0.05, 0, h + 0.022)),
+                              segments=24, material=silver, **kw))
+    dj = COMP["dj"]
+    w, d, h = dj["size"]
+    body = geo.rounded_box("studio_footprint_dj", w, d, h, 0.012, at=dj["at"], yaw=dj["yaw"], material=dj_m, **kw)
+    geo.bevel(body, 0.005, segments=2)
+    jogs = geo.cylinders("studio_footprint_jogs", [(0.07, _at(dj, (sx * 0.15, 0.01, h)), _at(dj, (sx * 0.15, 0.01, h + 0.01)))
+                                                   for sx in (-1, 1)], segments=40, material=jog_m, **kw)
+    ls = COMP["lightstick"]
+    x, y, z = ls["at"]
+    cradle = geo.cylinder("studio_footprint_stick_cradle", 0.035, (x, y, z), (x, y, z + 0.025), segments=20,
+                          material=stick_w, **kw)
+    handle = geo.cylinder("studio_footprint_stick_handle", 0.015, (x, y, z + 0.025), (x, y, z + 0.17), segments=16,
+                          material=stick_w, **kw)
+    head = geo.cylinder("studio_footprint_stick_head", 0.04, (x, y, z + 0.17), (x, y, z + ls["size"][2]), segments=8,
+                        material=stick_h, **kw)
+    geo.bevel(head, 0.012, segments=3)
+    sh = P.LIGHTSTICK_SHELF                         # a small shelf hooked into the pegboard
+    shelf = geo.box("studio_footprint_stick_shelf", -RX + 0.035, -RX + 0.035 + sh["d"], y - sh["w"] / 2, y + sh["w"] / 2,
+                    z - sh["t"], z, material=stick_w, **kw)
+    parts += [body, jogs, shelf, cradle, handle, head]
     return _done(r, parts)
 
 
 def build_mic():
+    """Shure MV7+ style capsule, white, on a white broadcast arm clamped at the back edge."""
     r, kw = _root("obj_mic")
-    m = _mat("mat_fp_mic", "#26272b", metal=0.4, rough=0.45)
-    mc = L["mic"]
-    cl = (*mc["clamp"], TOP)
-    up = (cl[0], cl[1], TOP + 0.08)
-    arm = geo.cylinders("mic_footprint_arm", [(0.008, cl, up), (0.008, up, mc["elbow"]),
-                                              (0.008, mc["elbow"], mc["capsule"])], segments=10, material=m, **kw)
-    cx, cy, cz = mc["capsule"]
-    cap = geo.cylinder("mic_footprint_capsule", 0.028, (cx, cy, cz - 0.07), (cx, cy, cz + 0.06), segments=24,
-                       material=m, **kw)
-    geo.bevel(cap, 0.012, segments=3)
-    return _done(r, [arm, cap])
-
-
-def build_bookshelf():
-    r, kw = _root("set_bookshelf")
-    bs = L["bookshelf"]
-    wood = _mat("mat_fp_shelf", "#3e2c20", rough=0.55)
-    books_m = M.tinted("mat_fp_books", rough=0.6)
-    x0, x1 = -RX, -RX + bs["d"]
-    y0, y1 = bs["y"] - bs["w"] / 2, bs["y"] + bs["w"] / 2
-    t = 0.018
-    shelves = 5
-    specs = [(x0, x1, y0, y0 + t, 0, bs["h"]), (x0, x1, y1 - t, y1, 0, bs["h"]), (x0, x0 + 0.006, y0, y1, 0, bs["h"])]
-    specs += [(x0, x1, y0, y1, k * (bs["h"] - t) / shelves, k * (bs["h"] - t) / shelves + t) for k in range(shelves + 1)]
-    case = geo.boxes("bookshelf_footprint_case", specs, material=wood, **kw)
-    geo.bevel(case, 0.002, segments=2)
-    import random
-    rng = random.Random(4)
-    objs = []
-    cols = ["#7b2d26", "#2d4a6b", "#c9b48a", "#3f5e3a", "#d8d2c4", "#5b3b5e", "#a3622a", "#1f2a33"]
-    for k in range(shelves):
-        z = k * (bs["h"] - t) / shelves + t
-        room = (bs["h"] - t) / shelves - t - 0.02
-        y = y0 + t + 0.01
-        while y < y1 - t - 0.04:
-            bw = rng.uniform(0.018, 0.04)
-            bh = room * rng.uniform(0.7, 0.95)
-            b = geo.box(f"bookshelf_footprint_book_{len(objs):03d}", x0 + 0.03, x0 + 0.03 + rng.uniform(0.17, 0.24),
-                        y, y + bw, z, z + bh, material=books_m, **kw)
-            geo.tint(b, rng.choice(cols))
-            objs.append(b)
-            y += bw + rng.uniform(0.0, 0.004)
-    books = geo.join(objs, "bookshelf_footprint_books")
-    return _done(r, [case, books])
+    m = _mat("mat_fp_mic", "#f2f2ef", rough=0.35)
+    mc = P.MIC
+    cx, cy = mc["clamp"]
+    cap = Vector(mc["capsule"])
+    elbow = Vector(mc["elbow"])
+    riser = Vector((cx, cy, TOP + 0.20))
+    hang = cap + Vector((0.03, 0.10, 0.12))
+    arm = geo.cylinders("mic_footprint_arm", [(0.012, (cx, cy, TOP), riser[:]), (0.009, riser[:], elbow[:]),
+                                              (0.009, elbow[:], hang[:]), (0.006, hang[:], cap[:])],
+                        segments=10, material=m, **kw)
+    to_ear = (Vector(P.EAR) - cap).normalized()
+    body = geo.cylinder("mic_footprint_capsule", 0.033, (cap - to_ear * 0.08)[:], (cap + to_ear * 0.073)[:],
+                        segments=20, material=m, **kw)
+    geo.bevel(body, 0.012, segments=3)
+    return _done(r, [arm, body])
 
 
 def build_frames():
+    """Three black frames standing on the ledge above the screens."""
     r, kw = _root("obj_frames")
-    fr = L["frames"]
-    border = _mat("mat_fp_frame", "#1f1d1b", rough=0.4)
-    pics = [_mat(f"mat_fp_picture_{i + 1:02d}", c, rough=0.6) for i, c in enumerate(("#c98a4a", "#5d7f9e", "#9aa27a"))]
+    border = _mat("mat_fp_frame", "#26262a", rough=0.4)
+    pics = [_mat(f"mat_fp_picture_{i + 1:02d}", c, rough=0.6) for i, c in enumerate(("#c9d6e8", "#e8dcc9", "#d4e2d0"))]
     parts = []
-    for i, y in enumerate(fr["y"]):
+    for i in range(3):
+        c = COMP[f"frame_{i + 1}"]
+        w, d, h = c["size"]
         n = f"{i + 1:02d}"
-        b = geo.box(f"frames_footprint_{n}", -RX, -RX + fr["t"], y - fr["w"] / 2, y + fr["w"] / 2,
-                    fr["z"] - fr["h"] / 2, fr["z"] + fr["h"] / 2, material=border, **kw)
-        geo.bevel(b, 0.003, segments=2)
-        p = geo.box(f"frames_footprint_picture_{n}", -RX + fr["t"], -RX + fr["t"] + 0.002, y - fr["w"] / 2 + 0.035,
-                    y + fr["w"] / 2 - 0.035, fr["z"] - fr["h"] / 2 + 0.04, fr["z"] + fr["h"] / 2 - 0.04,
+        b = geo.rounded_box(f"frames_footprint_{n}", w, d, h, 0.003, at=c["at"], yaw=c["yaw"], material=border, **kw)
+        p = geo.box(f"frames_footprint_picture_{n}", -w / 2 + 0.04, w / 2 - 0.04, -d / 2 - 0.002, -d / 2, 0.04, h - 0.04,
                     material=pics[i], **kw)
+        geo.place(p, c["at"], c["yaw"])
         parts += [b, p]
     return _done(r, parts)
 
 
+def build_chair():
+    """Aeron-style stand-in in Mineral: five-star base, gas lift, seat, mesh back, arms."""
+    r, kw = _root("set_chair")
+    ch = COMP["chair"]
+    frame = _mat("mat_fp_chair_frame", "#9da1a7", metal=0.5, rough=0.45)
+    mesh = M.fabric("mat_fp_chair_mesh", ch["col"])
+    x, y, _ = ch["at"]
+    legs = [(0.025, (0, 0, 0.06), (0, 0, 0.42))]
+    legs += [(0.018, (0, 0, 0.07), (0.33 * math.cos(2 * math.pi * k / 5), 0.33 * math.sin(2 * math.pi * k / 5), 0.04))
+             for k in range(5)]
+    base = geo.cylinders("chair_footprint_base", legs, segments=10, material=frame, **kw)
+    seat = geo.rounded_box("chair_footprint_seat", 0.50, 0.46, 0.06, 0.08, at=(0, -0.01, 0.42), material=mesh, **kw)
+    back = geo.rounded_box("chair_footprint_back", 0.46, 0.05, 0.50, 0.08, material=mesh, **kw)
+    back.data.transform(Matrix.Translation((0, 0.245, 0.56)) @ Matrix.Rotation(-0.18, 4, "X"))
+    back.location = (0, 0, 0)
+    arms = geo.boxes("chair_footprint_arms", [(s * 0.30 - 0.03, s * 0.30 + 0.03, -0.15, 0.15, 0.62, 0.65) for s in (-1, 1)]
+                     + [(s * 0.30 - 0.012, s * 0.30 + 0.012, 0.0, 0.03, 0.45, 0.62) for s in (-1, 1)],
+                     material=frame, **kw)
+    for o in (seat, back, arms):
+        geo.bevel(o, 0.01, segments=2)
+    o = geo.join([base, seat, back, arms], "chair_footprint")
+    geo.place(o, (x, y, 0), ch["yaw"])
+    return _done(r, [o])
+
+
 def build_rug():
     r, kw = _root("set_rug")
-    rg = L["rug"]
-    m = M.fabric("mat_fp_rug", "#6f7484")
-    rug = geo.box("rug_footprint", rg["x"] - rg["w"] / 2, rg["x"] + rg["w"] / 2, rg["y"] - rg["d"] / 2,
-                  rg["y"] + rg["d"] / 2, 0.0, rg["h"], material=m, **kw)
-    geo.bevel(rug, 0.004, segments=2)
+    c = COMP["rug"]
+    w, d, h = c["size"]
+    rug = geo.rounded_box("rug_footprint", w, d, h, 0.01, at=c["at"], yaw=c["yaw"], material=M.fabric("mat_fp_rug", c["col"]),
+                          **kw)
     return _done(r, [rug])
-
-
-def build_bed():
-    r, kw = _root("set_bed")
-    bd = L["bed"]
-    wood = _mat("mat_fp_bed_frame", "#4b3426", rough=0.5)
-    sheet = M.fabric("mat_fp_bed_duvet", "#c9cdd8")
-    pillow = M.fabric("mat_fp_bed_pillow", "#e4e4ea")
-    bx0, bx1 = bd["x"] - bd["w"] / 2, bd["x"] + bd["w"] / 2
-    by0, by1 = bd["y"] - bd["d"] / 2, bd["y"] + bd["d"] / 2
-    frame = geo.boxes("bed_footprint_frame", [(bx0, bx1, by0, by1 - 0.05, 0.08, 0.32),
-                                              (bx0, bx1, by1 - 0.05, by1, 0.0, bd["head_h"])]
-                      + [(x - 0.03, x + 0.03, y - 0.03, y + 0.03, 0.0, 0.08)
-                         for x in (bx0 + 0.05, bx1 - 0.05) for y in (by0 + 0.05, by1 - 0.1)], material=wood, **kw)
-    geo.bevel(frame, 0.006, segments=3)
-    mat = geo.box("bed_footprint_mattress", bx0 + 0.02, bx1 - 0.02, by0 + 0.02, by1 - 0.07, 0.32, bd["h"],
-                  material=sheet, **kw)
-    geo.bevel(mat, 0.05, segments=4)
-    pil = [geo.box(f"bed_footprint_pillow_{k + 1:02d}", bx0 + 0.08 + k * 0.66, bx0 + 0.66 + k * 0.66, by1 - 0.45,
-                   by1 - 0.12, bd["h"], bd["h"] + 0.12, material=pillow, **kw) for k in range(2)]
-    for p in pil:
-        geo.bevel(p, 0.05, segments=4)
-    return _done(r, [frame, mat] + pil)
 
 
 def build_panels():
     r, kw = _root("set_panels")
-    pg, pdk = L["panels_guitar"], L["panels_desk"]
-    g = M.fabric("mat_fp_panel_guitar", "#34353b")
-    d = M.fabric("mat_fp_panel_desk", "#5b6170")
-    a = geo.box("panels_footprint_guitar", RX - pg["t"], RX, pg["y0"], pg["y1"], pg["z0"], pg["z1"], material=g, **kw)
-    bs = [geo.box(f"panels_footprint_desk_{i + 1:02d}", x - pdk["w"] / 2, x + pdk["w"] / 2, RY - pdk["t"], RY,
-                  pdk["z0"], pdk["z1"], material=d, **kw) for i, x in enumerate(pdk["x"])]
-    for o in [a] + bs:
-        geo.bevel(o, 0.008, segments=3)
-    return _done(r, [a] + bs)
+    pg = P.PANEL_GUITAR_V2
+    a = geo.box("panels_footprint_guitar", RX - pg["t"], RX, pg["y0"], pg["y1"], pg["z0"], pg["z1"],
+                material=M.fabric("mat_fp_panel_guitar", "#34363c"), **kw)
+    geo.bevel(a, 0.008, segments=3)
+    return _done(r, [a])
 
 
-def _guitar(name, length, width, depth, colour, kw, archtop=False):
+def build_walls():
+    """The AI side's walls: the backlit pegboard with the headphones, the neon sign (strokes, not
+    words), the light panels, the floating ledge under the frames."""
+    r, kw = _root("set_walls")
+    white = _mat("mat_fp_walls_white", "#f2f2ef", rough=0.35)
+    glow = _mat("mat_fp_walls_backlight", "#9fc8ff", emit="#9fc8ff", emit_strength=4.0)
+    neon_m = _mat("mat_fp_walls_neon", "#ffffff", emit="#f4f8ff", emit_strength=8.0)
+    cup = _mat("mat_fp_walls_headphones", "#e9e9e6", rough=0.4)
+    parts = []
+    pb = COMP["pegboard"]
+    w, d, h = pb["size"]
+    board = geo.box("walls_footprint_pegboard", -w / 2, w / 2, -0.035, -0.035 + d, 0.0, h, material=white, **kw)
+    light = geo.box("walls_footprint_backlight", -w / 2 + 0.02, w / 2 - 0.02, -0.010, -0.006, 0.02, h - 0.02,
+                    material=glow, **kw)
+    for o in (board, light):
+        geo.place(o, (-RX, pb["at"][1], pb["at"][2]), pb["yaw"])
+    hp = COMP["headphones"]
+    hx, hy, hz = hp["at"]
+    cups = [(0.045, (hx, hy + s * 0.06, hz + 0.05), (hx, hy + s * 0.095, hz + 0.05)) for s in (-1, 1)]
+    band = [(0.011, (hx, hy + 0.075 * math.cos(a0), hz + 0.10 + 0.10 * math.sin(a0)),
+             (hx, hy + 0.075 * math.cos(a1), hz + 0.10 + 0.10 * math.sin(a1)))
+            for a0, a1 in [(math.pi * k / 6, math.pi * (k + 1) / 6) for k in range(6)]]
+    phones = geo.cylinders("walls_footprint_headphones", cups + band, segments=16, material=cup, **kw)
+    ne = COMP["neon"]
+    strokes = [(-0.30, -0.04, 0.19), (0.02, 0.30, 0.19), (-0.22, 0.22, 0.07)]
+    neon = geo.boxes("walls_footprint_neon", [(u0, u1, -0.02, -0.008, v - 0.007, v + 0.007) for u0, u1, v in strokes],
+                     material=neon_m, **kw)
+    geo.place(neon, (-RX, ne["at"][1], ne["at"][2]), ne["yaw"])
+    parts += [board, light, phones, neon]
+    # light panels: seven triangles, three colours, our own arrangement
+    nl = COMP["nanoleaf"]
+    tri_m = [_mat(f"mat_fp_walls_panel_{k + 1}", "#dfe6ff", emit=e, emit_strength=2.5)
+             for k, e in enumerate(("#7a8cff", "#9fd8ff", "#c79bff"))]
+    s3 = 0.23
+    hh = s3 * math.sqrt(3) / 2
+    cells = [(0, 0, 1), (1, 0, -1), (2, 0, 1), (1, 1, 1), (2, 1, -1), (3, 1, 1), (3, 0, -1)]
+    tris = []
+    for k, (i, j, up) in enumerate(cells):
+        u, v = -nl["size"][0] / 2 + i * s3 / 2, j * hh
+        pts = [(u, v), (u + s3, v), (u + s3 / 2, v + hh)] if up > 0 else [(u, v + hh), (u + s3 / 2, v), (u + s3, v + hh)]
+        c = (u + s3 / 2, v + hh / 2)
+        pts = [(a * 0.94 + c[0] * 0.06, b * 0.94 + c[1] * 0.06) for a, b in pts]
+        t = geo.prism(f"walls_footprint_panel_{k}", pts, "Y", -0.012, 0.0, material=tri_m[k % 3], **kw)
+        geo.place(t, (-RX, nl["at"][1], nl["at"][2]), nl["yaw"])
+        tris.append(t)
+    parts.append(geo.join(tris, "walls_footprint_panels"))
+    lg = COMP["ledge"]
+    w, d, h = lg["size"]
+    ledge = geo.box("walls_footprint_ledge", -w / 2, w / 2, -d / 2, d / 2, 0.0, h, material=white, **kw)
+    geo.place(ledge, lg["at"], lg["yaw"])
+    geo.bevel(ledge, 0.004, segments=2)
+    parts.append(ledge)
+    return _done(r, parts)
+
+
+def _guitar(name, length, width, depth, colour, kw, archtop=False, double=False):
     """A guitar silhouette (the sheet's outline), extruded: built standing in local X-Z,
-    face toward -Y, bottom at z = 0, centred on x = 0."""
-    body, neck, head = PLAN.guitar_outline(length, width, archtop=archtop)
+    face toward -Y, bottom at z = 0, centred on x = 0. double: two necks and heads."""
+    body, neck, head = PLAN.guitar_outline(length * (0.92 if double else 1.0), width, archtop=archtop)
     bm_ = _mat(f"mat_fp_{name}", colour, rough=0.3, coat=0.8, coat_rough=0.08)
-    wood = bpy.data.materials.get("mat_fp_guitar_neck") or _mat("mat_fp_guitar_neck", "#5b3a22", rough=0.45)
-    b = geo.prism(name + "_body", body, "Y", -depth / 2, depth / 2, material=bm_, **kw)
-    n = geo.prism(name + "_neck", neck, "Y", -0.012, 0.012, material=wood, **kw)
-    h = geo.prism(name + "_head", head, "Y", -0.009, 0.009, material=wood, **kw)
-    geo.bevel(b, 0.006, segments=3, angle=60)
-    return geo.join([b, n, h], name)
+    wood = _mat("mat_fp_guitar_neck", "#3a2414", rough=0.45)
+    out = [geo.prism(name + "_body", body, "Y", -depth / 2, depth / 2, material=bm_, **kw)]
+    geo.bevel(out[0], 0.006, segments=3, angle=60)
+    for k, du in enumerate((-0.085, 0.085) if double else (0.0,)):
+        out.append(geo.prism(f"{name}_neck_{k}", [(u + du, v) for u, v in neck], "Y", -0.012, 0.012, material=wood, **kw))
+        out.append(geo.prism(f"{name}_head_{k}", [(u + du, v) for u, v in head], "Y", -0.009, 0.009,
+                             material=bm_ if double else wood, **kw))
+    return geo.join(out, name)
 
 
 def build_guitars():
@@ -291,23 +311,25 @@ def build_guitars():
     metal = _mat("mat_fp_rack", "#232326", metal=0.5, rough=0.45)
     chrome = M.chrome("mat_fp_hook")
     parts = []
-    # wall: three on hooks, faces into the room (-X), timeline back to front
+    # wall: on hooks, faces into the room (-X), timeline back to front
     gx = RX - WG["off_wall"]
-    cols = ["#b5651d", "#f1efe8", "#8a4b1f"]
     hooks = []
     for i, y in enumerate(WG["y"]):
         if f"guitar_{i + 1:02d}" in MODELLED:
             continue
-        g = _guitar(f"guitars_footprint_{i + 1:02d}", WG["length"][i], WG["width"][i], 0.08 if i == 0 else 0.045,
-                    cols[i], kw, archtop=(i == 0))
+        c = COMP[f"guitar_{i + 1:02d}"]
+        g = _guitar(f"guitars_footprint_{i + 1:02d}", WG["length"][i], WG["width"][i], 0.045, c["col"], kw,
+                    archtop=(i == 0), double=(i == 2))
         g.rotation_euler = (0, 0, math.radians(-90))      # face -X
         g.location = (gx, y, WG["bottom"])
         parts.append(g)
         hz = WG["bottom"] + WG["length"][i] - WG["hook_from_top"][i]
-        hooks.append((0.006, (RX, y, hz), (gx + 0.01, y, hz + 0.02)))
+        for k in range(WG["hooks"][i]):
+            dy = 0.0 if WG["hooks"][i] == 1 else (-0.085, 0.085)[k]
+            hooks.append((0.006, (RX, y - dy, hz), (gx + 0.01, y - dy, hz + 0.02)))
     parts.append(geo.cylinders("guitars_footprint_hooks", hooks, segments=10, material=chrome, **kw))
-    # floor rack (option A), from the sheet's rack geometry
-    rk, gs, slots = PLAN.rack_slots()
+    # floor rack (the approved shape), at its v2 place
+    rk, gs, slots = PLAN.rack_slots(P.RACK_V2)
     lean = math.radians(rk["lean"])
     bar_x = -0.08 + 0.70 * math.sin(lean)
     bar_z = rk["cradle"] + 0.70 * math.cos(lean)
@@ -320,41 +342,40 @@ def build_guitars():
     geo.bevel(rack, 0.004, segments=2)
     geo.place(rack, (rk["x"], rk["y"], 0), rk["yaw"])
     parts.append(rack)
-    rcols = ["#c0762a", "#ece8dc", "#a98aa9"]
+    rcols = {"guitar_05": "#ece6d2", "guitar_06": "#a98aa9"}
     for i, (g, sl) in enumerate(zip(gs, slots)):
         if g["name"] in MODELLED:
             continue
-        o = _guitar(f"guitars_footprint_{i + 4:02d}", g["length"], g["width"], 0.05, rcols[i], kw)
+        o = _guitar(f"guitars_footprint_{i + 4:02d}", g["length"], g["width"], 0.045, rcols[g["name"]], kw)
         # in the rack's X-Z plane at its slot (face along the rack's length), bottom on the
         # cradle, leaning toward +X about the rack's Y, then the rack's yaw (as the sheet draws it)
-        from mathutils import Matrix
-        m = (Matrix.Translation((rk["x"], rk["y"], 0)) @ Matrix.Rotation(math.radians(rk["yaw"]), 4, "Z")
-             @ Matrix.Translation((-0.08, sl, rk["cradle"])) @ Matrix.Rotation(lean, 4, "Y"))
-        o.matrix_world = m
+        o.matrix_world = (Matrix.Translation((rk["x"], rk["y"], 0)) @ Matrix.Rotation(math.radians(rk["yaw"]), 4, "Z")
+                          @ Matrix.Translation((-0.08, sl, rk["cradle"])) @ Matrix.Rotation(lean, 4, "Y"))
         parts.append(o)
     return _done(r, parts)
 
 
 def build_plant():
+    """Young monstera in a terracotta pot on the centred sill."""
     r, kw = _root("obj_plant")
-    pl = L["plant"]
+    c = COMP["plant"]
     pot_m = _mat("mat_fp_pot", "#b4553a", rough=0.7)
-    leaf_m = _mat("mat_fp_leaf", "#4f7a46", rough=0.5, sss=0.15)
-    z0 = WIN["sill"]
-    import bmesh
-    pot = geo.cylinder("plant_footprint_pot", pl["pot_d"] / 2, (pl["x"], pl["y"], z0), (pl["x"], pl["y"], z0 + 0.13),
-                       segments=24, material=pot_m, **kw)
+    leaf_m = _mat("mat_fp_leaf", c["col"], rough=0.5, sss=0.15)
+    x, y, z0 = c["at"]
+    pot = geo.cylinder("plant_footprint_pot", c["size"][0] / 2, (x, y, z0), (x, y, z0 + 0.13), segments=24,
+                       material=pot_m, **kw)
     geo.bevel(pot, 0.004, segments=2)
     bm = bmesh.new()
     for dx, dz, rr in ((0.0, 0.25, 0.09), (-0.07, 0.20, 0.06), (0.07, 0.22, 0.065)):
         res = bmesh.ops.create_icosphere(bm, subdivisions=2, radius=rr)
-        bmesh.ops.translate(bm, vec=(pl["x"] + dx, pl["y"] - 0.01, z0 + dz), verts=res["verts"])
+        bmesh.ops.scale(bm, vec=(1.0, 0.45, 0.8), verts=res["verts"])
+        bmesh.ops.translate(bm, vec=(x + dx, y - 0.01, z0 + dz), verts=res["verts"])
     leaves = geo.from_bmesh("plant_footprint_leaves", bm, material=leaf_m, **kw)
     return _done(r, [pot, leaves])
 
 
-BUILDERS = [build_window, build_light, build_chair, build_studio, build_mic, build_bookshelf, build_frames,
-            build_rug, build_bed, build_panels, build_guitars, build_plant]
+BUILDERS = [build_window, build_light, build_studio, build_mic, build_frames, build_chair, build_rug,
+            build_panels, build_walls, build_guitars, build_plant]
 
 
 def build_steps():

@@ -1,4 +1,5 @@
-"""Rough 3D blockout of room plan v2 (NOT approved), seen from the v2 hero camera.
+"""Rough 3D blockout of room plan v2 with the layout fixes (2026-10-24, NOT approved), seen
+from the v2 hero camera.
 
 Simple boxes, cylinders and flat guitar outlines from blender/lib/plan_v2.py, EEVEE,
 for judging the composition only. Nothing here is exported or used by build.py.
@@ -6,11 +7,16 @@ for judging the composition only. Nothing here is exported or used by build.py.
     /Applications/Blender.app/Contents/MacOS/Blender --factory-startup --python blender/design/room_plan_v2_blockout.py
     (fallback: add -b before --factory-startup)
 
-Writes video-local/footage/2026-10-23-room-plan-v2/blockout-hero.png, blockout-phone.png,
-blockout-top.png and saves blender/out/room_plan_v2_blockout.blend first.
+Builds the room once per window variant (plan_v2 reloaded with PLAN_V2_WINDOW=A, then B) and
+writes into video-local/footage/2026-10-24-layout-fixes/: layout-hero-window-a.png and -b.png,
+layout-top.png and layout-phone.png (window A), the option stills (option-panel-light.png,
+option-panel-dark.png, option-guitars-lid60.png) and before-after.png (composed with the
+system python3 and Pillow). Saves blender/out/room_plan_v2_blockout.blend (window A) first.
 """
+import importlib
 import math
 import os
+import subprocess
 import sys
 
 import bpy
@@ -24,7 +30,7 @@ from lib.piano_layout import lid_profile  # noqa: E402
 import room_plan_sheet as PLAN  # noqa: E402  (guitar_outline only)
 
 RX, RY, H = P.RX, P.RY, P.H
-OUT = os.path.join(C.FOOTAGE, "2026-10-23-room-plan-v2")
+OUT = os.path.join(C.FOOTAGE, "2026-10-24-layout-fixes")
 MATS = {}
 
 
@@ -135,15 +141,16 @@ def build_room():
     for nm, x0, x1, z0, z1 in (("wb_l", -RX, W["x0"], 0, H), ("wb_r", W["x1"], RX, 0, H),
                                ("wb_low", W["x0"], W["x1"], 0, W["sill"]), ("wb_top", W["x0"], W["x1"], W["head"], H)):
         box(nm, x0, x1, RY, RY + bt, z0, z1, wall)
-    box("sill_ledge", W["x0"] - 0.05, W["x1"] + 0.05, RY - W["ledge_d"] + 0.05, RY + 0.05, W["sill"] - W["ledge_t"],
+    box("sill_ledge", W["x0"] - W["ledge_horn"], W["x1"] + W["ledge_horn"], RY - W["ledge_d"] + 0.05, RY + 0.05, W["sill"] - W["ledge_t"],
         W["sill"], mat("#9a9184", rough=0.4))
     al = mat("#b9bcc0", rough=0.3, metal=0.8)
     for x in (W["x0"], 0.0, W["x1"]):
         box("win_frame_v", x - 0.025, x + 0.025, RY + 0.10, RY + 0.14, W["sill"], W["head"], al)
     for z in (W["sill"], W["head"]):
         box("win_frame_h", W["x0"], W["x1"], RY + 0.10, RY + 0.14, z - 0.025, z + 0.025, al)
-    for i in range(1, 6):     # MS grill bars
-        z = W["sill"] + (W["head"] - W["sill"]) * i / 6
+    nb = max(6, round((W["head"] - W["sill"]) / 0.175))
+    for i in range(1, nb):    # MS grill bars, about 17.5 cm apart
+        z = W["sill"] + (W["head"] - W["sill"]) * i / nb
         box("grill", W["x0"], W["x1"], RY + 0.17, RY + 0.18, z - 0.006, z + 0.006, mat("#2b2d31"))
     box("sky", W["x0"] - 0.4, W["x1"] + 0.4, RY + 0.6, RY + 0.62, W["sill"] - 0.4, W["head"] + 0.4,
         mat("#8fb0ec", emit="#8fb0ec", strength=2.2))
@@ -368,6 +375,23 @@ def build_specials():
             dy = 0 if nh == 1 else (-0.085, 0.085)[k]
             hz = WG["bottom"] + WG["length"][i] - WG["hook_from_top"][i]
             cyl("hook", 0.006, (RX, y - dy, hz), (RX - 0.10, y - dy, hz + 0.02), mat("#cfd2d6", metal=1, rough=0.2), 8)
+    # the DJ stand (layout fix 1): four legs, the top, a laptop shelf across the back on two posts
+    ds = getattr(P, "DJ_STAND", None)
+    if ds is None:      # r3: no DJ stand (the decks are back on the desk return)
+        ds = dict(x=0, y=0, yaw=0, colour="#000000", w=0, d=0, top=0, t=0, shelf_w=0, shelf_up=0, shelf_d=0)
+    DM = at(ds["x"], ds["y"], 0, ds["yaw"])
+    st = mat(ds["colour"], metal=0.4, rough=0.45)
+    w2, d2 = ds["w"] / 2, ds["d"] / 2
+    box("dj_top", -w2, w2, -d2, d2, ds["top"] - ds["t"], ds["top"], mat("#2a2624", rough=0.5), DM)
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            box("dj_leg", sx * (w2 - 0.03) - 0.0125, sx * (w2 - 0.03) + 0.0125, sy * (d2 - 0.03) - 0.0125,
+                sy * (d2 - 0.03) + 0.0125, 0, ds["top"] - ds["t"], st, DM)
+        box("dj_shelf_post", sx * (ds["shelf_w"] / 2 - 0.02) - 0.01, sx * (ds["shelf_w"] / 2 - 0.02) + 0.01,
+            d2 - 0.04, d2 - 0.02, ds["top"], ds["top"] + ds["shelf_up"], st, DM)
+    box("dj_rail", -w2 + 0.03, w2 - 0.03, -0.01, 0.01, 0.12, 0.15, st, DM)
+    box("dj_shelf", -ds["shelf_w"] / 2, ds["shelf_w"] / 2, d2 - ds["shelf_d"], d2, ds["top"] + ds["shelf_up"] - 0.012,
+        ds["top"] + ds["shelf_up"], st, DM)
     # floor rack with guitar_04 to _06 (approved rack geometry, v2 place)
     rk = P.RACK_V2
     lean = math.radians(rk["lean"])
@@ -397,8 +421,8 @@ def lights():
     bg.inputs["Strength"].default_value = 0.6
     W = P.WINDOW_V2
     d = bpy.data.lights.new("dawn", "AREA")
-    d.shape, d.size, d.size_y = "RECTANGLE", 1.2, 1.05
-    d.energy, d.color = 260, (0.62, 0.74, 1.0)
+    d.shape, d.size, d.size_y = "RECTANGLE", W["x1"] - W["x0"], W["head"] - W["sill"]
+    d.energy, d.color = 260 * (W["x1"] - W["x0"]) * (W["head"] - W["sill"]) / 1.26, (0.62, 0.74, 1.0)
     o = bpy.data.objects.new("dawn", d)
     sc.collection.objects.link(o)
     o.location = (0, RY + 0.05, (W["sill"] + W["head"]) / 2)
@@ -421,10 +445,17 @@ def lights():
         oq.location = (x, y, 0.55)
 
 
-def job():
-    run.log("v2 blockout: building")
+def build(window, panel="none"):
+    """Reload plan_v2 for this window variant and panel style, then build the whole room."""
+    global P, RX, RY, H
+    os.environ["PLAN_V2_WINDOW"], os.environ["PLAN_V2_PANEL"] = window, panel
+    P = importlib.reload(P)
+    RX, RY, H = P.RX, P.RY, P.H
     for o in list(bpy.data.objects):
         bpy.data.objects.remove(o, do_unlink=True)
+    for c in list(bpy.data.cameras) + list(bpy.data.lights) + list(bpy.data.meshes):
+        (bpy.data.cameras if isinstance(c, bpy.types.Camera) else bpy.data.lights if isinstance(c, bpy.types.Light)
+         else bpy.data.meshes).remove(c)
     build_room()
     build_desk()
     build_parts()
@@ -432,51 +463,117 @@ def job():
     lights()
     from lib import looks
     hv = P.HERO_V2
-    cam = looks.camera("hero_v2", hv["pos"], hv["target"], vfov=hv["vfov"])
-    camp = looks.camera("phone_v2", hv["pos"], hv["phone_target"], vfov=hv["phone_vfov"])
+    cams = dict(hero=looks.camera("hero_v2", hv["pos"], hv["target"], vfov=hv["vfov"]),
+                phone=looks.camera("phone_v2", hv["pos"], hv["phone_target"], vfov=hv["phone_vfov"]))
     top = bpy.data.cameras.new("top")
     top.type, top.ortho_scale = "ORTHO", 4.9
     ot = bpy.data.objects.new("top_v2", top)
     bpy.context.scene.collection.objects.link(ot)
     ot.location = (0, 0, 2.6)
+    cams["top"] = ot
+    return cams
+
+
+def shot(name, cam, size):
+    sc = bpy.context.scene
+    sc.camera = cam
+    sc.render.resolution_x, sc.render.resolution_y = size
+    sc.render.resolution_percentage = 100
+    top = "-top" in name
+    bpy.data.objects["ceiling"].hide_render = top
+    bpy.data.objects["fill"].data.energy = 300 if top else 90
+    run.show_in_viewport("MATERIAL")
+    dt = yield from run.render_to(os.path.join(OUT, name + ".png"))
+    run.log(f"{name} rendered in {dt:.1f} s")
+
+
+COMPOSE = r"""
+import sys
+from PIL import Image, ImageDraw, ImageFont
+out, pairs = sys.argv[1], [sys.argv[2:4], sys.argv[4:6]]
+W, Hh, G, T = 1600, 900, 24, 64
+f = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 34)
+img = Image.new("RGB", (2 * W + 3 * G, 2 * (Hh + T) + 3 * G - T // 2), "#f6f3ec")
+d = ImageDraw.Draw(img)
+labels = [("BEFORE: the room shell as rebuilt (hero, blue hour)", "AFTER: layout fixes, window A (blockout)"),
+          ("BEFORE: the approved plan v2 (blockout, 2026-10-23)", "AFTER: same blockout style")]
+for r, (pa, pb) in enumerate(pairs):
+    y = G + r * (Hh + T + G)
+    for c, pth in enumerate((pa, pb)):
+        x = G + c * (W + G)
+        im = Image.open(pth).convert("RGB").resize((W, Hh), Image.LANCZOS)
+        img.paste(im, (x, y + T))
+        d.text((x, y + 14), labels[r][c], fill="#1d1d1f" if c else "#8a2b2b", font=f)
+img.save(out)
+"""
+
+
+def quick_job():
+    """r3 quick preview: hero, top and phone only, into 2026-10-24-layout-fixes/r3/."""
+    out = os.path.join(OUT, "r3")
+    os.makedirs(out, exist_ok=True)
+    run.setup_render("BLENDER_EEVEE", samples=32)
+    bpy.context.scene.view_settings.look = "AgX - Base Contrast"
+    cams = build("A")
+    for o in [o for o in bpy.data.objects if o.name.startswith("dj_") and o.name != "dj"]:
+        bpy.data.objects.remove(o, do_unlink=True)
+    if os.environ.get("MIRROR"):     # preview only: the whole room mirrored left to right
+        out = os.path.join(OUT, "r4")
+        os.makedirs(out, exist_ok=True)
+        root = bpy.data.objects.new("mirror_root", None)
+        bpy.context.scene.collection.objects.link(root)
+        for o in list(bpy.data.objects):
+            if o.type != "CAMERA" and o is not root and o.parent is None:
+                o.parent = root
+        root.scale = (-1, 1, 1)
+    for name, cam, size in (("r3-hero", cams["hero"], (1600, 900)), ("r3-top", cams["top"], (1100, 1050)),
+                            ("r3-phone", cams["phone"], (780, 1688))):
+        bpy.context.scene.camera = cam
+        sc = bpy.context.scene
+        sc.render.resolution_x, sc.render.resolution_y = size
+        bpy.data.objects["ceiling"].hide_render = name.endswith("top")
+        sc.render.filepath = os.path.join(out, name + ".png")
+        bpy.ops.render.render(write_still=True)
+        yield
+    run.log("r3 quick preview done")
+    if run.windowed():
+        bpy.ops.wm.quit_blender()
+
+
+def job():
+    run.log("layout-fix blockout: building")
     run.setup_render("BLENDER_EEVEE", samples=32)
     sc = bpy.context.scene
     sc.view_settings.look = "AgX - Base Contrast"
     os.makedirs(C.OUT, exist_ok=True)
     os.makedirs(OUT, exist_ok=True)
+    cams = build("A")
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(C.OUT, "room_plan_v2_blockout.blend"))
     yield
-    for name, c, size in (("blockout-hero", cam, (1600, 900)), ("blockout-phone", camp, (780, 1688)),
-                          ("blockout-top", ot, (1100, 1050))):
-        sc.camera = c
-        sc.render.resolution_x, sc.render.resolution_y = size
-        sc.render.resolution_percentage = 100
-        if name == "blockout-top":
-            bpy.data.objects["ceiling"].hide_render = True
-            bpy.data.objects["fill"].data.energy = 300
-        run.show_in_viewport("MATERIAL")
-        dt = yield from run.render_to(os.path.join(OUT, name + ".png"))
-        run.log(f"{name} rendered in {dt:.1f} s")
-    bpy.data.objects["ceiling"].hide_render = False
-    bpy.data.objects["fill"].data.energy = 90
-    # option stills for the owner's questions, at a smaller size
-    sc.render.resolution_x, sc.render.resolution_y = 1200, 675
-    cam50 = looks.camera("hero_50", hv["pos"], hv["target"], vfov=50)
-    sc.camera = cam50
-    dt = yield from run.render_to(os.path.join(OUT, "option-lens-b-50.png"))
-    cut = looks.camera("hero_cut", (hv["pos"][0], hv["pos"][1] - 0.40, hv["pos"][2]), hv["target"], vfov=50)
-    bpy.data.objects["wall_front"].hide_render = True
-    sc.camera = cut
-    dt = yield from run.render_to(os.path.join(OUT, "option-lens-c-cutaway.png"))
-    bpy.data.objects["wall_front"].hide_render = False
-    for o in [o for o in bpy.data.objects if o.name.startswith("neon_stroke")]:
-        bpy.data.objects.remove(o, do_unlink=True)
-    neon(at(P.XM, RY - 0.01, 2.40, 0))
-    sc.camera = cam
-    dt = yield from run.render_to(os.path.join(OUT, "option-neon-b-back-wall.png"))
-    run.log("v2 blockout done")
+    yield from shot("layout-hero-window-a", cams["hero"], (1600, 900))
+    yield from shot("layout-phone", cams["phone"], (780, 1688))
+    yield from shot("layout-top", cams["top"], (1100, 1050))
+    for panel in ("light", "dark"):
+        cams = build("A", panel)
+        yield from shot(f"option-panel-{panel}", cams["hero"], (1200, 675))
+    # the lid-stop option: the lid opens only to 60 deg in code, the guitars 24 cm lower (bottoms 145);
+    # the hero shows the lid closed, as the site does until it is clicked
+    cams = build("A")
+    for o in bpy.data.objects:
+        if o.name.startswith("wall_g") or o.name.startswith("hook"):
+            o.location.z -= 0.24
+    yield from shot("option-guitars-lid60", cams["hero"], (1200, 675))
+    cams = build("B")
+    yield from shot("layout-hero-window-b", cams["hero"], (1600, 900))
+    yield from shot("layout-top-window-b", cams["top"], (1100, 1050))
+    before = os.path.join(C.FOOTAGE, "2026-10-24-room-shell-v2", "hero-bluehour.png")
+    before_bo = os.path.join(C.FOOTAGE, "2026-10-23-room-plan-v2", "blockout-hero.png")
+    after = os.path.join(OUT, "layout-hero-window-a.png")
+    subprocess.run(["/usr/bin/env", "python3", "-c", COMPOSE, os.path.join(OUT, "before-after.png"),
+                    before, after, before_bo, after], check=True)
+    run.log("layout-fix blockout done")
     if run.windowed():
         bpy.ops.wm.quit_blender()
 
 
-run.drive(job())
+run.drive(quick_job() if os.environ.get("QUICK") else job())

@@ -1,4 +1,6 @@
-"""Room plan v2 sheet (NOT approved yet): half music studio, half AI lab, window centred.
+"""Room plan v2 sheet with the layout fixes r2 (2026-10-24, PROPOSED): half music studio, half AI
+lab, window A (150 x 140) centred, the DJ decks on a 150 cm return with the PC on the floor under
+it, the wall guitars lower with the piano's top lid stopping at 60 deg, no panel.
 
 Plain Python (no Blender), drawn to scale from blender/lib/plan_v2.py, the same numbers
 the v2 blockout (room_plan_v2_blockout.py) builds. Reuses the drawing helpers of the
@@ -6,10 +8,12 @@ approved 2026-10-22 sheet (room_plan_sheet.py) and the piano front of the piano 
 
     python3 blender/design/room_plan_v2_sheet.py
 
-Run the blockout first (it renders blockout-hero.png and blockout-phone.png into the same
-folder; the sheet places them). Output: video-local/footage/2026-10-23-room-plan-v2/
-room-plan-v2-sheet.{html,png}. Prints the clearance checks.
+Run the blockout first (it renders layout-hero.png and layout-phone.png into the same folder;
+the sheet places them). Output: video-local/footage/2026-10-24-layout-fixes/r2/
+room-plan-v2-layout-fixes-r2.{html,png} (the approved sheet in 2026-10-23-room-plan-v2/ and the
+first proposal in 2026-10-24-layout-fixes/ stay as they were). Prints the clearance checks.
 """
+import importlib
 import math
 import os
 import subprocess
@@ -29,8 +33,8 @@ OBJ_FILL, OBJ_LINE, SET_FILL = S.OBJ_FILL, S.OBJ_LINE, S.SET_FILL
 DASH, DOT = S.DASH, S.DOT
 RX, RY, H = P.RX, P.RY, P.H
 WIN, DOOR, R = P.WINDOW_V2, P.DOOR, P.ROOM
-OUT = os.path.join(C.FOOTAGE, "2026-10-23-room-plan-v2")
-W_PX, H_PX = 2400, 3560
+OUT = os.path.join(C.FOOTAGE, "2026-10-24-layout-fixes", "r2")
+W_PX, H_PX = 2400, 3900
 CHROME = PDS.CHROME
 CP = {c["key"]: c for c in P.COMPONENTS}
 NUM = {k: i + 1 for i, (k, _, _) in enumerate(P.OBJECTS_V2)}
@@ -87,10 +91,36 @@ DESK_L = [(BACK["x0"], BACK["y1"]), (BACK["x1"], BACK["y1"]), (BACK["x1"], BACK[
           (RET["x1"], RET["y0"]), (RET["x0"], RET["y0"])]
 CHAIR_ZONE = [(P.KNEE_BACK[0], BACK["y0"] - 1.00), (P.KNEE_BACK[1] + 0.06, BACK["y0"] - 1.00),
               (P.KNEE_BACK[1] + 0.06, BACK["y0"]), (P.KNEE_BACK[0], BACK["y0"])]          # 100 behind the back run
-CHAIR_ZONE_RET = [(RET["x1"], P.KNEE_RET[0]), (RET["x1"] + 1.00, P.KNEE_RET[0]),
-                  (RET["x1"] + 1.00, P.KNEE_RET[1]), (RET["x1"], P.KNEE_RET[1])]          # 100 beside the return
 lid90 = max(z for _, z in lid_profile(90)[0])
 WG = P.WALL_GUITARS_V2
+DJ_SEAT_FOOT = circ(P.DJ_SEAT[0], P.DJ_SEAT[1], 0.343)   # the chair turned to the decks, its star base
+LEG_FEET = [circ(x, y, P.DESK_V2["leg_d"] / 2) for x, y in P.DESK_V2["legs"]]
+LEDGE_FRONT = RY - P.LEDGE_IN
+HV0 = P.HERO_V2
+CHAIR_FOOT = circ(CP["chair"]["at"][0], CP["chair"]["at"][1], 0.343)   # the star base
+LIDMAX = P.PIANO_LID_MAX_DEG                      # the site's code stops the top lid here
+
+
+def lid_sweep(off_wall_face, deg_max=LIDMAX):
+    """Highest point the top lid reaches, opening from 0 to deg_max, over a line off_wall_face
+    metres from the right wall (piano frame: the hinge's local y is lid_over_back)."""
+    hy = PN["lid_over_back"]
+    u = (RX - off_wall_face) - PIA["x"]                # the line in the piano's local y
+    best = 0.0
+    for k in range(0, deg_max * 4 + 1):
+        pts, _ = lid_profile(k / 4)
+        for (y0, z0), (y1, z1) in zip(pts, pts[1:] + pts[:1]):
+            if (y0 - u) * (y1 - u) <= 0 and y0 != y1:
+                best = max(best, z0 + (z1 - z0) * (u - y0) / (y1 - y0))
+    return best
+
+
+# the bodies' plane: back face 2.5 cm behind the hook line, front face plus 2 cm of bridge and knobs
+BODY_BAND = (C.WALL_GUITARS["off_wall"] - 0.025, C.WALL_GUITARS["off_wall"] + 0.045)
+
+
+def sweep_band(deg_max=LIDMAX):
+    return max(lid_sweep(BODY_BAND[0] + (BODY_BAND[1] - BODY_BAND[0]) * i / 14, deg_max) for i in range(15))
 
 # ---------------------------------------------------------------------------
 # checks
@@ -106,39 +136,77 @@ def run_checks():
     door_leaf = DOOR["y1"] - DOOR["y0"] - 0.05
     door_arc = [(-RX, DOOR["y0"]), (-RX + door_leaf, DOOR["y0"]), (-RX + door_leaf, DOOR["y0"] + door_leaf),
                 (-RX, DOOR["y0"] + door_leaf)]
-    window_line = [(WIN["x0"], RY - 0.01), (WIN["x1"], RY - 0.01), (WIN["x1"], RY), (WIN["x0"], RY)]
-    chk("walkway to the window: desk end to rack", S.gap([(BACK["x1"], BACK["y0"]), (BACK["x1"], BACK["y1"]),
-        (BACK["x1"] - 0.01, BACK["y1"]), (BACK["x1"] - 0.01, BACK["y0"])], RACK_FOOT), 0.70)
+    desk_end = [(BACK["x1"], BACK["y0"]), (BACK["x1"], BACK["y1"]), (BACK["x1"] - 0.01, BACK["y1"]), (BACK["x1"] - 0.01, BACK["y0"])]
+    # walkways
+    chk("walkway to the window: desk end to the rack", S.gap(desk_end, RACK_FOOT), 0.70)
     chk("walkway: chair pulled out to the piano bench, played", S.gap(CHAIR_ZONE, bench_foot(True)), 0.70)
-    chk("walkway: chair zone (return side) to the bench, played", S.gap(CHAIR_ZONE_RET, bench_foot(True)), 0.70)
-    chk("walkway: chair to the rack", S.gap(foot(CP["chair"]), RACK_FOOT), 0.70)
     chk("walkway: return end to the door swing", S.gap(DESK_L[3:6] + [(RET["x0"], RET["y0"])], door_arc), 0.70)
+    chk("walkway: the PC to the door swing", S.gap(foot(CP["pc"]), door_arc), 0.70)
+    # the return: DJ controller, laptop, PC on the floor (r2)
+    chk("knee space under the return, PC to drawer unit 1", P.KNEE_RET[1] - P.KNEE_RET[0], 0.50)
+    chk("DJ controller within 3 cm of the return knee's centre", 0.03 - abs(CP["dj"]["at"][1] - sum(P.KNEE_RET) / 2), 0.0)
+    chk("DJ controller to the laptop stand", S.gap(foot(CP["dj"]), foot(CP["mstand"])), 0.0)
+    chk("DJ controller inside the return's front edge", RET["x1"] - max(x for x, _ in foot(CP["dj"])), 0.01)
+    chk("DJ controller to the left speaker", S.gap(foot(CP["dj"]), foot(CP["a7v_1"])), 0.03)
+    chk("laptop to the left speaker", S.gap(foot(CP["laptop"]), foot(CP["a7v_1"])), 0.03)
+    chk("PC under the desk top (height)", P.TOP - P.DESK_V2["t"] - CP["pc"]["size"][2], 0.15)
+    chk("PC inside the return's end (its glass side)", (CP["pc"]["at"][1] - CP["pc"]["size"][0] / 2) - RET["y0"], 0.0)
+    chk("PC to the return's leg", S.gap(foot(CP["pc"]), LEG_FEET[0]), 0.02)
+    chk("PC off the left wall", min(x for x, _ in foot(CP["pc"])) + RX, 0.02)
+    chk("chair turned to the decks (base) to the PC", S.gap(DJ_SEAT_FOOT, foot(CP["pc"])), 0.05)
+    chk("chair turned to the decks (base) to the leg", S.gap(DJ_SEAT_FOOT, LEG_FEET[0]), 0.03)
+    for k in ("alex_1", "alex_2"):
+        chk(f"chair turned to the decks (base) to {CP[k]['label'].lower()}", S.gap(DJ_SEAT_FOOT, foot(CP[k])), 0.02)
+    chk("laptop top to the pegboard", CP["pegboard"]["at"][2] - (CP["laptop"]["at"][2] + CP["laptop"]["size"][2]), 0.10)
+    chk("laptop top to the lightstick's shelf", P.LIGHTSTICK_SHELF["z"] - P.LIGHTSTICK_SHELF["t"]
+        - (CP["laptop"]["at"][2] + CP["laptop"]["size"][2]), 0.10)
+    # the rack
     chk("rack to bench at rest", S.gap(RACK_FOOT, bench_foot()), 0.03)
     chk("rack to bench, played", S.gap(RACK_FOOT, bench_foot(True)), 0.02)
     chk("rack to piano", S.gap(RACK_FOOT, PIANO_FOOT), 0.05)
-    chk("rack corner into the window width (on the floor, below the sill)", min(x for x, _ in RACK_FOOT) - WIN["x1"], -0.05)
-    chk("desk end to the window", WIN["x0"] - BACK["x1"], 0.05)
-    chk("piano case to the back wall", RY - max(y for _, y in PIANO_FOOT), 0.05)
-    for k in ("alex_1", "alex_2", "alex_3"):
-        chk(f"parked chair to {CP[k]['label'].lower()}", S.gap(foot(CP["chair"]), foot(CP[k])), 0.02)
+    chk("rack clear of the window's edge (x)", min(x for x, _ in RACK_FOOT) - WIN["x1"], 0.0)
     chk("rack to the back wall", RY - max(y for _, y in RACK_FOOT), 0.02)
-    for a, b, need in (("a7v_1", "pc", 0.03), ("a7v_1", "interface", 0.02), ("a7v_2", "streamdeck", 0.02),
-                       ("pc", "lightstick", 0.03), ("lightstick", "mstand", 0.03), ("dj", "mstand", 0.0),
+    chk("chair to the rack", S.gap(CHAIR_FOOT, RACK_FOOT), 0.70)
+    # the window and the monitor side of the desk
+    chk("desk end to the window", WIN["x0"] - BACK["x1"], 0.05)
+    sx = P.XM + P.SPK_DX + P.SPK_HALF_X                          # right speaker's right edge
+    sy = P.SPK_Y + 0.5 * (P.A7V[1] * math.cos(P._ya) + P.A7V[0] * math.sin(P._ya))   # its back corner
+    chk("right speaker to the stone ledge", max(WIN["x0"] - WIN["ledge_horn"] - sx, LEDGE_FRONT - sy), 0.01)
+    chk("left speaker to the left wall", P.XM - P.SPK_DX - P.SPK_HALF_X + RX, 0.02)
+    hx = HV0["pos"]
+    chk("right speaker clear of the glass, from the hero camera",
+        WIN["x0"] - (hx[0] + (sx - hx[0]) * (RY - hx[1]) / (P.SPK_Y - hx[1])), 0.05)
+    kl2 = CP["keylight_2"]
+    chk("key light 2 panel to the glass (x)", WIN["x0"] - max(x for x, _ in foot(kl2)), 0.0)
+    chk("window head to the ceiling", H - WIN["head"], 0.50)
+    chk("plant pot on the stone ledge", P.LEDGE_IN - (RY - CP["plant"]["at"][1] + CP["plant"]["size"][0] / 2 - 0.05), 0.0)
+    chk("piano case to the back wall", RY - max(y for _, y in PIANO_FOOT), 0.05)
+    # the desk and the return (fix 1)
+    for k in ("alex_1", "alex_2"):
+        chk(f"parked chair (base, r 34) to {CP[k]['label'].lower()}", S.gap(CHAIR_FOOT, foot(CP[k])), 0.02)
+    chk("parked chair (base) to the PC", S.gap(CHAIR_FOOT, foot(CP["pc"])), 0.05)
+    for a, b, need in (("a7v_1", "interface", 0.02), ("a7v_2", "streamdeck", 0.02),
+                       ("headphones", "lightstick", 0.05),
                        ("a7v_2", "keylight_pole_2", 0.0), ("a7v_1", "keylight_pole_1", 0.0), ("snake_plant", "mouse", 0.03)):
         chk(f"{CP[a]['label'].lower()} to {CP[b]['label'].lower()}", S.gap(foot(CP[a]), foot(CP[b])), need)
     kl = CP["keylight_1"]
     chk("key light 1 panel to the left wall", min(x for x, _ in foot(kl)) + RX, 0.0)
     reach = math.dist(P.MIC["clamp"], P.MIC["capsule"][:2])
     chk("mic arm reach (PSA1+ about 82 cm)", 0.82 - reach, 0.0)
+    chk("lightstick top to the neon", CP["neon"]["at"][2] - (CP["lightstick"]["at"][2] + CP["lightstick"]["size"][2]), 0.10)
+    chk("pegboard to the light panels (y)", (CP["nanoleaf"]["at"][1] - CP["nanoleaf"]["size"][0] / 2)
+        - (CP["pegboard"]["at"][1] + CP["pegboard"]["size"][0] / 2), 0.03)
+    chk("light bar to the ledge", P.LEDGE["z"] - (CP["screenbar"]["at"][2] + 0.03), 0.10)
+    chk("ultrawide bottom over the console", CP["ultrawide"]["at"][2] - (P.TOP + CP["interface"]["size"][2]), 0.01)
+    # the wall guitars (fix 4)
     for i in range(2):
         chk(f"guitar gap 0{i + 1} to 0{i + 2}", (WG["y"][i] - WG["width"][i] / 2) - (WG["y"][i + 1] + WG["width"][i + 1] / 2), 0.10)
-    chk("lid at 90 deg to the lowest guitar", WG["bottom"] - lid90, 0.05)
+    chk(f"lid's swing to {LIDMAX} deg through the bodies' plane to the bottoms", WG["bottom"] - sweep_band(), 0.05)
+
     for i in range(3):
         chk(f"guitar_0{i + 1} top to the ceiling", H - (WG["bottom"] + WG["length"][i]), 0.10)
     chk("guitar_01 to the back wall", RY - (WG["y"][0] + WG["width"][0] / 2), 0.10)
-    chk("PC top to the pegboard", CP["pegboard"]["at"][2] - (P.TOP + CP["pc"]["size"][2]), 0.05)
-    chk("light bar to the ledge", P.LEDGE["z"] - (CP["screenbar"]["at"][2] + 0.03), 0.10)
-    chk("ultrawide bottom over the console", CP["ultrawide"]["at"][2] - (P.TOP + CP["interface"]["size"][2]), 0.01)
+    chk("guitar_03 front edge inside the hero frame (y 43)", WG["y"][2] - WG["width"][2] / 2 - 0.43, 0.0)
 
 
 # ---------------------------------------------------------------------------
@@ -218,7 +286,7 @@ def walls_plan(v):
     v.rect(WIN["x0"], WIN["x1"], RY, RY + tb, PAPER, PAPER, 0)
     v.line((WIN["x0"], RY + tb * 0.45), (WIN["x1"], RY + tb * 0.45), INK, 1.0)
     v.line((WIN["x0"], RY + tb * 0.58), (WIN["x1"], RY + tb * 0.58), INK, 1.0)
-    v.rect(WIN["x0"] - 0.05, WIN["x1"] + 0.05, RY - (WIN["ledge_d"] - tb * 0.45), RY, "#d2ccc0", INK, 0.8)
+    v.rect(WIN["x0"] - WIN["ledge_horn"], WIN["x1"] + WIN["ledge_horn"], RY - P.LEDGE_IN, RY, "#d2ccc0", INK, 0.8)
     dy0, dy1 = DOOR["y0"], DOOR["y1"]
     v.rect(-RX - ts, -RX, dy0, dy1, PAPER, PAPER, 0)
     leaf = dy1 - dy0 - 0.05
@@ -251,13 +319,17 @@ def plan(px, py, pw, ph):
     text(xr, yr, "rug 150 × 230", 12, MUTED, "middle")
     # chair clearance zone
     v.poly(CHAIR_ZONE, "#dfe8f3", "#7f9cc4", 1.0, extra=DASH + ' fill-opacity=".45"')
-    v.poly(CHAIR_ZONE_RET, "#dfe8f3", "#7f9cc4", 1.0, extra=DASH + ' fill-opacity=".35"')
     xz, yz = v.p(P.XM, BACK["y0"] - 0.85)
-    text(xz, yz, "chair zone: 100 cm behind both runs", 12, "#46628a", "middle")
+    text(xz, yz, "chair zone: 100 cm behind the back run", 12, "#46628a", "middle")
+    v.poly(DJ_SEAT_FOOT, "#f3e6d6", "#b98a55", 1.0, extra=DASH + ' fill-opacity=".5"')
+    xz, yz = v.p(P.DJ_SEAT[0] + 0.05, P.DJ_SEAT[1] - 0.47)
+    text(xz, yz, "chair turned to the decks", 11, "#8a5a25", "middle")
     # desk
     v.poly(DESK_L, "#ffffff", INK, 1.6)
     for k, (x, y, yaw) in enumerate(DK["drawers"]):
         v.poly(rect_w(x, y, P.ALEX[0], P.ALEX[1], yaw), "none", MUTED, 0.9, extra=DOT)
+    for f in LEG_FEET:
+        v.poly(f, MUTED, INK, 0.8)
     # components
     order = sorted(P.COMPONENTS, key=lambda c: c["at"][2])
     for c in order:
@@ -305,13 +377,13 @@ def plan(px, py, pw, ph):
         ("studio_display", (-0.55, 2.80), "screens on one pole: 27 in (posts) over the 34 in curved (dashboard)"),
         ("a7v_1", (-2.45, 2.62), "A7V white on stands, toed in 34°"),
         ("ledge", (-2.45, 2.80), "floating ledge 115, three frames (wall)"),
-        ("pc", (-2.45, 1.40), "training rig (PC)"),
-        ("dj", (-2.45, 0.55), "DJ decks, laptop behind"),
-        ("lightstick", (-2.45, 0.98), "lightstick"),
-        ("pegboard", (-2.45, 0.15), "pegboard, neon above (wall)"),
+        ("pc", (-2.45, 0.35), "training rig (PC), on the floor under the return"),
+        ("dj", (-2.45, 1.40), "DJ decks, laptop on its stand behind"),
+        ("lightstick", (-2.45, 1.05), "lightstick (pegboard shelf)"),
+        ("pegboard", (-2.45, 0.70), "pegboard, neon above (wall)"),
         ("nanoleaf", (-2.45, 1.85), "light panels (wall)"),
-        ("plant", (0.75, 2.62), "plant on the sill, window 120 centred"),
-        ("rack", (0.30, 0.85), "rack: 04 05 06"),
+        ("plant", (0.75, 2.62), f"plant on the deeper sill, window {cm(WIN['x1'] - WIN['x0'], 0)} centred"),
+        ("rack", (1.00, 2.45), "rack: 04 05 06, against the back wall"),
         ("guitar_02", (1.30, 0.02), "wall guitars 01 02 03, on hooks above the piano"),
         ("snake_plant", (-0.25, 1.15), "snake plant"),
     ]
@@ -344,7 +416,7 @@ def plan(px, py, pw, ph):
     text(xh + 14, yh + 8, f"{HV['vfov']}° vertical, {CAM.hfov:.0f}° across on 16:9 · dotted: phone ({PHONE.hfov:.0f}° across)", 12, ACC)
     # dimensions
     top = v.p(0, -RY - 0.15)[1] + 28
-    xs = [-RX, BACK["x1"], WIN["x0"], WIN["x1"], RX]
+    xs = sorted({-RX, BACK["x1"], WIN["x0"], WIN["x1"], RX})
     for a, b in zip(xs, xs[1:]):
         dim(v.p(a, 0)[0], top, v.p(b, 0)[0], top, cm(b - a, 0), size=12)
     dim(v.p(-RX, 0)[0], top + 34, v.p(RX, 0)[0], top + 34, "440 inside", size=13)
@@ -353,10 +425,8 @@ def plan(px, py, pw, ph):
     # desk dims
     yb = v.p(0, BACK["y0"])[1] + 16
     dim(v.p(P.KNEE_BACK[0], 0)[0], yb, v.p(P.KNEE_BACK[1], 0)[0], yb, f"knee {cm(P.KNEE_BACK[1] - P.KNEE_BACK[0], 0)}", size=11)
-    xd = v.p(RET["x1"], 0)[0] + 14
-    dim(xd, v.p(0, P.KNEE_RET[1])[1], xd, v.p(0, P.KNEE_RET[0])[1], f"knee {cm(P.KNEE_RET[1] - P.KNEE_RET[0], 0)}", side=-1, size=11)
     xl = v.p(-RX, 0)[0] - 30
-    dim(xl, v.p(0, RY)[1], xl, v.p(0, RET["y0"])[1], "return 180", size=12)
+    dim(xl, v.p(0, RY)[1], xl, v.p(0, RET["y0"])[1], f"return {cm(P.RET_LEN, 0)}", size=12)
     dim(xl - 26, v.p(0, RY)[1], xl - 26, v.p(0, BACK["y0"])[1], "80", size=12)
     yd = v.p(0, RET["y0"])[1] + 20
     dim(v.p(-RX, 0)[0], yd, v.p(RET["x1"], 0)[0], yd, "60", side=-1, size=12)
@@ -367,7 +437,7 @@ def plan(px, py, pw, ph):
     dim(xpz, v.p(0, py0)[1], xpz, v.p(0, min(y for _, y in PIANO_FOOT))[1], "piano 153", side=-1, size=11)
     # walkway notes
     g_win = [c for c in CHECKS if c[0].startswith("walkway to the window")][0][1]
-    xw, yw = v.p((BACK["x1"] + min(x for x, _ in RACK_FOOT)) / 2, 1.42)
+    xw, yw = v.p((BACK["x1"] + min(x for x, _ in RACK_FOOT)) / 2, 1.00)
     text(xw, yw, f"walkway {cm(g_win, 0)} to the window", 12, ACC, "middle", weight=600)
     g_b = [c for c in CHECKS if c[0].startswith("walkway: chair pulled")][0][1]
     xw, yw = v.p(0.0, -0.35)
@@ -408,14 +478,15 @@ def elevations(px, py, pw, ph):
     base = py + 115 + H * s
     # ---- back wall: u = x + RX
     vb = View(px + 40, base, s)
-    wall_frame(vb, R["width"], "Back wall", "AI lab on the left, window centred, rack on the right")
+    wall_frame(vb, R["width"], "Back wall", "AI lab on the left, the bigger window centred, rack on the right")
     U = lambda x: x + RX  # noqa: E731
     vb.rect(U(WIN["x0"]), U(WIN["x1"]), WIN["sill"], WIN["head"], "#cfdcf2", INK, 1.2)
-    for i in range(1, 6):
-        z = WIN["sill"] + (WIN["head"] - WIN["sill"]) * i / 6
+    nb = max(6, round((WIN["head"] - WIN["sill"]) / 0.175))
+    for i in range(1, nb):
+        z = WIN["sill"] + (WIN["head"] - WIN["sill"]) * i / nb
         vb.line((U(WIN["x0"]), z), (U(WIN["x1"]), z), "#7d8696", 0.7)
     vb.line((U(0), WIN["sill"]), (U(0), WIN["head"]), INK, 0.8)
-    vb.rect(U(WIN["x0"] - 0.05), U(WIN["x1"] + 0.05), WIN["sill"] - 0.03, WIN["sill"], "#d2ccc0", INK, 0.8)
+    vb.rect(U(WIN["x0"] - WIN["ledge_horn"]), U(WIN["x1"] + WIN["ledge_horn"]), WIN["sill"] - 0.03, WIN["sill"], "#d2ccc0", INK, 0.8)
     # desk top and drawers
     vb.rect(U(BACK["x0"]), U(BACK["x1"]), P.TOP - DK["t"], P.TOP, "#fff", INK, 1.3)
     for x, y, yaw in DK["drawers"][:2]:
@@ -441,8 +512,12 @@ def elevations(px, py, pw, ph):
     text(xk, yk, "piano side", 11, MUTED, "middle")
     # dims back wall
     xq = vb.p(U(WIN["x1"]) + 0.08, 0)[0]
-    dim(xq, vb.p(0, 0)[1], xq, vb.p(0, WIN["sill"])[1], "105", side=-1, size=11)
-    dim(xq, vb.p(0, WIN["sill"])[1], xq, vb.p(0, WIN["head"])[1], "105", side=-1, size=11)
+    xq = vb.p(U(-0.08), 0)[0]
+    dim(xq, vb.p(0, 0)[1], xq, vb.p(0, WIN["sill"])[1], cm(WIN["sill"], 0), side=-1, size=11)
+    dim(xq, vb.p(0, WIN["sill"])[1], xq, vb.p(0, WIN["head"])[1], cm(WIN["head"] - WIN["sill"], 0), side=-1, size=11)
+    yq = vb.p(0, WIN["head"] + 0.10)[1]
+    dim(vb.p(U(WIN["x0"]), 0)[0], yq, vb.p(U(WIN["x1"]), 0)[0], yq, cm(WIN["x1"] - WIN["x0"], 0), size=11)
+
     xq = vb.p(U(BACK["x0"]) + 0.06, 0)[0]
     dim(xq, vb.p(0, 0)[1], xq, vb.p(0, P.TOP)[1], "73.5", side=-1, size=11)
     sp = P.SPEAKERS_V2[1]
@@ -464,7 +539,7 @@ def elevations(px, py, pw, ph):
     # ---- left wall: facing -X, front corner at the left, u = y + RY
     x2 = px + 40 + R["width"] * s + 70
     vl = View(x2, base, s)
-    wall_frame(vl, R["depth"], "Left wall", "door, then the desk return: rig, decks, pegboard, neon")
+    wall_frame(vl, R["depth"], "Left wall", "door, then the return: the PC on the floor, the decks, pegboard, neon")
     U2 = lambda y: y + RY  # noqa: E731
     vl.rect(U2(DOOR["y0"]), U2(DOOR["y1"]), 0, DOOR["head"], "#f1ede5", INK, 1.1)
     vl.path([(U2(DOOR["y1"]), 0), (U2(DOOR["y0"]) + 0.02, DOOR["head"] / 2), (U2(DOOR["y1"]), DOOR["head"])], MUTED, 0.7, extra=DASH)
@@ -472,10 +547,8 @@ def elevations(px, py, pw, ph):
     vl.rect(U2(sw["y"]) - sw["w"] / 2, U2(sw["y"]) + sw["w"] / 2, sw["z"] - sw["h"] / 2, sw["z"] + sw["h"] / 2, SET_FILL, INK, 1)
     vl.rect(U2(RET["y0"]), U2(RY), P.TOP - DK["t"], P.TOP, "#fff", INK, 1.3)
     vl.line((U2(RET["y0"]), P.TOP - DK["t"] - 0.005), (U2(BACK["y0"]), P.TOP - DK["t"] - 0.005), "#7fb6ff", 2.0)
-    x, y, yaw = DK["drawers"][2]
-    vl.rect(U2(y - P.ALEX[0] / 2), U2(y + P.ALEX[0] / 2), 0, P.ALEX[2], "#fff", INK, 1.0)
-    for j in range(1, 5):
-        vl.line((U2(y - P.ALEX[0] / 2), P.ALEX[2] * j / 5), (U2(y + P.ALEX[0] / 2), P.ALEX[2] * j / 5), MUTED, 0.6)
+    for x, y in DK["legs"]:
+        vl.rect(U2(y - DK["leg_d"] / 2), U2(y + DK["leg_d"] / 2), 0, P.TOP - DK["t"], "#fff", INK, 0.9)
     x, y, yaw = DK["drawers"][0]
     vl.rect(U2(y - P.ALEX[1] / 2), U2(y + P.ALEX[1] / 2), 0, P.ALEX[2], "#fff", INK, 1.0)
     for key in ("pc", "dj", "mstand", "laptop", "lightstick", "pegboard", "headphones", "neon", "nanoleaf",
@@ -484,8 +557,8 @@ def elevations(px, py, pw, ph):
         u0, u1 = proj_extent(c, "y")
         z0 = c["at"][2]
         elev_rect(vl, U2(u0), U2(u1), z0, z0 + c["size"][2], c, dashed=key in ("a7v_1", "iso_1", "keylight_1", "keylight_pole_1"))
-    for key, lab in (("pc", "rig"), ("dj", "decks"), ("neon", "neon: our words"), ("pegboard", "pegboard"),
-                     ("nanoleaf", "panels"), ("laptop", "laptop")):
+    for key, lab in (("pc", "rig"), ("dj", "decks"), ("laptop", "laptop"), ("neon", "neon: our words"),
+                     ("pegboard", "pegboard"), ("nanoleaf", "panels")):
         c = CP[key]
         u0, u1 = proj_extent(c, "y")
         xt, yt = vl.p(U2((u0 + u1) / 2), c["at"][2] + c["size"][2] / 2)
@@ -496,22 +569,27 @@ def elevations(px, py, pw, ph):
     ne = CP["neon"]
     dim(xq, vl.p(0, ne["at"][2])[1], xq, vl.p(0, ne["at"][2] + ne["size"][2])[1], f"{cm(ne['at'][2], 0)} to {cm(ne['at'][2] + ne['size'][2], 0)}", size=11)
     yq = vl.p(0, 0)[1] + 18
-    dim(vl.p(U2(RET["y0"]), 0)[0], yq, vl.p(U2(RY), 0)[0], yq, "return 180", side=-1, size=11)
+    dim(vl.p(U2(RET["y0"]), 0)[0], yq, vl.p(U2(RY), 0)[0], yq, f"return {cm(P.RET_LEN, 0)}", side=-1, size=11)
     dim(vl.p(U2(DOOR["y1"]), 0)[0], yq, vl.p(U2(RET["y0"]), 0)[0], yq, cm(RET["y0"] - DOOR["y1"], 0), side=-1, size=11)
+    dim(vl.p(U2(P.KNEE_RET[0]), 0)[0], yq + 30, vl.p(U2(P.KNEE_RET[1]), 0)[0], yq + 30,
+        f"knee {cm(P.KNEE_RET[1] - P.KNEE_RET[0], 0)}", side=-1, size=10)
     # ---- right wall: facing +X, back corner at the left, u = RY - y
     x3 = x2 + R["depth"] * s + 70
     vr = View(x3, base, s)
-    wall_frame(vr, R["depth"], "Right wall", "piano, three guitars on hooks, acoustic panel")
+    wall_frame(vr, R["depth"], "Right wall", f"piano 10 cm forward; top lid stops at {LIDMAX}°; guitars 27 cm lower; no panel")
     U3 = lambda y: RY - y  # noqa: E731
     pgp = P.PANEL_GUITAR_V2
-    vr.rect(U3(pgp["y1"]), U3(pgp["y0"]), pgp["z0"], pgp["z1"], "#3a3b41", "#2b2c31", 0.8)
+    if pgp:
+        vr.rect(U3(pgp["y1"]), U3(pgp["y0"]), pgp["z0"], pgp["z1"], pgp["colour"], "#2b2c31", 0.8)
     pv = PDS.View(vr.ox + U3(PIA["y"]) * s, base, s / 1000)
     PDS.front(pv, dict(PDS.TECH, sw=0.7), detail=False)
     hw = PN["width"] / 2 + PN["lid_over_side"]
-    vr.rect(U3(PIA["y"]) - hw, U3(PIA["y"]) + hw, PN["case_top"] + PN["lid_t"], lid90, "#dfe8f3", "#7f9cc4", 1.0,
-            extra=DASH + ' fill-opacity=".6"')
-    xl_, yl_ = vr.p(U3(PIA["y"]), (PN["case_top"] + lid90) / 2 + 0.05)
-    text(xl_, yl_ + 8, "top lid opened to 90°", 11, "#46628a", "middle")
+    # the lid stopped at its code limit: its section at the hinge, seen end-on (dashed outline)
+    l60 = max(z for _, z in lid_profile(LIDMAX)[0])
+    vr.rect(U3(PIA["y"]) - hw, U3(PIA["y"]) + hw, PN["case_top"] + PN["lid_t"], l60, "#f3e6d6", "#b98a55", 1.0,
+            extra=DASH + ' fill-opacity=".7"')
+    xo, yo = vr.p(U3(PIA["y"]), l60 - 0.07)
+    text(xo, yo, f"lid at {LIDMAX}°: front edge {cm(l60, 0)}, over the bodies' plane {cm(sweep_band(), 1)}", 10, "#8a5a25", "middle")
     cols = ["#3a3a3c", "#f8f6f0", "#b8474b"]
     for i, y in enumerate(WG["y"]):
         L_, W_ = WG["length"][i], WG["width"][i]
@@ -542,8 +620,9 @@ def elevations(px, py, pw, ph):
     xk, yk = vr.p(U3((max(rfy) + min(rfy)) / 2), 1.10)
     text(xk, yk, "rack", 11, OBJ_LINE, "middle")
     xq = vr.p(U3(WG["y"][2]) + WG["width"][2] / 2 + 0.10, 0)[0]
-    dim(xq, vr.p(0, 0)[1], xq, vr.p(0, lid90)[1], cm(lid90, 1), side=-1, size=11)
-    dim(xq, vr.p(0, lid90)[1], xq, vr.p(0, WG["bottom"])[1], cm(WG["bottom"] - lid90, 1), side=-1, size=11)
+    sb = sweep_band()
+    dim(xq, vr.p(0, 0)[1], xq, vr.p(0, sb)[1], cm(sb, 1), side=-1, size=11)
+    dim(xq, vr.p(0, sb)[1], xq, vr.p(0, WG["bottom"])[1], cm(WG["bottom"] - sb, 1), side=-1, size=11)
     dim(xq, vr.p(0, WG["bottom"])[1], xq, vr.p(0, WG["bottom"] + WG["length"][2])[1], cm(WG["length"][2], 0), side=-1, size=11)
     dim(xq, vr.p(0, WG["bottom"] + WG["length"][2])[1], xq, vr.p(0, H)[1], cm(H - WG["bottom"] - WG["length"][2], 0), side=-1, size=11)
     ygp = vr.p(0, WG["bottom"] - 0.12)[1]
@@ -566,12 +645,12 @@ def hero_panel(px, py, pw, ph):
     iw = pw - 36
     ih = iw * 9 / 16
     x0, y0 = px + 18, py + 76
-    add(f'<image href="blockout-hero.png" x="{x0}" y="{y0}" width="{iw:.0f}" height="{ih:.0f}"/>')
+    add(f'<image href="layout-hero.png" x="{x0}" y="{y0}" width="{iw:.0f}" height="{ih:.0f}"/>')
     markers(CAM, x0, y0, iw, ih)
     text(x0 + 10, y0 + ih - 12, "desktop, 16:9", 13, "#fff", weight=600)
     pw2, ph2 = 300, 300 * 844 / 390
     yp = y0 + ih + 22
-    add(f'<image href="blockout-phone.png" x="{x0}" y="{yp:.0f}" width="{pw2}" height="{ph2:.0f}"/>')
+    add(f'<image href="layout-phone.png" x="{x0}" y="{yp:.0f}" width="{pw2}" height="{ph2:.0f}"/>')
     add(f'<rect x="{x0}" y="{yp:.0f}" width="{pw2}" height="{ph2:.0f}" rx="16" fill="none" stroke="{INK}" stroke-width="3"/>')
     markers(PHONE, x0, yp, pw2, ph2)
     text(x0 + pw2 / 2, yp + ph2 + 20, "phone, 390 × 844, aimed at the posts screen", 12, MUTED, "middle")
@@ -596,12 +675,11 @@ def hero_panel(px, py, pw, ph):
         yy += 21
     yy += 8
     para(tx, yy, [
-        "At 50° (the approved lens) the side walls show only from y = 65 cm",
-        "back, so the double-neck's near edge and the guitars' heads touch",
-        "the frame; at 54° the walls show from y = 43 cm. The piano's front",
-        "end is cut by the right edge either way; its keys and rest stay in.",
-        "The posts screen is about 9 % of the frame's width (12 % before);",
-        "a click still glides to the straight-on close-up as today.",
+        "What changed in the frame: the return ends 30 cm further back than",
+        "the approved 180 (at y 60), the decks sit on it beside the corner and",
+        "the PC glows on the floor under its end; the window is 150 × 140",
+        "and carries the middle on its own; the rack stands between it and",
+        "the piano; the wall guitars hang 27 cm lower on the pale wall.",
         "Phone: same place, 70° vertical, aimed at the screens.",
     ], 13, MUTED)
     return CAM
@@ -613,7 +691,7 @@ def hero_panel(px, py, pw, ph):
 def size_str(c):
     w, d, h = c["size"]
     if c["key"] == "desk":
-        return "155×80 + 100×60"
+        return f"{(BACK['x1'] - BACK['x0']) * 100:.0f}×80 + {(P.RET_LEN - 0.80) * 100:.0f}×60"
     if c["shape"] == "cyl":
         return f"⌀{cm(w, 0)} × {cm(h, 0)}"
     if c["key"] in ("led",):
@@ -661,30 +739,36 @@ def legend(px, py, pw, ph):
 
 
 def numbers_panel(px, py, pw, ph):
-    panel(px, py, pw, ph, "5 · Numbers and checks", "plan_v2.py (constants.py untouched) · checked by this script")
+    panel(px, py, pw, ph, "5 · Numbers and checks", "plan_v2.py (constants.py untouched) · checked by this script, both windows")
     sp = P.SPEAKERS_V2[0]
     d_ear = math.dist((sp["x"], sp["y"]), P.EAR[:2])
+    l60 = max(z for _, z in lid_profile(LIDMAX)[0])
     lines = [
-        ("Desk (option A, refined)", INK, 650),
-        f"Back run 155 × 80, x {cm(BACK['x0'], 0)} to {cm(BACK['x1'], 0)}, 5 cm short of the window.",
-        f"Return 180 × 60 from the back wall (100 past the corner). Top 73.5, 3.5 cm.",
-        f"Drawer units 36 × 58 × 70, top straight on them (70 + 3.5 = 73.5, as IKEA's file).",
-        f"Knee space {cm(P.KNEE_BACK[1] - P.KNEE_BACK[0], 0)} under the back run, {cm(P.KNEE_RET[1] - P.KNEE_RET[0], 0)} under the return.",
-        f"Screens centred on the back knee space, x {cm(P.XM, 1)}.",
-        f"Speakers {cm(2 * P.SPK_DX, 0)} apart, {cm(d_ear, 0)} from the ear, toed in {abs(sp['yaw']):.0f}°,",
-        f"tweeters at {cm(sp['z'] + P.TWEETER_UP, 0)}, backs 20 cm off the wall.",
+        ("Desk (option A, layout fixes r2)", INK, 650),
+        f"Back run {cm(BACK['x1'] - BACK['x0'], 0)} × 80, x {cm(BACK['x0'], 0)} to {cm(BACK['x1'], 0)}, 5 cm short of the window.",
+        f"Return {cm(P.RET_LEN, 0)} from the back wall (approved 180). Under it:",
+        f"drawer unit 1, knee {cm(P.KNEE_RET[1] - P.KNEE_RET[0], 0)}, the PC on the floor at the end,",
+        "a 4 cm white leg at the free corner. Two drawer units, not three.",
+        f"Decks at y {cm(P.DJ_Y, 0)}, facing the chair; MacBook on the mStand",
+        "behind them. Lightstick on the pegboard shelf above.",
+        f"Knee {cm(P.KNEE_BACK[1] - P.KNEE_BACK[0], 0)} under the back run; screens at x {cm(P.XM, 1)}.",
+        f"Speakers {cm(2 * P.SPK_DX, 0)} apart, {cm(d_ear, 0)} from the ear, toed in {abs(sp['yaw']):.0f}°.",
         "",
-        ("Window", INK, 650),
-        "x −60 to +60, sill 105, head 210 (size unchanged).",
+        ("Window and rack", INK, 650),
+        f"{cm(WIN['x1'] - WIN['x0'], 0)} × {cm(WIN['head'] - WIN['sill'], 0)}, sill {cm(WIN['sill'], 0)}, head {cm(WIN['head'], 0)};",
+        f"stone ledge {cm(P.LEDGE_IN, 0)} into the room (was 10).",
+        f"Rack x {cm(RK['x'], 0)}, y {cm(RK['y'], 0)}, yaw {RK['yaw']:.0f}°: centred in the 78 cm",
+        f"between the ledge and the piano's toe. Piano y {cm(PIA['y'], 0)} (was 100).",
         "",
-        ("Wall guitars (bottoms on one line at 172)", INK, 650),
-        f"Lid at 90° reaches {cm(lid90, 1)}: {cm(WG['bottom'] - lid90, 1)} under the bodies.",
+        (f"Wall guitars (bottoms on one line at {cm(WG['bottom'], 0)})", INK, 650),
+        f"The top lid stops at {LIDMAX}° in code (PIANO_LID_MAX_DEG): front",
+        f"edge {cm(l60, 0)}; over the bodies' plane it reaches {cm(sweep_band(), 1)}.",
+        f"Bottoms {cm(WG['bottom'] - sweep_band(), 1)} above that (rule 5). Was 172.",
         f"Tops: 01 {cm(WG['bottom'] + WG['length'][0], 0)}, 02 {cm(WG['bottom'] + WG['length'][1], 0)}, "
-        f"03 {cm(WG['bottom'] + WG['length'][2], 0)} (ceiling 300).",
-        f"Centres y {', '.join(cm(y, 1) for y in WG['y'])}; 12 cm between bodies.",
-        "Double-neck: two hooks, one per head, 17 cm apart.",
+        f"03 {cm(WG['bottom'] + WG['length'][2], 0)} (ceiling 300). No panel.",
         "",
         ("Checks", INK, 650),
+    ]        ("Checks", INK, 650),
     ]
     para(px + 18, py + 92, lines[:-1], 13.5)
     y = py + 92
@@ -692,8 +776,10 @@ def numbers_panel(px, py, pw, ph):
     y += 20
     for name, g, need, ok in CHECKS:
         val = "overlap" if g == -1.0 else cm(g, 1)
-        text(px + 470, y, f"{'ok' if ok else 'CLASH'}  {name}: {val} ({cm(need, 0)})", 11.5, INK if ok else "#a33")
-        y += 16.5
+        tight = ok and g - need < 0.02
+        text(px + 470, y, f"{'ok' if ok else 'CLASH'}  {name}: {val} ({cm(need, 0)}){'  tight' if tight else ''}", 10.5,
+             "#a33" if not ok else ("#8a5a25" if tight else INK))
+        y += 14.2
 
 
 def objects_panel(px, py, pw, ph):
@@ -706,60 +792,31 @@ def objects_panel(px, py, pw, ph):
         text(px + 50, y + 17, f"{k} · {what}", 12, MUTED)
         y += 40
     para(px + 18, y + 6, [
-        "New: obj_rig (the PC and the 34 in dashboard; projects",
-        "as training runs). Needs a MESHES.md change, asked below.",
-        "obj_monitor moves to the 27 in screen: monitor_screen",
-        "stays 16:10 (53.8 × 33.6) centred in the 16:9 glass, so",
-        "the posts code and the 400 × 250 phone rule do not change.",
-        "The audio interface is an Apollo x4: its big",
-        "monitor knob is the volume, the preamp knob the pan.",
-        "Ten is the limit: nothing else can become interactive.",
+        "Unchanged ten. obj_rig: the PC on the floor under the",
+        "return and the 34 in on the back run. obj_studio: the",
+        "decks on the return, the Apollo x4, the speakers and",
+        "the lightstick. Ten is the limit.",
     ], 12.5, MUTED)
 
 
-def questions(px, py, pw, ph):
-    panel(px, py, pw, ph, "7 · For the owner", "recommendation first")
-    qs = [
-        ("1. Hero camera lens (stills below).", [
-            "A (recommended): 54° vertical, about 20 mm, inside the room;",
-            "   every object in the 16:9 frame, the orbit works as today.",
-            "B: keep the approved 50° (22 mm): the guitars' heads and the",
-            "   lamp touch the top edge, the double-neck the right edge.",
-            "C: 50° from 40 cm behind the front wall (a cut-away set):",
-            "   the calmest picture, but the front wall must be hidden",
-            "   and the orbit kept from seeing past the side walls."]),
-        ("2. Neon sign (still below).", [
-            "A (recommended): left wall above the pegboard, as in",
-            "   your photo; the back wall stays calm round the window.",
-            "B: back wall above the frames: read straight on from the",
-            "   hero, but the AI half's back wall gets crowded."]),
-        ("3. Training rig as the tenth object.", [
-            "A (recommended): its own object, obj_rig: click the PC,",
-            "   fans pulse, the 34 in lists the projects as runs.",
-            "   Needs a MESHES.md and contract change (new root).",
-            "B: fold the PC and both screens into obj_monitor: nine",
-            "   objects and one spare, but one heavy object file."]),
-        ("4. Front half of the room (out of the hero view).", [
-            "A (recommended): leave it open floor (door, walkway).",
-            "B: a floor monstera or a beanbag, set dressing only."]),
-    ]
-    y = py + 92
-    colx = [px + 18, px + 18 + (pw - 36) / 2]
-    for i, (q, opts) in enumerate(qs):
-        x = colx[i % 2]
-        yy = y + (0 if i < 2 else 186)
-        text(x, yy, q, 14.5, INK, weight=650)
-        para(x + 10, yy + 22, opts, 12.5, MUTED, lh=17.5)
-    tw = (pw - 36 - 3 * 14) / 4
-    th = tw * 9 / 16
-    ty = py + ph - th - 44
-    for k, (f, lab) in enumerate((("blockout-hero.png", "1A · 54°, inside (recommended)"), ("option-lens-b-50.png", "1B · 50°, inside"),
-                                  ("option-lens-c-cutaway.png", "1C · 50°, 40 cm behind the wall"),
-                                  ("option-neon-b-back-wall.png", "2B · neon on the back wall"))):
-        tx = px + 18 + k * (tw + 14)
-        add(f'<image href="{f}" x="{tx:.0f}" y="{ty:.0f}" width="{tw:.0f}" height="{th:.0f}"/>')
-        add(f'<rect x="{tx:.0f}" y="{ty:.0f}" width="{tw:.0f}" height="{th:.0f}" fill="none" stroke="{INK}" stroke-width="1"/>')
-        text(tx, ty + th + 18, lab, 12.5, INK, weight=600)
+def decisions(px, py, pw, ph):
+    panel(px, py, pw, ph, "7 · The owner's decisions in this sheet", "2026-10-24, after the first layout-fix blockout")
+    para(px + 18, py + 96, [
+        ("\u201cDJ controller on the desk return, PC on the floor under it. Window A, no panel,", INK, 600),
+        ("guitars lower with the lid stopping at 60\u00b0. Show me the blockout.\u201d", INK, 600),
+        "",
+        "1. Window A: 150 × 140, sill 95, head 235. Variant B is dropped.",
+        "2. The DJ stand is gone; the window's right half is clear again.",
+        f"3. The decks on the return, facing the chair; the MacBook on its mStand behind. The return grows from",
+        f"   110 back to {cm(P.RET_LEN, 0)}: the decks need the knee space between drawer unit 1 and the PC.",
+        "4. The PC on the floor under the return's end: glass side to the camera, front glass to the chair,",
+        "   still obj_rig. It takes the third drawer unit's place; a slim white leg holds the corner.",
+        "5. No panel behind the wall guitars.",
+        f"6. The piano's top lid stops at {LIDMAX}° (PIANO_LID_MAX_DEG in plan_v2.py; the site's code must",
+        f"   hold it there). The guitars come down to {cm(WG['bottom'], 0)}, the lowest whole cm 5 cm over the lid.",
+        "7. The rack: centred between the ledge and the piano, 4 cm clear of the glass's edge, 6 cm from the",
+        "   piano; it is the link between the window and the piano, the wall guitars continue it to the right.",
+    ], 14, MUTED, lh=22)
 
 
 def main():
@@ -769,27 +826,28 @@ def main():
     add(f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="{W_PX}" height="{H_PX}" '
         f'viewBox="0 0 {W_PX} {H_PX}" font-family="-apple-system, Helvetica Neue, Arial, sans-serif">')
     add(f'<rect width="{W_PX}" height="{H_PX}" fill="{PAPER}"/>')
-    text(48, 58, "The room v2 · plan sheet: half music studio, half AI lab", 32, INK, weight=650)
+    text(48, 58, "The room v2 · layout fixes: the bigger window, the DJ stand, the rack, the guitars", 32, INK, weight=650)
     text(48, 88, "to scale from blender/lib/plan_v2.py · dimensions in cm · Blender axes: back wall +Y, hero camera −Y, "
          "origin on the floor at the room's centre · room 440 × 420 × 300, door unchanged", 16, MUTED)
     add(f'<rect x="{W_PX - 420}" y="30" width="372" height="40" rx="6" fill="#a33"/>')
-    text(W_PX - 234, 57, "NOT YET APPROVED · proposal", 18, "#fff", "middle", weight=700)
-    text(W_PX - 48, 92, "2026-10-23 · replaces the 2026-10-22 plan only once approved", 14, MUTED, "end")
+    text(W_PX - 234, 57, "PROPOSED r2 · not approved", 18, "#fff", "middle", weight=700)
+    text(W_PX - 48, 92, "2026-10-24 r2: the owner's choices after the first layout-fix blockout (panel 7)",
+         14, MUTED, "end")
     plan(40, 116, 1290, 1340)
     hero_panel(1350, 116, 1010, 1340)
     elevations(40, 1480, 2320, 640)
     legend(40, 2144, 1500, 640)
     objects_panel(1560, 2144, 800, 640)
-    numbers_panel(40, 2808, 1060, 720)
-    questions(1120, 2808, 1240, 720)
+    numbers_panel(40, 2808, 1060, 1060)
+    decisions(1120, 2808, 1240, 1060)
     add("</svg>")
     html = ("<!doctype html><html><head><meta charset='utf-8'><title>Room plan v2</title>"
             f"<style>html,body{{margin:0;background:{PAPER}}}svg{{display:block}}</style></head><body>"
             + "\n".join(out) + "</body></html>")
-    hp = os.path.join(OUT, "room-plan-v2-sheet.html")
+    hp = os.path.join(OUT, "room-plan-v2-layout-fixes-r2.html")
     with open(hp, "w", encoding="utf-8") as f:
         f.write(html)
-    png = os.path.join(OUT, "room-plan-v2-sheet.png")
+    png = os.path.join(OUT, "room-plan-v2-layout-fixes-r2.png")
     subprocess.run([CHROME, "--headless", "--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist",
                     "--allow-file-access-from-files", "--hide-scrollbars", f"--screenshot={png}",
                     f"--window-size={W_PX},{H_PX}", "file://" + hp], check=True,

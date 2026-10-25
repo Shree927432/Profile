@@ -36,7 +36,7 @@ import bpy
 from mathutils import Matrix, Vector
 from mathutils.geometry import delaunay_2d_cdt
 
-from lib import constants as C, geo, materials as M, names
+from lib import constants as C, geo, materials as M, names, plan_v2
 from lib.guitar_specs import GUITAR_02 as G, spline
 
 sys.path.insert(0, os.path.join(C.BLENDER_DIR, "design"))
@@ -1449,8 +1449,8 @@ def build(parent=None, collection=None, lite=False):
 
 def place_on_wall(root):
     """On its hook on the right wall, facing the room (-X): the body's centre plane at
-    WALL_GUITARS off_wall, the hook contact at the hook height."""
-    WG = C.WALL_GUITARS
+    off_wall, the hook contact at the hook height (plan_v2.WALL_GUITARS_V2)."""
+    WG = plan_v2.WALL_GUITARS_V2
     root.location = (C.RX - WG["off_wall"] - (G["body_t"] / 2 + PIV[2]) * MM, WG["y"][1],
                      WG["bottom"] + PIV[1] * MM)
     root.rotation_euler = (0, 0, math.radians(-90))
@@ -1467,7 +1467,7 @@ def build_hanger(root, collection, parent=None, wall_z=None, name="guitars_hook_
     bh = VN + BP.HOOK_B
     pr = 3.75
     if wall_z is None:
-        wall_z = -G["body_t"] / 2 - C.WALL_GUITARS["off_wall"] / MM
+        wall_z = -G["body_t"] / 2 - plan_v2.WALL_GUITARS_V2["off_wall"] / MM
     zb = -30.0
     chrome = bmesh.new()
     foam = bmesh.new()

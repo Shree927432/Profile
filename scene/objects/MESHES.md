@@ -3,7 +3,9 @@
 Drafted 2026-10-21 for Phase 4, updated the same day with the owner's answers,
 the widened premise (the room tells the evolution of music through its
 instruments), the guitar rack and the DJ controller; see "Resolved 2026-10-21" at
-the end. A row in docs/05-decisions.md points here.
+the end. A row in docs/05-decisions.md points here. Updated 2026-10-24 for room plan v2
+(half music studio, half AI lab, approved that day): `obj_rig` is the tenth object, the
+posts moved to the 27-inch top screen, the bed, bookshelf and nightstand are gone.
 
 The code may rely on a name only if it is in this file. Anything not listed is free
 for the Blender scripts to rename, join or delete. Change a listed name only with a
@@ -29,7 +31,7 @@ Sharps only, written `s`: `cs ds fs gs as`. Never flats. Full range `piano_key_a
 to `piano_key_c8`. The code turns the name into a MIDI number, so no note table.
 
 **Roots.** Every object has one empty at the top of its tree:
-`obj_<object>` for the nine interactive objects, `set_<thing>` for static scenery.
+`obj_<object>` for the ten interactive objects, `set_<thing>` for static scenery.
 All its parts are children. Code finds the object by its root; the video script
 builds the room root by root; bake and look scripts toggle a whole root.
 Each root also has a Blender collection of the same name for organising (collections
@@ -69,9 +71,9 @@ Materials: `mat_<thing>`.
   recalculated; never a negative scale on an exported object.
 - Blender is Z up. Export as GLB with the default "+Y Up". In three.js that gives y up.
 - The room faces the same way as the placeholder: **back wall (window, desk,
-  monitor) at Blender +Y = three.js −Z. The viewer stands at Blender −Y = three.js
-  +Z**, looking at it (Blender's Front view, numpad 1). Left wall (bed, bookshelf,
-  frames) at −X, right wall (guitars, panels, piano) at +X in both.
+  monitors) at Blender +Y = three.js −Z. The viewer stands at Blender −Y = three.js
+  +Z**, looking at it (Blender's Front view, numpad 1). Left wall (the AI lab's desk
+  return, pegboard, door) at −X, right wall (guitars, panels, piano) at +X in both.
 - Origin on the floor at the room's centre. Floor top at height 0.
 - Each object is modelled in its own frame facing Blender −Y (three.js +Z), its
   right at +X, then placed and turned by its root. Parts keep identity rotation
@@ -81,7 +83,7 @@ Materials: `mat_<thing>`.
 - The monitor must face straight out from the back wall (yaw 0, a back tilt up
   to about 10° is fine). The orbit code starts the camera at world +Z of the screen.
 
-**Screens** (`monitor_screen`, `piano_sheet`, `frame_NN_picture`, `window_sky`):
+**Screens** (`monitor_screen`, `rig_screen`, `piano_sheet`, `frame_NN_picture`, `window_sky`):
 2D canvases painted by code. Each is one mesh, one material, a flat rectangle.
 - As three.js loads it: the plane spans local X (width) and Y (height), faces local
   +Z, UVs 0..1 left to right and **bottom to top**. The code reads size from the
@@ -91,8 +93,9 @@ Materials: `mat_<thing>`.
   are written **upside down** (V = 0 on the top edge, 1 on the bottom), because the
   glTF exporter stores V as 1 − V. One helper in the Blender scripts writes screen
   UVs; nobody edits them by hand.
-- Not yet tested (no Blender here). The first GLB export must show a test pattern
-  with "TOP" and an arrow on the monitor, upright, before anything else is built.
+- Tested 2026-10-23 (room shell) and again 2026-10-24 on the v2 posts screen: the
+  GLB's "TOP" test pattern shows upright with `/?room&glb&uvtest`. `rig_screen` gets the
+  same test in obj_rig's own step (today it carries a plain placeholder picture).
 
 **Export settings that keep the names:** GLB, +Y Up, apply modifiers, no cameras,
 no punctual lights, no custom properties. Draco or meshopt compression need a
@@ -108,17 +111,17 @@ root, one root or group per accented chord pair.
 | `set_room` | floor, walls, ceiling, skirting | 1, wireframe shell |
 | `obj_window` | window | 1, with the shell (a dark frame) |
 | `obj_light` | ceiling light and switch | 1, with the shell |
-| `set_desk`, `set_chair` | desk and chair | 2 |
-| `obj_monitor` | desk monitor | 3 |
+| `set_desk`, `set_chair` | the L desk on its drawer units, what stands on it, the chair | 2 |
+| `obj_monitor`, `obj_rig` | the posts screen (27-inch, top); the training rig (PC, 34-inch dashboard) | 3 |
 | `obj_studio` | studio desk: speakers, DJ controller, audio interface, lightstick | 4: the speakers left and right of the monitor, then the DJ controller and the interface; the controller's pads light on the next accents, the lightstick lands last |
 | `obj_mic` | mic on its arm | 5 |
-| `set_bookshelf`, `obj_frames` | bookshelf, three picture frames | 6 |
-| `set_bed`, `set_nightstand`, `set_rug` | bed, nightstand, rug | 7 |
+| `set_walls`, `obj_frames` | pegboard, neon sign, light panels, the ledge; three picture frames on it | 6 |
+| `set_rug` | rug | 7 |
 | `set_panels`, `obj_guitars` | acoustic panels, guitar wall and floor rack | 8: the hooks, then `guitar_01` to `guitar_03` onto them, one per accent, left to right; then the rack lands beside the desk and `guitar_04` to `guitar_06` drop into it, one per accent, left to right. The timeline builds from jazz to now |
 | `obj_piano` | upright piano and bench | 9, last. Fallboard open, top lid closed; the keys play the Presto |
 | `obj_plant` | plant on the sill | dawn section, catches the first light |
 
-## 3. The nine objects
+## 3. The ten objects
 
 ### `obj_piano`: upright piano
 
@@ -214,16 +217,45 @@ widest body):
   the lift path is clear. The end frames are parallel to the guitars and never
   cross it.
 
-### `obj_monitor`: desk monitor (posts screen)
+### `obj_monitor`: the posts screen (27-inch, top of the stack)
+
+Since room plan v2 (2026-10-24) the posts are on the 27-inch top screen of the AI-lab
+stack (a thin aluminium screen, all-black glass front, no logo), on a VESA arm clamped
+to the shared monitor pole. The glass is 16:9; the posts canvas stays 16:10, as tall as
+the glass and centred in it, so the posts code and its 400 × 250 phone rule do not
+change. Yaw 0, no tilt. The root stands on the desk top under the screen's front face.
 
 | Name | What | Code does | Pivot / origin |
 |---|---|---|---|
-| `monitor_body` | case and bezel. **Fixed name** | camera framing uses its size | — |
-| `monitor_screen` | the screen. **Fixed name.** 16:10 | screen: posts (`content/posts`), click target, glide target | screen rules |
-| `monitor_static` | stand and base | — | — |
+| `monitor_body` | case and glass. **Fixed name** | camera framing uses its size | — |
+| `monitor_screen` | the screen. **Fixed name.** 16:10, 53.8 × 33.6 cm, centred in the 16:9 glass | screen: posts (`content/posts`), click target, glide target | screen rules |
+| `monitor_static` | the VESA arm and its collar on the pole (the pole is `set_desk`'s) | — | — |
 | `monitor_view`, `monitor_view_target` | close-up anchors | reserved; today the code computes its own close-up from the screen | empties |
 
 `monitor_glow` is made by code (the halo). Blender must not use the name.
+
+### `obj_rig`: the training rig (projects as training runs)
+
+The tenth object (owner, 2026-10-23): the PC on the desk's return (a white dual-chamber
+case with glass on the front and on the side towards `room_view`, a large graphics card
+inside) and the 34-inch curved dashboard screen under the posts screen, on the same pole.
+The dashboard lists the projects (`content/projects`) as training runs; the fans pulse.
+The root stands on the desk top under the 34-inch's front face, yaw 0. The case stands
+on the return turned 90 degrees (front towards the chair); that turn is on `rig_case`'s
+and `rig_gpu`'s rotation. No logos or model names anywhere.
+
+| Name | What | Code does | Pivot / origin |
+|---|---|---|---|
+| `rig_case` | the case: frame, panels, glass (one material) | click target: "the rig", camera moves to `rig_view` | at the case's bottom centre; the 90 degree turn on its rotation |
+| `rig_gpu` | the graphics card, seen through the side glass | click target, same as the case | at the card's centre; the case's turn on its rotation |
+| `rig_fans` | the fans' light rings, one mesh, one emissive material | glow pulses while a training run plays (code sets the emissive intensity; at most three pulses a second; steady with reduced motion) | at the case's bottom centre, with the case's turn (it never moves) |
+| `rig_display` | the 34-inch screen's body and bezel, one material | camera framing uses its size; click target | — |
+| `rig_screen` | the dashboard. 21:9, 79.7 × 33.4 cm | screen: training runs from `content/projects`, click target | screen rules. Flat today; whether it follows the screen's 1800R curve is decided in obj_rig's own step (the code reads size from the bounding box) |
+| `rig_static` | the 34-inch's arm and collar on the pole, the case's inside (board tray, fan hubs) | — | — |
+| `rig_view`, `rig_view_target` | close-up on the dashboard | camera moves here | empties |
+
+`rig_glow`, if the dashboard gets a halo like the posts screen, is made by code. Blender
+must not use the name.
 
 ### `obj_mic`: mic on its arm (email)
 
@@ -386,13 +418,11 @@ except the home view anchors.
 | Root | Contains (enough for the bake, not every bolt) |
 |---|---|
 | `set_room` | `room_floor`, `room_wall_back`, `room_wall_left`, `room_wall_right`, `room_ceiling`, `room_skirting`. Anchors kept by name: `room_view`, `room_view_target` (the home view). Bake only: `bake_wall_front`, `bake_door` |
-| `set_desk` | `desk_top`, `desk_legs`, `desk_keyboard`, `desk_mouse` (the audio interface moved to `obj_studio`) |
+| `set_desk` | `desk_top` (the white L top), `desk_drawers_01`, `desk_drawers_02`, `desk_drawers_03` (the drawer units), `desk_led` (the strip under the front edge), `desk_pole` (the monitor pole both screens hang on), `desk_screenbar`, `desk_keylight_01`, `desk_keylight_02`, `desk_camera`, `desk_mat`, `desk_keyboard`, `desk_mouse`, `desk_streamdeck`, `desk_laptop_stand`, `desk_laptop`, `desk_plant` |
 | `set_chair` | `chair` |
-| `set_bed` | `bed_frame`, `bed_mattress`, `bed_duvet`, `bed_pillow_01` ... `03`, `bed_throw` |
-| `set_nightstand` | `nightstand`, `nightstand_lamp` (static, not a light in v1) |
-| `set_bookshelf` | `bookshelf_case`, `bookshelf_books` (books as one generated mesh) |
+| `set_walls` | `walls_pegboard` (backlit, with the headphones), `walls_neon` (the owner's words, from content), `walls_panels` (the light panels), `walls_ledge` (the frames stand on it) |
 | `set_rug` | `rug` |
-| `set_panels` | `panels_guitar_wall` (behind the guitars), `panels_desk` (behind the desk) |
+| `set_panels` | `panels_guitar_wall` (behind the guitars) |
 
 ## 5. Lights and cameras
 
@@ -432,7 +462,7 @@ comes in only when the real sun is up. The full sunrise exists only in the video
 
 ## 6. Counts
 
-Names the code may rely on, under the nine roots:
+Names the code may rely on, under the ten roots:
 
 | Root | Names |
 |---|---|
@@ -441,17 +471,19 @@ Names the code may rely on, under the nine roots:
 | `obj_guitars` | 19: 6 guitars × 3, plus `guitars_static` (wall hooks and floor rack) |
 | `obj_plant` | 15: 12 leaves, 3 parts |
 | `obj_frames` | 9: 3 frames × 3 |
+| `obj_rig` | 8: 6 parts (`rig_screen` among them), 2 anchors |
 | `obj_monitor` | 5 |
 | `obj_mic` | 4 |
 | `obj_window` | 4 |
 | `obj_light` | 3 |
-| Total | 204 (88 of them keys) |
+| Total | 212 (88 of them keys) |
 
 The DJ controller's 35: per deck a jog, 8 pads, play, cue, tempo, 3 EQ knobs, a
 filter knob and a channel fader (17), twice, plus the crossfader.
 
-With the 9 object roots, 8 scenery roots and their 8 static meshes, and the 2 home
-view anchors, the GLB has about 231 nodes, about 193 of them meshes. In the room
+With the 10 object roots, 6 scenery roots and their 6 static meshes, and the 2 home
+view anchors, the GLB has about 237 nodes, about 200 of them meshes (estimate before the
+v2 objects are modelled; measure at each export). In the room
 view at rest the 88 keys, the 3 piano interior meshes and `window_beam` are hidden,
 so about 101 meshes draw, or about 69 with the studio parts batched (see
 `obj_studio`). The studio close-up draws about 50, the piano close-up with both
