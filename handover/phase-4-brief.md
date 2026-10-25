@@ -1,110 +1,90 @@
 # Phase 4 brief (the room model in Blender)
 
-Last updated: 2026-10-22, afternoon. Done and approved: the piano (the quality bar:
-polished black upright with silver tribal ornament, tuning-fork emblem, ivory key
-fronts), the room plan (440 x 420 x 300 cm, layout, hero camera, rack A; numbers in
-blender/lib/constants.py), and the desk designs (Adam A7V-style monitors, thin
-aluminium screen, compact two-deck controller). Next: Step 1 below, the room shell; it
-was briefed and stopped at the owner's request before any file was written. Models:
-designer on Opus, builder on Sonnet, quick on Haiku; no Fable.
+Last updated: 2026-10-25. Read this first when resuming Phase 4.
 
-## Context to read first
+## Where it stands
 
-- `docs/00-vision.md`: the premise and the nine objects. Since 2026-10-21 the room
-  tells the evolution of music: six era guitars (three on the wall, three on a floor
-  rack), an 88-key upright piano with both lids opening, a studio desk with a
-  two-deck DJ controller and a K-pop lightstick. 5:40 a.m., blue pre-dawn light.
-- `scene/objects/MESHES.md`: the name list Blender and the code both follow
-  (conventions, `obj_*` roots, pivots, the screen-UV rule and its TOP test, export
-  settings, lights, cameras, counts). Final.
-- `docs/05-decisions.md`: the 2026-10-21 rows explain every choice above.
-- `docs/10-video-plan.md`: the making-of video (Moonlight Sonata, storm then dawn).
-  Every step saves footage, as it describes.
-- `docs/build-journal.md`: keep adding entries (CLAUDE.md rule).
-- References, local only, never in git: `docs/moodboard/local/` (the owner's room
-  photo, the approved guitar sheet, a desk-and-rack photo, a two-deck controller).
-- `docs/moodboard/room-sketch.html`: layout and rough colours.
+- **Premise (changed 2026-10-23/24):** half AI lab, half music studio. The site opens on the sky and
+  the city through the window; a click pulls the camera back into the room and turns it to the AI lab,
+  laid out exactly as the owner's photo `docs/moodboard/local/ai-desk-reference-1.jpg`. The music side
+  (piano, guitars, rack, DJ controller) is a secret, revealed with About. Rows in `docs/05-decisions.md`
+  from 2026-10-23 on explain every choice.
+- **Layout:** plan v3, approved. Numbers and 68 clearance checks in `blender/lib/plan_v3.py`
+  (`cd blender && python3 -m lib.plan_v3`), sheet `blender/design/room_plan_v3_sheet.py`, blockout
+  `blender/design/room_plan_v3_blockout.py`, images in `video-local/footage/2026-10-24-room-plan-v3/`.
+  Desk at 76.5 cm on 3 cm risers; screens and pegboard raised to match. Cameras: INTRO (out of the
+  window), HERO_V3 (the photo's angle), ABOUT (the music side), phone.
+- **Components (built one by one, away from the room, before placing them):**
 
-## Environment (already set up on this Mac)
+| Component | State | Files |
+|---|---|---|
+| Screens: Samsung G8 34 + Apple Studio Display 27 on a pole, ScreenBar Halo 2 | approved (round 2b) | `blender/components/screens*.py` |
+| Speakers: ADAM A7V pair, gloss white, desk-pole mounts (ISO-155 alternative) | approved | `blender/components/speakers*.py` |
+| Desk: LAGKAPTEN L top on three ALEX units, 3 cm risers, LED strip | approved | `blender/components/desk*.py` |
+| PC: Lian Li O11 Vision white, white build, RTX 5090 FE (`obj_rig`) | built, waiting for owner approval | `blender/components/pc*.py` |
+| Camera (ZV-E10 II on Flex Arm), mic (MV7+ white on PSA1+ white), key lights | next | |
+| Apollo x4 (Gen 2 silver), Keychron Q1 Max, MX Master 3S, Stream Deck MK.2 white | to do | |
+| Shelf and three frames, hanging plants, SKADIS pegboard + ATH-M50x, neon (words from content), Nanoleaf triangles | to do | |
+| MacBook Pro 16 on Rain mStand, DJ controller (DDJ-FLX4 shape), K-pop lightstick | to do | |
+| Herman Miller Aeron, Mineral (hardest) | to do | |
+| Guitars: 01 Lucille, 03 Page double-neck, 05 Hetfield Explorer, 06 Henson TOD10 | to do (02 Strat and 04 Number One done) | `blender/props/guitar_0*.py` |
 
-- Blender 5.2.2 at `/Applications/Blender.app` (installed with Homebrew).
-  Headless: `/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup --python <script>`.
-  Cycles sees the Metal GPU (Apple M2 Pro).
-- FFmpeg 9 (Homebrew), for footage.
-- Headless Chromium for WebGL screenshots and recordings:
-  `~/Library/Caches/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-mac-arm64/chrome-headless-shell`
-  with `--use-angle=metal --enable-gpu --ignore-gpu-blocklist`. The capture script
-  from the first timelapse is in `video-local/scripts/capture.mjs`.
-- The in-app browser pane: when hidden it runs about one frame a second, and sizes
-  emulated larger than the pane scale WebGL and click coordinates wrongly. Test at
-  the pane's own size, or use headless Chromium.
+  Each component's GLBs (rich for renders, lite for the web) are in `blender/out/components/`
+  (git-ignored, rebuilt from the scripts); stills, compare sheets and NOTE.md in
+  `video-local/footage/2026-10-24-components/<name>/`.
+- **The room itself:** `scene/assets/room.glb` on main is still the v1 room shell (with guitar_02 and
+  guitar_04). A rebuild to plan v2 stalled halfway and is kept on branch
+  `wip/room-rebuild-v2-stalled` for its useful parts (obj_rig.py, video/stills.py, window rebuild,
+  posts screen on the 27-inch, hero camera wiring). Do not merge it; rebuild from plan v3.
 
-## Step 1: room shell, desk, monitor, and the TOP test (next)
+## How a component is built (the pipeline)
 
-From this step on, footage follows docs/10-video-plan.md, sections "Multiple cameras
-and better animation" and "Built for the Moonlight Sonata edit": several camera angles,
-eased and staggered animation, event times read from a timing file on the placeholder
-Presto beat grid, 1 s handles, storm and dawn looks.
+Full commands: `blender/README.md`, section "Component pipeline". In short:
 
-Agent: designer (Opus, high). Goal: prove Blender to website end to end with the
-smallest real slice of the room.
+1. References: `docs/moodboard/local/ai-lab/<NN-name>/` (photos, SOURCES.md with official sizes,
+   MODELS.md). Lens-correct photos with `blender/lib/refs.py`; trace on true-scale backdrops
+   (`blender/lib/backdrops.py`).
+2. Start from `blender/tools/component_template.py`. Parts from `blender/lib/parts.py`.
+3. Outline check (`blender/tools/outline_check.py`) about 15 minutes in, gate 0.96.
+4. Detail, then the every-angle compare test (`blender/lib/compare.py`, 0.98 per angle or EXPLAINED),
+   the photo-vs-model sheet with a top row, close-up pair sheets of the key details.
+5. ONE complete review of every close-up, all fixes in one round, then the coordinator's own full
+   review before the owner sees it.
+6. Export rich and lite. Report: table of angles, sizes, proposed mesh names, credits, what went wrong.
 
-1. Scripts in a new `blender/` folder: one entry script (`blender/build.py`) that
-   builds from scratch, checks every name against MESHES.md, saves a .blend and
-   exports the GLB; shared helpers in `blender/lib/` (name checks, the screen-UV
-   helper, simple materials); one script per prop group (now: `set_room`,
-   `set_desk`, `obj_monitor`). One rebuild command, written in `blender/README.md`.
-2. Room shell at real dimensions in metres: floor, walls, ceiling, window opening
-   on the back wall. Propose the dimensions (none exist yet) as named constants.
-3. Desk and monitor: `monitor_body`, `monitor_screen` (16:10, the UV rule exactly),
-   `monitor_static`. The monitor faces straight out from the back wall.
-4. TOP test: `monitor_screen` gets a generated "TOP" plus arrow texture. Prove it
-   shows upright in three.js, then that the posts canvas does too.
-5. Export `scene/assets/room.glb`. Keep the .blend out of git (the scripts are the
-   source). Report the GLB size.
-6. Load it behind a flag so the live site does not change: `/?room&glb` uses
-   GLTFLoader and the GLB; without the flag the placeholder stays. Serve only the
-   loader files needed from `src/integrations/scene-files.mjs` (GLTFLoader.js and
-   the two utils it imports), not the whole 2 MB `loaders/` folder. A `uvtest`
-   param keeps the GLB's own TOP texture visible.
-7. Stills from the hero camera (clay, wireframe, simple blue-hour lit) at
-   1920x1080, saved under `video-local/footage/<date>-room-shell/` with a note.
+Rules the owner set: Blender runs headless (`-b`) always; one heavy Cycles render at a time
+(`blender/lib/renderqueue.py`); every build has a time box and re-renders only the stills a fix
+touches; no logos, brand names or printed text on any model; exact replicas in shape and finish.
+The builder brief that agents read is kept in this file's spirit; give each builder this section,
+the component's reference folder, an approved component as a pattern, and a time box.
 
-Done when: one command rebuilds the GLB; `/?room&glb&uvtest` shows TOP upright;
-`/?room&glb` shows the posts upright and the glide still opens a post; `/?room`
-and `/` are unchanged; no console errors; `npm run build` passes. Then show the
-owner the stills, record the decisions (scripts layout, .blend ignored, GLB
-committed, dimensions, the flag), commit.
+## Next steps, in order
 
-## Later steps (one at a time, owner reviews stills after each)
-
-2. Guitars: three on the wall, the floor rack beside the desk, six guitar models in
-   each era's style (no logos or trademarked graphics). Stills decide which side of
-   the desk the rack stands on.
-3. Piano: upright, 88 keys, key cover and top lid opening, strings and hammers inside.
-4. Studio desk: the two studio monitors, the two-deck DJ controller, the audio
-   interface with pan and volume, the lightstick.
-5. Mic on its arm, three picture frames, ceiling light, window, plant on the sill,
-   bed, bookshelf, rug, panels.
-6. Lighting: blue-hour bake with Cycles into atlases; night and sunrise setups for
-   the video only.
-7. The full room in the site on a phone: under 3 s on 4G, 60 fps on a mid-range
-   phone (measure draw calls; merge at load if needed, as MESHES.md describes).
-   Then the room replaces the placeholder at `/?room`.
+1. Owner approves the PC (view it: `preview_start` "glb-viewer", then
+   `/video-local/viewer/index.html?f=blender/out/components/pc-lite.glb`).
+2. Camera, mic and key lights (one builder, about 1.5 h, time-boxed).
+3. The remaining components in the table, one at a time.
+4. Fold the components' proposed mesh names into `scene/objects/MESHES.md` (see its section
+   "Proposed names from the component builds").
+5. Rebuild the room from plan v3 with the real components; owner judges the layout by eye.
+6. Site: the intro (window, city) → zoom out → AI lab → About reveals the music side; posts on the
+   Studio Display; `obj_rig` (PC fans pulse) as the tenth object; piano lid limited to 60 degrees.
+7. The four remaining guitars, lighting bake, phone performance (under 3 s on 4G, 60 fps mid phone),
+   then the new room replaces the placeholder at `/?room`.
 
 ## Open questions for the owner
 
-- Which side of the desk the guitar rack stands on (decide from Step 2 stills;
-  recommended: by the right studio monitor).
-- Video recording: MIDI keyboard plus audio, or audio only?
-- Which piano pieces per era (examples in docs/00-vision.md).
-- Large assets: when the GLB and textures grow, git-lfs or a CDN bucket (see
-  docs/02-architecture.md). Ask before setting either up.
+See `docs/05-decisions.md`, section "Open questions".
 
-## How to resume
+## Environment on this Mac
 
-    cd ~/Documents/My_website
-    git pull
-    npm install
-
-Then paste the prompt from `handover/RESUME-PROMPT.txt` into a new session.
+- Blender 5.2.2: `/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup --python <script>`.
+  Cycles on the Metal GPU (M2 Pro); it can stall when two Cycles jobs run at once (use the render queue).
+  Blender 5.2's glTF importer fails on our GLBs ("Iridescence Factor"); check GLBs in the browser viewer.
+- Python with Pillow and numpy: `/opt/anaconda3/bin/python3` (the `python3` on PATH has no Pillow).
+- macOS has no `timeout` command; a wrapped command silently never runs.
+- Headless Chromium: `~/Library/Caches/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-mac-arm64/chrome-headless-shell`
+  with `--use-angle=metal --enable-gpu --ignore-gpu-blocklist`.
+- GLB viewer: `.claude/launch.json` "glb-viewer" serves the repo on port 8765; the page is
+  `video-local/viewer/index.html` (local only).
+- The Mac runs on battery unless the owner plugs in; check `pmset -g batt` before long runs.

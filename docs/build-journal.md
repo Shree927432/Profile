@@ -788,3 +788,12 @@ site or the room. Keep each entry short. No polishing; the post does that.
 ## 2026-10-25: copy for friends to review, and a push
 
 - The owner asked to drop music from the bio ("remove music part for now"), then to sound confident ("i don't want to look a fresher"), then for copy that is "real, shows my capabilites and work and what i'm persuaing". Home now says what was built, what is in progress and where it is headed. One About rewrite was tried and reverted. Pushed main (59 commits) so friends can review; Cloudflare had it live in about 45 seconds.
+
+## 2026-10-25: checkpoint before the owner closes the session
+
+- Owner: "can you update everything, all checkpoints and remaining tasks and whatever is needed, i
+  might quit this session". Updated handover/START-HERE.md, handover/phase-4-brief.md (rewritten:
+  state, component pipeline, next steps, this Mac's quirks), handover/RESUME-PROMPT.txt,
+  docs/00-vision.md (the current premise), docs/03-roadmap.md, scene/objects/MESHES.md (proposed
+  component names), docs/10-video-plan.md, the open questions. The stalled plan-v2 rebuild was moved
+  to branch `wip/room-rebuild-v2-stalled` so main is clean.

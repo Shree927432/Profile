@@ -17,6 +17,24 @@ sacrificed for the effect.
 - Building it teaches 3D, audio, performance, and how to direct AI agents on a
   long creative project. Those skills carry over.
 
+## The premise, current (2026-10-24; supersedes the layout below)
+
+**Premise:** my room in Pune, half AI lab, half music studio. The AI lab is laid out exactly as
+the owner's desk photo (`docs/moodboard/local/ai-desk-reference-1.jpg`): a white L desk on ALEX
+drawers with risers and an LED glow, two stacked screens on a pole, white ADAM speakers beside the
+top screen, key lights, a camera and a mic on arms, a glass PC with an RTX 5090, a laptop by the
+window, a backlit pegboard with a neon sign of the owner's words, light panels, a shelf with frames
+and trailing plants. The music side (the upright piano, six era guitars, the DJ controller, the
+K-pop lightstick) is the secret the site reveals with About.
+**How the site opens:** on the sky and the city through the window; a click pulls the camera back
+into the room and turns it to the AI lab (the photo's angle). About turns the camera to the music side.
+**Layout and cameras:** plan v3, `blender/lib/plan_v3.py` (INTRO, HERO_V3, ABOUT, phone).
+**Objects:** ten, the limit: the posts screen (the 27-inch Studio Display), the training rig
+`obj_rig` (the PC and the 34-inch dashboard; fans pulse), the mic, the three frames, the studio
+desk (speakers, Apollo x4, DJ controller, lightstick), the piano (its top lid stops at 60 degrees in
+code so the wall guitars can hang lower), the guitars, the ceiling light, the window, the plant.
+**Copy:** confident, an AI engineer's site; music stays out of the bio for now (2026-10-25).
+
 ## The premise (decided 2026-10-19)
 
 Felix's room works because one sentence decides everything:

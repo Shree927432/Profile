@@ -209,3 +209,13 @@ and optional `duration_beats`, `stagger_beats` (0.5 = an eighth note), `overshoo
 `drop_m`, `offset`. `handles_s` and `tail_bars` frame the shot; `detail` places the close
 camera's moment; `storm_hidden` lists roots kept for the dawn. The script copies the file
 next to the clips it renders.
+
+## Update 2026-10-25: the new opening and the component footage
+
+- The site and the final cut can share the opening: plan v3's INTRO camera (the sky and the city
+  through the window), the pull-back to HERO_V3 (the AI lab, the owner's photo angle), and ABOUT
+  (the music side revealed). Use these named cameras for the directed shoot.
+- Every component now has a light process record in `video-local/footage/2026-10-24-components/<name>/`:
+  hero, close-ups, clay, wire, the outline check and the photo-vs-model sheets. The "photo vs our
+  model" pairs are strong material for the making-of: the real product beside ours, then the overlay.
+

@@ -1,11 +1,14 @@
 Read CLAUDE.md, then docs/00-vision.md, docs/02-architecture.md,
 docs/03-roadmap.md, docs/05-decisions.md and docs/08-model-guide.md.
-Then read handover/START-HERE.md, the Status section of README.md and
-handover/phase-4-brief.md (it lists the files to read and the setup on
-this Mac). Phases 1 to 3 are done and live; the room shows at ?room.
-Phase 4 planning is done: the room tells the evolution of music, and the
-mesh names are final in scene/objects/MESHES.md. Start Phase 4 Step 1
-(room shell, desk, monitor, TOP test) with the designer agent, one step
-at a time. Review and test its work before committing. Keep the build
-journal, video plan and blog draft current. Show me screenshots, keep
-answers short, and ask before deleting content or adding dependencies.
+Then read handover/START-HERE.md and handover/phase-4-brief.md (it has the
+current state, the component pipeline, the next steps and this Mac's setup).
+The site is live; the 3D room is being rebuilt. The premise is half AI lab
+(laid out exactly as my desk photo), half music studio kept as a secret for
+About; the layout is plan v3 (blender/lib/plan_v3.py). Components are built
+one at a time and compared with the real product from every angle: screens,
+speakers and desk are approved, the PC waits for my approval. Continue from
+the brief's next steps with the designer agent, headless Blender, one
+component at a time, time-boxed. Review every close-up yourself before
+showing me. Keep the build journal, decisions, video plan and blog notes
+current. Show me screenshots, keep answers short, sound confident in any
+site copy, and ask before deleting content, adding dependencies or pushing.

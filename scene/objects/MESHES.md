@@ -481,3 +481,22 @@ without any name changing.
      guitars on both sides of the desk and splits the timeline across the room.
    Stills of A and B from the Blender file before the rack is modelled. No name
    changes either way.
+
+## Proposed names from the component builds (2026-10-24, to adopt when the room is rebuilt from plan v3)
+
+Not final until the room rebuild adopts them; the component reports in
+`video-local/footage/2026-10-24-components/<name>/NOTE.md` give origins and pivots.
+
+- **obj_monitor (the 27-inch Studio Display, the posts screen):** `monitor_body`, `monitor_screen`
+  (16:10, 53.8 x 33.6 cm, centred in the 16:9 glass, screen-UV rule), `monitor_static` (its arm and collar).
+- **obj_rig (the PC and the 34-inch dashboard):** `rig_display`, `rig_screen` (on the 1800R arc, same UV
+  rule), `rig_static`, `rig_case`, `rig_case_glass`, `rig_gpu`, `rig_gpu_fan_01`..`_02`, `rig_gpu_light`,
+  `rig_fans` (all case-fan light rings, one emissive mesh, for the pulse), `rig_fan_01`..`_08` (rotors:
+  01-03 side, 04-05 rear, 06-08 bottom; origin at the hub, +Z is the air's direction).
+- **obj_studio, speakers:** `studio_speaker_01`/`_02` (front local -Y, origin bottom centre),
+  `studio_speaker_0N_woofer` (+Z out of the cone, for the pulse), new `studio_speaker_0N_pole` and
+  `_iso` (mounts; merge the chosen one into `studio_static`).
+- **set_desk:** `desk_top`, `desk_led`, `desk_pole`, `desk_screenbar`, `desk_screenbar_dial`,
+  `desk_drawers_01`..`_03` (empties), `desk_drawers_NN_carcass`, `desk_drawers_NN_drawer_01`..`_05`
+  (top to bottom; slides 0.40 m along local -Y), `desk_drawers_NN_risers`.
+

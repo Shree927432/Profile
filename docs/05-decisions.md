@@ -126,3 +126,17 @@ it before finishing. Re-opening a decision needs the owner's say-so.
   the rich one for renders. Also whether to add Draco or meshopt compression (a
   decoder dependency, about 5x smaller files).
 - Video recording: MIDI keyboard plus audio, or audio only?
+- Approve the PC component (O11 Vision white, white build, RTX 5090 FE). Small leftovers: the
+  card's back fin windows a little light, its end caps less round than the real card.
+- Speakers' height: standing ear height beside the top screen (plan v3, as the photo), or seated.
+- `obj_studio` now spans the room (speakers and Apollo in the lab, decks and lightstick by the piano):
+  one object with two close-ups, or move the decks' part into the piano's close-up.
+- LED: the Hue Play gradient strip is made for the back of a monitor; we use a desk-edge strip.
+  Add a Hue strip behind the screens too, or not.
+- Apollo x4 colour: Gen 2 silver assumed (Gen 1 is dark grey).
+- G8 ring light default: colour wheel (as Samsung's photos) assumed; white is an option.
+- guitar_04 Number One: keep the body as traced, or scale it 1% toward the museum photo.
+- guitar_02 Strat: move the bridge (about 7 mm) and the pickup switch (about 17 mm, less certain).
+- Large assets: room.glb is 1.7 MB; at 2 MB choose git-lfs or a CDN bucket.
+- Credits page: needed only if a CC-BY model ships (none so far; the six downloaded Sketchfab models
+  are local bases; see `docs/moodboard/local/ai-lab/VERDICTS.md`).

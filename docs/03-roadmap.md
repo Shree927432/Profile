@@ -3,7 +3,7 @@
 Each phase ends with something online. Never skip ahead more than one phase.
 Update the status line when a phase changes.
 
-**Current phase: 4, planned, modelling not started** (site live on Cloudflare Pages, custom domain deferred. Phases 2 and 3 done; the room shell is on main behind `?room`. Phase 4 plan and next step: handover/phase-4-brief.md.)
+**Current phase: 4, modelling** (site live on Cloudflare Pages. Plan v3 approved 2026-10-24; components built one at a time: screens, speakers, desk approved, PC waiting. State and next steps: handover/phase-4-brief.md.)
 
 ## Phase 0: plan and content (now)
 
@@ -54,6 +54,11 @@ Time: 2 to 4 sessions.
 
 - [x] Blender via Python scripts, one script per group of props (room shell 2026-10-23, `blender/build.py`)
 - [x] Every interactive mesh named per a list (scene/objects/MESHES.md, 2026-10-21)
+- [x] Layout plan v3 with clearance checks, approved (`blender/lib/plan_v3.py`, 2026-10-24)
+- [x] Modelling toolkit: lens-corrected references, backdrops, every-angle compare test, parts library, render queue (2026-10-24)
+- [ ] AI-lab components, one at a time, compared from every angle (screens, speakers, desk done; PC waiting; the rest to do)
+- [ ] Rebuild the room from plan v3 with the real components
+- [ ] Intro (window, city) to hero (AI lab) to About (music side) camera moves in the site
 - [ ] Bake lighting with Cycles into atlases, export GLTF
 - [ ] Load in the shell. Look at it on a phone. Iterate on stills first.
 - [ ] Save a light process record at every step: stills and a quick preview (docs/10-video-plan.md)
