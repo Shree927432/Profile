@@ -1,7 +1,7 @@
 {
   "name": "Shrikant Pawade",
-  "tagline": "AI engineer in Pune. I train small language models and build the tools around them.",
-  "intro": "I build with AI: an MCP server that diagnoses failed CI runs, a reconciliation tool for accountants, and small language models fine-tuned on my own data. Every model here ships with an evaluation, because a model you can't score is one you can't trust.",
+  "tagline": "AI engineer in Pune, building agents, developer tools and small language models.",
+  "intro": "I've built an MCP server that diagnoses failed CI runs with evidence instead of guesses, and a matching engine that reconciles GST invoices for chartered accountants. Now I'm fine-tuning a small Qwen model with LoRA and proving it beats the base model on a held-out test set. Where I'm headed: agents that reason, use tools and learn from feedback, and the frontier systems behind them.",
   "description": "Shrikant Pawade, an AI engineer in Pune. Projects, essays and notes on training small language models.",
   "screens": {
     "posts": {
