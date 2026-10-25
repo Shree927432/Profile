@@ -112,6 +112,7 @@ it before finishing. Re-opening a decision needs the owner's say-so.
 | 2026-10-24 | The desk component (IKEA LAGKAPTEN on three ALEX units) stands on short 3 cm metal risers, so the top is at 76.5 cm and the LED strip runs along the whole front edge, glowing through the gap as in the owner's photo. Plan v3's desk height changes from 73.5 to 76.5; its checks still pass. | Owner: "Option B: short 3 cm risers, desk at about 76.5 cm, LED along the whole front edge." |
 | 2026-10-24 | The desk component is approved: LAGKAPTEN L top on three ALEX units with 3 cm brushed-steel risers, top at 76.5 cm, the LED along the whole front edge; 11 angles at 0.981 to 1.000; lite 161 KB. Next: the PC (Lian Li O11 Vision white, RTX 5090 Founders Edition), the training rig `obj_rig`. | Owner: "Desk approved. Next: the PC (Lian Li O11 Vision white with the RTX 5090)." |
 | 2026-10-25 | The About page leaves out music for now: no "pianist by training", no years at the instrument, no weekend gigs; it starts with learning to build with AI. The home page's tagline and intro still mention music until the owner decides. | Owner: "i want to change my about section remove music part for now". |
+| 2026-10-25 | The home page leaves out music too: tagline "Building with AI, learning in public from Pune.", intro starts "About a year ago I started learning how language models are trained", description "an AI builder in Pune". | Owner: "Yes, remove music from the home page tagline, intro and description too." |
 
 ## Open questions (move to the table when answered)
 
