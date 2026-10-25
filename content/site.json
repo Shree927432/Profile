@@ -1,8 +1,8 @@
 {
   "name": "Shrikant Pawade",
-  "tagline": "Building with AI, learning in public from Pune.",
-  "intro": "About a year ago I started learning how language models are trained, by building small ones and fine-tuning them on my own data. This site is where the work goes, including the parts that fail.",
-  "description": "Shrikant Pawade, an AI builder in Pune. Projects, essays and notes on training small language models.",
+  "tagline": "AI engineer in Pune. I train small language models and build the tools around them.",
+  "intro": "I build with AI: an MCP server that diagnoses failed CI runs, a reconciliation tool for accountants, and small language models fine-tuned on my own data. Every model here ships with an evaluation, because a model you can't score is one you can't trust.",
+  "description": "Shrikant Pawade, an AI engineer in Pune. Projects, essays and notes on training small language models.",
   "screens": {
     "posts": {
       "title": "POSTS",
