@@ -784,3 +784,7 @@ site or the room. Keep each entry short. No polishing; the post does that.
   now."
 - Lesson: review the close-ups before calling anything ready, and distrust a comparison that
   disagrees with your eyes.
+
+## 2026-10-25: copy for friends to review, and a push
+
+- The owner asked to drop music from the bio ("remove music part for now"), then to sound confident ("i don't want to look a fresher"), then for copy that is "real, shows my capabilites and work and what i'm persuaing". Home now says what was built, what is in progress and where it is headed. One About rewrite was tried and reverted. Pushed main (59 commits) so friends can review; Cloudflare had it live in about 45 seconds.
