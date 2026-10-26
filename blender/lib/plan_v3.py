@@ -315,7 +315,7 @@ part("mic", "Microphone on its arm", "Shure MV7+ white on a RODE PSA1+ white", (
      (MIC["capsule"][0], MIC["capsule"][1], MIC["capsule"][2] - 0.045), _aim(*MIC["capsule"][:2], *EAR_SEATED[:2]),
      role="obj_mic", shape="special", note="parked left of the keyboard; email")
 part("interface", "Audio interface", "Universal Audio Apollo x4 Gen 2, silver", (0.233, 0.15, 0.066),
-     (WL + 0.185, YM - 0.10, TOP), 90, role="obj_studio", col=G_, note="233 x 149 x 66 (retailers)")
+     (WL + 0.21, YM - 0.10, TOP), 90, role="obj_studio", col=G_, note="233 x 149 x 66 (retailers); 2.5 cm off the pole for its rear cables")
 part("streamdeck", "Stream Deck", "Elgato Stream Deck MK.2 white, on its stand", (0.118, 0.084, 0.075),
      (WL + 0.28, YM + 0.17, TOP), 90, note="118 x 84 x 25 flat (Elgato); on its stand UNSURE")
 part("mat", "Felt desk mat", "grey felt, 80 x 30", (0.80, 0.30, 0.004), (MAIN["x1"] - 0.25, YM, TOP), 90, col="#8d9096")
