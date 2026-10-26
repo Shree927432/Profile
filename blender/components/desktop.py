@@ -166,11 +166,32 @@ def mats():
     p["ms_top"] = get("mat_desktop_mouse_top", base="#e2e3e4", rough=0.62, spec=0.3)
     p["ms_side"] = get("mat_desktop_mouse_side", base="#c4c6c9", rough=0.3, metal=0.55)
     p["ms_line"] = get("mat_desktop_mouse_seam", base="#8c8e91", rough=0.6)
+    p["ms_thumb"] = bpy.data.materials.get("mat_desktop_mouse_thumbrest") or thumbrest_material()
     p["ms_wheel"] = get("mat_desktop_mouse_wheel", base="#b8bbbf", rough=0.22, metal=1.0)
     p["ms_slot"] = get("mat_desktop_mouse_slot", base="#1a1b1d", rough=0.55)
     p["sd_white"] = get("mat_desktop_deck_white", base="#efefec", rough=0.5, spec=0.35)
     p["sd_key"] = get("mat_desktop_deck_key", base="#0b0b0d", rough=0.08, spec=0.6, coat=1.0, coat_rough=0.04)
     return p
+
+
+def thumbrest_material():
+    """Pale grey soft-touch with fine diagonal ridges (a bump map; ridge pitch about 1.5 mm)."""
+    from lib import materials as M
+    m = M.principled("mat_desktop_mouse_thumbrest", base="#e2e3e4", rough=0.62, spec=0.3)
+    nt = m.node_tree
+    b = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    wv = nt.nodes.new("ShaderNodeTexWave")
+    wv.wave_type, wv.bands_direction = "BANDS", "DIAGONAL"
+    wv.inputs["Scale"].default_value = 420.0
+    wv.inputs["Distortion"].default_value = 0.0
+    bp = nt.nodes.new("ShaderNodeBump")
+    bp.inputs["Strength"].default_value = 0.5
+    bp.inputs["Distance"].default_value = 0.0003
+    nt.links.new(tc.outputs["Object"], wv.inputs["Vector"])
+    nt.links.new(wv.outputs["Fac"], bp.inputs["Height"])
+    nt.links.new(bp.outputs["Normal"], b.inputs["Normal"])
+    return m
 
 
 def icon_mat(i, colour, strength=1.2):
@@ -227,10 +248,23 @@ def rloops(A, loops, key, cap_bottom=True, cap_top=True, m=None):
     return vs
 
 
+def flat_port(name, at, facing, coll, parent, mp, w=8.34, h=2.56):
+    """The web model's USB-C: one dark stadium face on the surface."""
+    from lib import parts as P
+    A = P.Mesh()
+    A.face(A.verts([(x, y, 0.15 * MM) for x, y in P.ccw(P.stadium(w * MM, h * MM, 3))]), "port")
+    return A.finish(name, mp, facing, at, coll, parent, smooth=0)
+
+
 def brand(key, parent, name, lite, at, normal, up, **kw):
     from lib import brands
     bpy.context.view_layer.update()
-    return brands.decal(key, at=at, normal=normal, up=up, parent=parent, lite=lite, name=name, **kw)
+    d = brands.decal(key, at=at, normal=normal, up=up, parent=parent, lite=lite, name=name, **kw)
+    if d is not None and lite:          # the web lettering: about half the triangles (planar decimate keeps the shapes)
+        mod = d.modifiers.new("lite_letters", "DECIMATE")
+        mod.decimate_type = "DISSOLVE"
+        mod.angle_limit = math.radians(5)
+    return d
 
 
 # ---------------------------------------------------------------------------
@@ -307,9 +341,9 @@ def build_interface(coll, mp, rough=False, lite=False):
     L = P.Mesh()                                       # lite: every socket a flat ring and a dark well
 
     def disc(facing, at, r_out, r_in, ko, ki="port"):
-        m = T(*at) @ P.orient(facing)
-        L.prism(P.circle(r_out * MM, 12), 0.0, 0.4 * MM, ko, m=m, bottom=False)
-        L.prism(P.circle(r_in * MM, 10), 0.0, 0.45 * MM, ki, m=m, bottom=False)
+        m = T(*at) @ P.orient(facing)                  # flat discs: no walls in the web model
+        L.face(L.verts([(x, y, 0.3 * MM) for x, y in P.ccw(P.circle(r_out * MM, 10))], m), ko)
+        L.face(L.verts([(x, y, 0.35 * MM) for x, y in P.ccw(P.circle(r_in * MM, 8))], m), ki)
     for i, x in enumerate(IF_JACKS if lite else ()):
         disc("-Y", mm(x, yf - 1.0, IF_JACK_Z), 6.4, 3.3, "gold")
     for i, x in enumerate(() if lite else IF_JACKS):
@@ -328,10 +362,22 @@ def build_interface(coll, mp, rough=False, lite=False):
         lo = [((x * MM), (y * MM) / math.cos(ang)) for x, y in pts]
         A.prism(lo, -0.3 * MM, h * MM, key, bottom=False, m=T(0, 0, IF_ZF * MM) @ T(0, -IF_D / 2 * MM, 0) @ R(math.degrees(ang), "X")
                 @ T(0, IF_D / 2 * MM / math.cos(ang), 0))
-    on_top(P.rrect(x1 - x0, y1 - y0, 2.0, 2 if lite else 6, (x0 + x1) / 2, (y0 + y1) / 2), 0.15, "if_glass")
+    Rr = IF_RING_R
+    xb = kx - math.sqrt(Rr ** 2 - (y0 - ky) ** 2)          # where the window's bottom and top edges meet the circle
+    xt = kx - math.sqrt(Rr ** 2 - (y1 - ky) ** 2)
+    a0 = math.atan2(y0 - ky, xb - kx) % (2 * math.pi)
+    a1 = math.atan2(y1 - ky, xt - kx) % (2 * math.pi) + 2 * math.pi
+    na = 20 if lite else 72
+    cr = 2.0
+    shape = [(xb, y0)] + [(kx + Rr * math.cos(a0 + (a1 - a0) * i / na), ky + Rr * math.sin(a0 + (a1 - a0) * i / na))
+                          for i in range(1, na)] + [(xt, y1)]
+    for cx_, cy_, a_s in ((x0 + cr, y1 - cr, 90), (x0 + cr, y0 + cr, 180)):     # the window's two left corners
+        shape += [(cx_ + cr * math.cos(math.radians(a_s + 90 * k / 3)), cy_ + cr * math.sin(math.radians(a_s + 90 * k / 3)))
+                  for k in range(4)]
+    on_top(shape, 0.15, "if_glass")                    # MEASURED gen2-silver-top: one black window round the knob
     nr = 24 if lite else 72
-    A.ring_face(P.circle(IF_RING_R * MM, nr, kx * MM, ky * MM / math.cos(ang)), P.circle(26.0 * MM, nr, kx * MM, ky * MM / math.cos(ang)),
-                0.16 * MM, "if_glass", m=T(0, 0, IF_ZF * MM) @ T(0, -IF_D / 2 * MM, 0) @ R(math.degrees(ang), "X")
+    A.ring_face(P.circle(26.0 * MM, nr, kx * MM, ky * MM / math.cos(ang)), P.circle(kr * MM + 0.2 * MM, nr, kx * MM, ky * MM / math.cos(ang)),
+                0.17 * MM, "if_silver", m=T(0, 0, IF_ZF * MM) @ T(0, -IF_D / 2 * MM, 0) @ R(math.degrees(ang), "X")
                 @ T(0, IF_D / 2 * MM / math.cos(ang), 0))
     on_top(P.circle(1.0, 12, 38.2, -27.3), 0.05, "port")            # the talkback mic hole (MEASURED top)
     win = fin(A, "apollo_meter_window" + sfx, mp, coll, root)
@@ -365,6 +411,13 @@ def build_interface(coll, mp, rough=False, lite=False):
     kn.matrix_basis = if_top(kx, ky) @ T(0, 0, 0.15 * MM)
     names["knob"] = [kn.name]
     for i, x in enumerate(IF_BTN_X + IF_BTN2_X):
+        if lite:                                        # the web model: a plain cap
+            B_ = P.Mesh()
+            box(B_, -IF_BTN[0] / 2 * MM, IF_BTN[0] / 2 * MM, -IF_BTN[1] / 2 * MM, IF_BTN[1] / 2 * MM, 0.0, 1.4 * MM, "if_btn")
+            b = B_.finish(f"apollo_button_{i + 1}{sfx}", mp, "+Z", (0, 0, 0), coll, root, smooth=0)
+            b.matrix_basis = if_top(x, IF_BTN_Y)
+            names.setdefault("buttons", []).append(b.name)
+            continue
         b = P.push_button(f"apollo_button_{i + 1}{sfx}", size=mm(*IF_BTN), height=1.4 * MM, bezel=0.5 * MM,
                           r_corner=2.2 * MM, lite=lite, mats={"cap": mp["if_btn"], "bezel": mp["if_silver"],
                                                                "port": mp["port"]}, facing="+Z", collection=coll,
@@ -423,7 +476,7 @@ def build_interface(coll, mp, rough=False, lite=False):
             s_ = P.screw(f"apollo_screw_{i + 1}", "phillips", d=5.0 * MM, facing="+Y", at=mm(x, yb, z),
                          collection=coll, parent=root, mats={"steel": mp["steel"]})
             names.setdefault("ports", []).append(s_.name)
-    feet = P.rubber_feet("apollo_feet" + sfx, [mm(x, y) for x in (-100, 100) for y in (-60, 60)], d=12 * MM,
+    feet = P.rubber_feet("apollo_feet" + sfx, [mm(x, y) for x in (-100, 100) for y in (-60, 60)], d=12 * MM, square=lite,
                          h=IF_FEET * MM, z=IF_FEET * MM, lite=lite, collection=coll, parent=root)
     names["feet"] = [feet.name]
     # the invented name where the real maker's wordmark sits: front strip, centre, light grey print
@@ -555,7 +608,8 @@ def build_keyboard(coll, mp, rough=False, lite=False):
     # rear: USB-C, the two slide switches and the LED, in the pocket at the back left (MEASURED review-tr-rear)
     yb = KB_D / 2
     zp = (KB_SPLIT + 4.5)
-    u = P.port("kb_usb" + sfx, "usb_c", lite=lite, facing="+Y", at=mm(-95.7, yb, zp), collection=coll, parent=root)
+    u = flat_port("kb_usb_lite", mm(-95.7, yb, zp), "+Y", coll, root, mp) if lite else \
+        P.port("kb_usb", "usb_c", facing="+Y", at=mm(-95.7, yb, zp), collection=coll, parent=root)
     A = P.Mesh()
     for x, w in ((-111.0, 10.0), (-130.0, 12.0)):
         box(A, (x - w / 2) * MM, (x + w / 2) * MM, (yb - 0.1) * MM, (yb + 0.7) * MM, (zp - 2.0) * MM, (zp + 2.0) * MM,
@@ -590,13 +644,20 @@ def ms_height(x, y):
         t = (u - MS_PEAK) / (1 - MS_PEAK)
         h = MS_H - 19.0 * t ** 2
     h *= 1.0 - 0.28 * ((x - 6.0) / 44.0) ** 2
-    # the thumb shelf: outside x < -15 behind the thumb wheel, at about 24 mm, dished
-    def sstep(a, b, v):
-        t = min(max((v - a) / (b - a), 0.0), 1.0)
-        return t * t * (3 - 2 * t)
-    w = sstep(-13.0, -24.0, x) * sstep(-16.0, 4.0, -y)
-    shelf = 23.0 - 4.0 * sstep(-26.0, -41.0, x) + 3.0 * sstep(20.0, 55.0, -y)
+    # the thumb rest: a wide, flat, slightly cupped shelf, blended into the body in one sweep (coordinator 2026-10-26)
+    w = ms_thumb_w(x, y)
+    shelf = 20.5 + 2.0 * min(1.0, ((x + 29.0) / 12.0) ** 2) + 2.0 * _sstep(20.0, 55.0, -y)
     return h * (1 - w) + shelf * w
+
+
+def _sstep(a, b, v):
+    t = min(max((v - a) / (b - a), 0.0), 1.0)
+    return t * t * (3 - 2 * t)
+
+
+def ms_thumb_w(x, y):
+    """0 on the main body, 1 on the thumb rest (world x, y; the tail is -y)."""
+    return _sstep(-11.0, -27.0, x) * _sstep(-22.0, 6.0, -y)
 
 
 def ms_outline(n=None):
@@ -615,7 +676,7 @@ def build_mouse(coll, mp, rough=False, lite=False):
     root = empty("mouse" + sfx, coll=coll)
     out = ms_outline(36 if lite else None)
     cx, cy = 3.0, -4.0                       # the rings shrink toward the hump
-    rings = [1.0, 0.97, 0.9, 0.78, 0.6, 0.4, 0.2] if not lite else [1.0, 0.9, 0.65, 0.3]
+    rings = [1.0, 0.97, 0.92, 0.85, 0.75, 0.62, 0.48, 0.33, 0.18] if not lite else [1.0, 0.9, 0.65, 0.3]
     A = P.Mesh()
     loops = []
     # the side wall: the bottom tucked in 2.5 mm, then up the outline to the shoulder
@@ -643,6 +704,13 @@ def build_mouse(coll, mp, rough=False, lite=False):
         sub = body.modifiers.new("subsurf", "SUBSURF")
         sub.levels = sub.render_levels = 2
     names["body"] = [body.name]
+    if not (lite or rough):            # the thumb rest's fine diagonal ridges: its own bump-mapped material
+        body.data.materials.append(mp["ms_thumb"])
+        ti = len(body.data.materials) - 1
+        for f in body.data.polygons:
+            c = f.center
+            if c.z > 8 * MM and ms_thumb_w(c.x / MM, c.y / MM) > 0.55 and f.normal.z > 0.3:
+                f.material_index = ti
     if rough:
         return root, names
     bpy.context.view_layer.update()
@@ -710,42 +778,56 @@ def build_mouse(coll, mp, rough=False, lite=False):
     A.lathe(prof, seg, "ms_wheel", m=T(wx * MM, wy * MM, (zs + 3.5 - wr) * MM) @ R(90, "Y"))
     wheel = fin(A, "mouse_wheel" + sfx, mp, coll, root, smooth=40)
     names["wheels"] = [slot.name, wheel.name]
-    # the thumb wheel: axis tilted out of the thumb side (two ridged drums), with the back/forward buttons below
-    tx, ty, tr, tw = MS_THUMB
-    ty = -ty
-    tz = 27.0                                   # MEASURED side-thumb-profile: about half the hump's height
+    # the thumb wheel (coordinator 2026-10-26): a horizontal knurled drum, 22 long and 13 across, its axis along the
+    # mouse's length, its outer half showing out of a silver pocket in the thumb wall; two pill buttons under it,
+    # the green battery LED on the pocket behind it (Logitech three-quarter.png, side-thumb-profile.png)
+    TW_L, TW_R = 22.0, 6.5
+    ty = -MS_THUMB[1]
+    tz = 31.0
+
+    def wall_frame(y, z):
+        h_ = bvh.ray_cast(Vector((-0.08, y * MM, z * MM)), Vector((1, 0, 0)))
+        p_, n_ = (h_[0], h_[1].normalized()) if h_[0] is not None else (Vector(mm(-18.0, y, z)), Vector((-1, 0, 0)))
+        zl = Vector((n_.x, 0.0, n_.z)).normalized()          # out of the wall, the axis kept along Y
+        yl = Vector((0, 1, 0))
+        xl = yl.cross(zl)
+        m_ = Matrix((xl, yl, zl)).transposed().to_4x4()
+        m_.translation = p_
+        return m_
+    Mw = wall_frame(ty, tz)
     A = P.Mesh()
-    rid = (lambda a: 1.0 - 0.05 * (0.5 + 0.5 * math.cos(a * 30))) if not lite else None
-    prof = [(0, -tw / 2), (tr - 0.5, -tw / 2), (tr, -tw / 2 + 0.5, rid), (tr, -0.8, rid), (tr - 1.0, -0.6),
-            (tr - 1.0, 0.6), (tr, 0.8, rid), (tr, tw / 2 - 0.5, rid), (tr - 0.5, tw / 2), (0, tw / 2)]
+    P._rbox(A, 16.0 * MM, 34.0 * MM, 9.0 * MM, 4.0 * MM, 1.2 * MM, 0.0, 1 if lite else 4, "ms_side", z0=-8.2 * MM)
+    pocket = A.finish("mouse_thumb_pocket" + sfx, mp, "+Z", (0, 0, 0), coll, root, smooth=40)
+    pocket.matrix_basis = Mw @ T(0, -3.0 * MM, 0)
+    A = P.Mesh()
+    knurl = (lambda a: 1.0 - 0.03 * (0.5 + 0.5 * math.cos(a * 40))) if not lite else None
+    L2, Rd = TW_L / 2, TW_R
+    prof = [(0, -L2), (Rd - 0.6, -L2), (Rd, -L2 + 0.6, knurl), (Rd, -1.0, knurl), (Rd - 0.8, -0.6), (Rd - 0.8, 0.6),
+            (Rd, 1.0, knurl), (Rd, L2 - 0.6, knurl), (Rd - 0.6, L2), (0, L2)]
     prof = [(p[0] * MM, p[1] * MM, p[2]) if len(p) > 2 and p[2] else (p[0] * MM, p[1] * MM) for p in prof]
-    A.lathe(prof, 14 if lite else 60, "ms_wheel")
+    A.lathe(prof, 12 if lite else 240, "ms_wheel", m=R(-90, "X"))
     thumb = fin(A, "mouse_thumbwheel" + sfx, mp, coll, root, smooth=40)
-    h_ = bvh.ray_cast(Vector((-0.08, ty * MM, tz * MM)), Vector((1, 0, 0)))
-    if h_[0] is not None:
-        n_ = h_[1].normalized()
-        ax = (Vector((0, 0, 1)) - n_ * n_.z).normalized()          # the axis lies along the wall
-        c_ = h_[0] - n_ * (tr - 3.0) * MM                            # 3 mm of rim out of the wall
-        thumb.matrix_basis = Matrix.Translation(c_) @ ax.to_track_quat("Z", "X").to_matrix().to_4x4()
-    else:
-        thumb.matrix_basis = T(tx * MM, ty * MM, tz * MM)
+    thumb.matrix_basis = Mw @ T(0, 0, 0.8 * MM)          # the axis at the pocket's face: its outer half shows
+    import bmesh as _bm
     A = P.Mesh()
-    for i, yy in enumerate((-12.0, 0.5)):            # back / forward buttons on the thumb side, below the wheel
-        box(A, -4.0 * MM, 4.0 * MM, -5.5 * MM, 5.5 * MM, -1.5 * MM, 1.6 * MM, "ms_top", r=2.0 * MM, n=1 if lite else 4,
-            m=T(-21.5 * MM, -(yy + 3.0) * MM, 19.0 * MM) @ R(-62, "Y"))
-    led = None
-    btns = fin(A, "mouse_side_buttons" + sfx, mp, coll, root, smooth=40)
+    for yy in (ty + 6.0, ty - 6.0):                        # back / forward: two pills side by side under the wheel
+        n0 = len(A.bm.verts)
+        P._rbox(A, 4.4 * MM, 10.0 * MM, 2.0 * MM, 2.2 * MM, 1.0 * MM, 0.0, 1 if lite else 4, "ms_top", z0=-0.6 * MM)
+        A.bm.verts.ensure_lookup_table()
+        _bm.ops.transform(A.bm, matrix=wall_frame(yy, 24.0), verts=A.bm.verts[n0:])
+    btns = A.finish("mouse_side_buttons" + sfx, mp, "+Z", (0, 0, 0), coll, root, smooth=40)
     A = P.Mesh()
-    box(A, -0.5 * MM, 0.5 * MM, -1.8 * MM, 1.8 * MM, -0.4 * MM, 0.35 * MM, "led_green", r=0.45 * MM, n=2,
-        m=T(-17.0 * MM, -12.5 * MM, 30.0 * MM) @ R(-35, "Y"))
-    led = fin(A, "mouse_led" + sfx, mp, coll, root)
-    names["thumb"] = [thumb.name, btns.name, led.name]
+    P._rbox(A, 1.2 * MM, 3.6 * MM, 0.5 * MM, 0.55 * MM, 0.2 * MM, 0.0, 2, "led_green", z0=0.0)
+    led = A.finish("mouse_led" + sfx, mp, "+Z", (0, 0, 0), coll, root, smooth=0)
+    led.matrix_basis = Mw @ T(2.5 * MM, -16.5 * MM, 0.75 * MM)
+    names["thumb"] = [pocket.name, thumb.name, btns.name, led.name]
     # the nose: USB-C under the buttons (MEASURED front.png)
     h_ = bvh.ray_cast(Vector((1.0 * MM, 0.12, 7.5 * MM)), Vector((0, -1, 0)))
     at_ = h_[0] if h_[0] is not None else Vector(mm(1.0, 61.0, 7.5))
-    u = P.port("mouse_usb" + sfx, "usb_c", lite=lite, facing="+Y", at=tuple(at_), collection=coll, parent=root)
+    u = flat_port("mouse_usb_lite", tuple(at_), "+Y", coll, root, mp) if lite else \
+        P.port("mouse_usb", "usb_c", facing="+Y", at=tuple(at_), collection=coll, parent=root)
     names["front"] = [u.name]
-    feet = P.rubber_feet("mouse_feet" + sfx, [mm(-27, -10), mm(27, -10), mm(0, 45)], d=6 * MM, h=1.2 * MM,
+    feet = P.rubber_feet("mouse_feet" + sfx, [mm(-27, -10), mm(27, -10), mm(0, 45)], d=6 * MM, h=1.2 * MM, square=lite,
                          z=1.2 * MM, lite=lite, collection=coll, parent=root)
     names["feet"] = [feet.name]
     # the invented name where "logi" sits: the left button's rear, turned 12 deg, mid grey print, on the shell
@@ -828,8 +910,12 @@ def build_streamdeck(coll, mp, rough=False, lite=False):
             im = icon_mat(i + 1, col, 0.9)
             wm = icon_mat(100, "#ffffff", 1.0)
             B = P.Mesh()
-            B.prism(P.rrect(14.6 * MM, 14.6 * MM, 1.8 * MM, 1 if lite else 3), 0.62 * MM, 0.64 * MM, "field",
-                    bottom=False)
+            def lay(o_, z0_, z1_, key_):
+                if lite:
+                    B.face(B.verts([(x_, y_, z1_) for x_, y_ in P.ccw(o_)]), key_)
+                else:
+                    B.prism(o_, z0_, z1_, key_, bottom=False)
+            lay(P.rrect(14.6 * MM, 14.6 * MM, 1.8 * MM, 1 if lite else 3), 0.62 * MM, 0.64 * MM, "field")
             shp = SD_SHAPES[i]
             n = 12 if lite else 32
             if shp == "circle":
@@ -844,9 +930,9 @@ def build_streamdeck(coll, mp, rough=False, lite=False):
                 o = [P.rrect(1.4 * MM, hh * MM, 0.5 * MM, 1, xx * MM, (hh / 2 - 3.0) * MM)
                      for xx, hh in ((-2.6, 4.0), (0.0, 6.4), (2.6, 3.0))]
             for oo in o:
-                B.prism(oo, 0.64 * MM, 0.66 * MM, "icon", bottom=False)
+                lay(oo, 0.64 * MM, 0.66 * MM, "icon")
             if shp == "ring":
-                B.prism(P.circle(2.0 * MM, n), 0.66 * MM, 0.68 * MM, "field", bottom=False)
+                lay(P.circle(2.0 * MM, n), 0.66 * MM, 0.68 * MM, "field")
             ic = B.finish(f"deck_icon_{i + 1:02d}{sfx}", {"field": im, "icon": wm}, "+Z", (0, 0, 0), coll, k, smooth=0)
             keys.append(k.name)
             names.setdefault("icons", []).append(ic.name)
