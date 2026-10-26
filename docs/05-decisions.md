@@ -129,7 +129,7 @@ it before finishing. Re-opening a decision needs the owner's say-so.
   the rich one for renders. Also whether to add Draco or meshopt compression (a
   decoder dependency, about 5x smaller files).
 - Video recording: MIDI keyboard plus audio, or audio only?
-- PC lights wash out in a bright room (owner: "where are no lights in PC"): add an interior glow light and stronger rings now, or settle it with the room's lighting pass.
+- PC lights wash out in a bright room (owner: "where are no lights in PC"). Owner wants an interior glow and stronger rings, but "do it later" (2026-10-26): do it before or with the room lighting pass. Brief: interior area lights for renders, an emissive `rig_glow` panel and strip for the web (no bloom on the site), blue-white rings judged in a bright room.
 - Speakers' height: standing ear height beside the top screen (plan v3, as the photo), or seated.
 - `obj_studio` now spans the room (speakers and Apollo in the lab, decks and lightstick by the piano):
   one object with two close-ups, or move the decks' part into the piano's close-up.
