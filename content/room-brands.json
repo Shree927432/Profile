@@ -1,5 +1,5 @@
 {
-  "_note": "Invented brand names printed on the room's gear, in place of the real makers' logos (owner, 2026-10-26: set A, coined tech names). Same spot, size, colour and finish as the real logo, in our own plain lettering. The Blender builders read this file; never type these names into scene or Blender code.",
+  "_note": "Invented brand names printed on the room's gear, in place of the real makers' logos (owner, 2026-10-26: set A, coined tech names). Same spot, size, colour and finish as the real logo, in a free lookalike font for each logo (see _fonts), never the real logo lettering. The Blender builders read this file; never type these names into scene or Blender code.",
   "brands": {
     "screens_g8": {
       "real_maker": "Samsung",
