@@ -113,7 +113,11 @@ def mats():
     p["lens_front"] = get("mat_arms_lens_print_ring", base="#0d0d0e", rough=0.62, spec=0.25)
     p["grip"] = bpy.data.materials.get("mat_arms_grip") or grip_material()
     p["mount"] = get("mat_arms_mount_silver", base="#b9bcc1", rough=0.25, metal=1.0)
-    p["glass"] = get("mat_arms_lens_glass", base="#06070a", rough=0.02, coat=1.0, coat_rough=0.02)
+    p["glass"] = bpy.data.materials.get("mat_arms_lens_glass") or glass_material()
+    p["glass_lite"] = get("mat_arms_lens_glass_lite", base="#05070a", rough=0.04, spec=1.0, coat=1.0,
+                          coat_rough=0.02)
+    p["glass_hint"] = get("mat_arms_lens_glass_hint", base="#5a6a78", rough=0.15, spec=1.0)
+    p["lens_rib"] = get("mat_arms_lens_rib", base="#111113", rough=0.38, spec=0.35)
     p["lcd"] = get("mat_arms_lcd", base="#0a0c10", rough=0.08, emit="#7d93b0", emit_strength=0.3)
     p["white"] = get("mat_arms_white", base="#eeeeec", rough=0.42, coat=0.1)
     p["mic_white"] = get("mat_arms_mic_white", base="#ececea", rough=0.45)
@@ -122,6 +126,22 @@ def mats():
     p["glow"] = get("mat_arms_keylight_glow", base="#ffffff", rough=0.6, emit="#fff6ea", emit_strength=6.0)
     p["red"] = get("mat_arms_red", base="#a3201c", rough=0.4)
     return p
+
+
+def glass_material():
+    """Coated lens glass for renders: clear dielectric (IOR 1.5), a thin-film coat for the green and magenta
+    reflections. Rich only: the glTF importer in Blender 5.2 fails on iridescence, so lite uses glass_lite."""
+    from lib import materials as M
+    m, nt, b = M._new("mat_arms_lens_glass")
+    for k, v in (("Base Color", (0.95, 0.95, 0.95, 1)), ("Roughness", 0.01), ("IOR", 1.5),
+                 ("Transmission Weight", 1.0), ("Thin Film Thickness", 560.0), ("Thin Film IOR", 1.38),
+                 ("Coat Weight", 0.5), ("Coat Roughness", 0.0), ("Coat IOR", 1.6)):
+        if k in b.inputs:
+            b.inputs[k].default_value = v
+    m.use_raytrace_refraction = True
+    m.surface_render_method = "DITHERED"
+    m.diffuse_color = (0.02, 0.03, 0.04, 1)
+    return m
 
 
 def grip_material():
@@ -446,26 +466,53 @@ def build_camera(coll, mp, rough=False, lite=False, sfx="", screen="selfie"):
         def k(rr, z):
             return (rr, z, kn) if kn else (rr, z)
         rp = 0.0308
-        prof = [(0, 0.0), (0.0300, 0.0), (0.0313, 0.0005), (0.0313, 0.0028), (rp, 0.0030), (rp, 0.0168),
-                (0.0326, 0.0172), (0.0330, 0.0178), k(r, 0.0182), k(r, 0.0300), (0.0326, 0.0308), (0.0316, L),
-                (0.0220, L), (0.0216, L - 0.0014), (0.0185, L - 0.0016), (0.0181, L - 0.0040),
-                (0.0152, L - 0.0058), (0, L - 0.0058)]
-        keys = ["lens", "lens", "lens", "lens", "lens", "lens", "lens", "lens", "lens", "lens", "lens",
-                "lens_front", "lens", "lens", "lens", "lens", "lens"]
-        A.lathe(prof, seg, keys, Ml)
-        # the element's black retaining ring: leaves a clear centre 23 across (Henry's: dark to r 10-11)
-        zg = L - 0.0059
-        A.lathe([(0.0115, zg + 0.0012), (0.0151, zg + 0.0008), (0.0151, zg + 0.0019), (0.0122, zg + 0.0026),
-                 (0.0115, zg + 0.0026)], seg, "lens", Ml)
+        zr0, zr1 = 0.0182, L - 0.0006          # the ribbed zoom ring (top-pb.jpg: the front 45 % of the barrel)
+        # barrel up to the ribbed ring, then (after the ring) a crisp 0.4 mm edge, the FLAT front annulus
+        # (r 32.6 to 22.5, the plain print ring), and stepped black rings going in (Henry's radial profile)
+        A.lathe([(0, 0.0), (0.0300, 0.0), (0.0313, 0.0005), (0.0313, 0.0028), (rp, 0.0030), (rp, 0.0168),
+                 (0.0326, 0.0172), (0.0329, zr0), (0, zr0)], seg, "lens", Ml)
+        front = [(r, zr1), (r - 0.0004, L), (0.0225, L), (0.0225, L - 0.0008), (0.0205, L - 0.0008),
+                 (0.0205, L - 0.0022), (0.0186, L - 0.0022), (0.0183, L - 0.0040), (0.0156, L - 0.0052),
+                 (0.0151, L - 0.0128), (0, L - 0.0128)]
+        A.lathe(front, seg, ["lens", "lens_front", "lens", "lens", "lens", "lens", "lens", "lens", "lens",
+                             "port"], Ml)
+        # the ribs: their own lathe, 4 vertices per rib, a square wave 0.25 mm proud, so they catch the light
+        ribs = 0 if lite else 140
+        if ribs:
+            rs = ribs * 4
+            sq = lambda a: 1.0 + (0.00025 / r) * (1.0 if math.cos(ribs * a - math.pi / 4) > 0 else 0.0)  # noqa: E731
+            A.lathe([(r, zr0, sq), (r, zr1, sq)], rs, "lens_rib", Ml, phase=math.pi / rs)     # open tube
+        else:
+            A.lathe([(r, zr0), (r, zr1)], seg, "lens_rib", Ml)
+        # the element's black retaining ring at the front element's edge, the aperture plate deeper inside
+        zg = L - 0.0062
+        A.lathe([(0.0128, zg + 0.0016), (0.0156, zg + 0.0010), (0.0156, zg + 0.0021), (0.0134, zg + 0.0026),
+                 (0.0128, zg + 0.0026)], seg, "lens", Ml)
+        A.lathe([(0.0042, L - 0.0118), (0.0151, L - 0.0118), (0.0151, L - 0.0114), (0.0042, L - 0.0114)], seg, "satin", Ml)
         # the zoom/focus switch tab on the barrel's left (+X) side
         rbox(A, 0.004, 0.009, 0.007, 0.0015, 0, 0, 2, "lens", T(rp + 0.0018, yf - 0.009, LENS_Z) @ R(90, "Y"))
     lens = fin(A, f"cam_lens{sfx}", mp, coll, root, bevel=None, lite=lite)
     out = {"cam_body": [body.name], "cam_lens": [lens.name], "cam_screen": []}
-    if not rough:   # the front element: a glass dome inside the filter ring (40.5 thread)
+    if not rough:
+        # the glass: a front element (a solid meniscus, 30 across) and a second, smaller element 4 mm deeper;
+        # rich: transmissive coated glass; lite: a glossy dark dielectric plus a faint highlight crescent
+        g = "glass_lite" if lite else "glass"
         A = P.Mesh()
-        z0 = L - 0.0059
-        A.lathe([(0, z0), (0.0152, z0), (0.0148, z0 + 0.0006), (0.0110, z0 + 0.0016), (0.0055, z0 + 0.0022),
-                 (0, z0 + 0.0024)], seg, "glass", Ml)
+        z0 = L - 0.0062
+        A.lathe([(0, z0), (0.0150, z0), (0.0150, z0 + 0.0007), (0.0112, z0 + 0.0016), (0.0060, z0 + 0.0022),
+                 (0, z0 + 0.0024)], seg, g, Ml)
+        if not lite:
+            z1 = L - 0.0108
+            A.lathe([(0, z1), (0.0100, z1), (0.0100, z1 + 0.0006), (0.0060, z1 + 0.0016), (0, z1 + 0.0019)], seg, g, Ml)
+        else:
+            n = 10
+            arc = [(math.radians(115 + 45 * k / n)) for k in range(n + 1)]
+            ri, ro = 0.0080, 0.0104
+            hz = lambda rr: z0 + 0.0024 - 0.0024 * (rr / 0.0150) ** 2 + 0.00012   # noqa: E731  (on the dome)
+            a = A.verts([(ro * math.cos(t), ro * math.sin(t), hz(ro)) for t in arc], Ml)
+            b = A.verts([(ri * math.cos(t), ri * math.sin(t), hz(ri)) for t in arc], Ml)
+            for k in range(n):
+                A.face([b[k], b[k + 1], a[k + 1], a[k]], "glass_hint")
         out["cam_lens"].append(fin(A, f"cam_lens_glass{sfx}", mp, coll, root, lite=lite).name)
     # the vari-angle screen: hinge on the camera's left (+X); "selfie" = swung out and facing front
     A = P.Mesh()
@@ -990,6 +1037,7 @@ def _studio(sc, cycles, strength=1.0):
     else:
         sc.render.engine = "BLENDER_EEVEE"
         sc.eevee.taa_render_samples = 32
+        sc.eevee.use_raytracing = True          # the lens glass refracts in EEVEE too
 
 
 def _shoot(sc, cam, path, cycles, label):
