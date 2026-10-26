@@ -23,7 +23,7 @@ Last updated: 2026-10-25. Read this first when resuming Phase 4.
 | Desk: LAGKAPTEN L top on three ALEX units, 3 cm risers, LED strip | approved | `blender/components/desk*.py` |
 | PC: Lian Li O11 Vision white, white build, RTX 5090 FE (`obj_rig`) | built, waiting for owner approval | `blender/components/pc*.py` |
 | Camera (ZV-E10 II on Flex Arm), mic (MV7+ white on PSA1+ white), key lights | next | |
-| Apollo x4 (Gen 2 silver), Keychron Q1 Max, MX Master 3S, Stream Deck MK.2 white | to do | |
+| Apollo x4 (Gen 2 silver), Keychron Q1 Max, MX Master 3S, Stream Deck MK.2 white | approved; mouse rebuilt on a CC BY scan (2026-10-26); keyboard legends to do | `blender/components/desktop.py`, `mouse_scan.py`, `blender/assets/mouse/` |
 | Shelf and three frames, hanging plants, SKADIS pegboard + ATH-M50x, neon (words from content), Nanoleaf triangles | to do | |
 | MacBook Pro 16 on Rain mStand, DJ controller (DDJ-FLX4 shape), K-pop lightstick | to do | |
 | Herman Miller Aeron, Mineral (hardest) | to do | |
@@ -88,3 +88,15 @@ See `docs/05-decisions.md`, section "Open questions".
 - GLB viewer: `.claude/launch.json` "glb-viewer" serves the repo on port 8765; the page is
   `video-local/viewer/index.html` (local only).
 - The Mac runs on battery unless the owner plugs in; check `pmset -g batt` before long runs.
+
+## Changing an approved component later
+
+Every component is rebuilt from its script, so any change is an edit plus a re-run, never hand work in a .blend:
+- the part's script in `blender/components/` (e.g. `desktop.py` with `DESKTOP_PART=mouse`), run headless with the
+  stages its docstring lists (outline, build, stills, compare, closeups, export);
+- brand names and fonts in `content/room-brands.json`; layout numbers in `blender/lib/plan_v3.py`;
+- the mouse body: `blender/components/mouse_scan.py` re-wraps the shell from the local scan
+  (`docs/moodboard/local/ai-lab/23-mouse/scan/`, not in git; re-download from Sircher's Sketchfab page if lost).
+  The committed shell (`blender/assets/mouse/mx-master-3s-shell.json`) means ordinary rebuilds never need the scan.
+Then re-run `blender/design/room_v3_component_test.py` so the room picks it up.
+
