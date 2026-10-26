@@ -845,4 +845,14 @@ site or the room. Keep each entry short. No polishing; the post does that.
   case shows no logo in any photo, so KAIRO's spot is a guess. Owner: "there are some render issues with
   pc, and why every reflective thing is reflecting the shadow of tree" (the trees were Blender's Material
   Preview forest light, not the room); the PC glass and glow fix started right after.
+- PC glass and glow: the milky, grainy EEVEE glass came from the room test forcing raytraced refraction on
+  every glass material; the PC now has a thin blended glass for EEVEE and the web, a blue-white glow
+  (#5f9fff) on the fan rings and four strips inside the case, and a hidden light inside for renders.
+- Fonts. Owner: "fonts are really bad", then "i want the original fonts". The real logos are custom-drawn
+  and protected, so a comparison page put each real logo beside three free lookalikes; owner: "use c for
+  all". Seven OFL fonts downloaded with permission, cut to static weights. Re-printed every name; spacing now
+  comes from Blender's own text engine (the old helper moved overlapping letters as one block). HALDEN moved
+  clear of the knob; KAIRO removed (no logo on the real case). Miss: lowering the clamp print's roughness
+  made it greyer (it mirrored the white studio at a grazing angle); turning its specular down fixed it.
+- The fan rings went from 2.2 to about 5 mm; in the bright room they read as pale circles, still soft.
 
