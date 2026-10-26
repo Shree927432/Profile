@@ -856,3 +856,6 @@ site or the room. Keep each entry short. No polishing; the post does that.
   made it greyer (it mirrored the white studio at a grazing angle); turning its specular down fixed it.
 - The fan rings went from 2.2 to about 5 mm; in the bright room they read as pale circles, still soft.
 
+- Desk-top group: the first builder was lost when the Claude session restarted, about 35 minutes in, with
+  no files written. Owner: "You also said 60 minutes half an hour ago". Restarted with a 75-minute box and a
+  PROGRESS.md the owner can check at each stage.
