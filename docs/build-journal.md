@@ -832,3 +832,8 @@ site or the room. Keep each entry short. No polishing; the post does that.
   that the key-light panels clear the real speaker's top (the plan's speaker box was 3.6 cm short of the
   built component, which is why plan v3's key light hid the speaker). 82 checks pass.
 
+- Fix round on the arms, lights and mic: all ten fixes in, in 15 of 45 minutes (black finned key-light rim,
+  landscape back box, Flex Arm ball joints, flat-band MV7+ yoke, rainbow LED arc, rear ports, padded PSA1+
+  covers, T-handle clamp). Left as is: the Flex Arm's balls sit mostly inside their sockets in the room pose;
+  the fins and foam texture are rich-only. The room test now reads plan v3's numbers (B). Rich GLB 3.7 MB,
+  lite 537 KB.
