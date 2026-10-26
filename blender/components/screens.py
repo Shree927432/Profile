@@ -295,13 +295,13 @@ HALO_HINGE = (75.0, -1.0)
 # G8: Samsung's word sits on a small dark tab just under the panel's bottom edge, centred (g8-01, 0.465 mm/px:
 # letters 4.5 px = 2.1 mm tall, the word 36 px = 16.6 mm wide, light grey pad print). We have no tab, so the
 # name sits on the black chin straight above it, just over the silver bottom strip.
-BRAND_G8 = dict(z=6.0 * MM, height=2.1 * MM, track=0.6 * MM, weight=0.03, colour="#a3a5a8", finish="printed")
+BRAND_G8 = dict(z=6.0 * MM, height=2.1 * MM, max_width=16.6 * MM, colour="#a3a5a8", finish="printed")
 # Studio Display: Apple's mark, centred between the adapter rails (diagram-back-vesa-adapter, 0.705 mm/px:
 # 68 x 85 mm, its body's centre 134 mm below the top), polished. Ours: a plain ring, 70 mm across.
 BRAND_SD = dict(below_top=134 * MM, height=70 * MM, colour="#dcdee1", finish="polished")
 # ScreenBar Halo: BenQ's word, tone on tone, on the user-facing face of the rear block above the arm
 # (three-quarter-bar-with-controller: about 10 mm wide, letters about 2.5 mm). The block face is y = 60.5 mm.
-BRAND_HALO = dict(y=60.5, z=34.0 * MM, height=2.5 * MM, spacing=1.0, colour="#3a3c40", finish="engraved")
+BRAND_HALO = dict(y=60.5, z=34.0 * MM, height=2.5 * MM, max_width=10.8 * MM, colour="#3a3c40", finish="engraved")
 HALO_WEIGHT = [(-18.8, 0.0), (5.6, 0.0), (4.0, -48.0), (1.5, -53.5), (-3.0, -55.7), (-14.0, -55.7),
                (-17.8, -53.0), (-18.8, -49.0)]
 
@@ -1112,48 +1112,16 @@ if bpy is not None:
         inv = part.matrix_world.inverted()
         root_m = part.parent.matrix_world if part.parent is not None else Matrix.Identity(4)
         m = inv @ root_m
-        track = kw.pop("track", 0.0)
         n, u = (m.to_3x3() @ V(normal)).normalized(), (m.to_3x3() @ V(up)).normalized()
-        o = brands.decal(key, m @ V(at), n, u, parent=part, collection=coll, name=nm(name), lite=lite, **kw)
-        if o is not None and track:
-            _track(o, u.cross(n).normalized(), track)
-        return o
-
-    def _track(o, right, gap):
-        """Open the letter-spacing: each letter (one connected island; our names are all capitals with no
-        dots) moves `gap` per step from the word's centre along `right`."""
-        bm = bmesh.new()
-        bm.from_mesh(o.data)
-        left = set(bm.verts)
-        islands = []
-        while left:
-            stack = [left.pop()]
-            isl = [stack[0]]
-            while stack:
-                v = stack.pop()
-                for e in v.link_edges:
-                    w = e.other_vert(v)
-                    if w in left:
-                        left.discard(w)
-                        stack.append(w)
-                        isl.append(w)
-            islands.append(isl)
-        islands.sort(key=lambda vs: sum(v.co.dot(right) for v in vs) / len(vs))
-        k = len(islands)
-        for i, vs in enumerate(islands):
-            d = right * ((i - (k - 1) / 2) * gap)
-            for v in vs:
-                v.co += d
-        bm.to_mesh(o.data)
-        bm.free()
+        return brands.decal(key, m @ V(at), n, u, parent=part, collection=coll, name=nm(name), lite=lite, **kw)
 
     def add_brands(parts, coll, lite, halo_on, z_sd):
         out = {}
         b = BRAND_G8
         f = g8_front(0.0, b["z"])
         out["g8_brand"] = _brand("screens_g8", parts["rig_display"], (f[0], f[1], f[2] + G8_Z0), (0, -1, 0),
-                                 (0, 0, 1), "g8_brand", lite, coll, height=b["height"], track=b["track"],
-                                 weight=b["weight"], colour=b["colour"], finish=b["finish"])
+                                 (0, 0, 1), "g8_brand", lite, coll, height=b["height"], max_width=b["max_width"],
+                                 colour=b["colour"], finish=b["finish"])
         b = BRAND_SD
         out["sd_brand"] = _brand("screens_sd", parts["monitor_body"], (0.0, SD_Y + SD_T, z_sd + SD_H - b["below_top"]),
                                  (0, 1, 0), (0, 0, 1), "sd_brand", lite, coll, height=b["height"],
@@ -1164,7 +1132,7 @@ if bpy is not None:
             out["screenbar_brand"] = _brand("screenbar", parts["desk_screenbar"],
                                             (0.0, SD_Y + (off + b["y"]) * MM, z_sd + SD_H + b["z"]), (0, -1, 0),
                                             (0, 0, 1), "screenbar_brand", lite, coll, height=b["height"],
-                                            spacing=b["spacing"], colour=b["colour"], finish=b["finish"])
+                                            max_width=b["max_width"], colour=b["colour"], finish=b["finish"])
         return {k: o for k, o in out.items() if o is not None}
 
     # -----------------------------------------------------------------------

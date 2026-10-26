@@ -536,7 +536,6 @@ def build_gpu(coll, parent, lite):
 
 # the brand names (decision 2026-10-26): names from content/room-brands.json via lib/brands.py
 GPU_LETTER_H = 6.0 * MM      # EST detail-logo-edge.jpg: GEFORCE RTX cap height about 1/6 of the 40 mm edge
-CASE_LETTER_H = 4.0 * MM     # EST: small print, as the O11 family's front pillar carries it
 
 
 def _brand_name(o, wanted, lite):
@@ -551,21 +550,12 @@ def gpu_lettering(coll, lite):
     from lib import brands
     c = Vector(((LIGHT[0] + LIGHT[1]) / 2, H, -T / 2))
     o = brands.decal("pc_gpu", at=c, normal=(0, 1, 0), up=(0, 0, -1), height=GPU_LETTER_H, finish="lit",
-                     colour="#f4f7ff", lite=lite, name="rig_gpu_light", spacing=1.25, weight=0.025,
+                     colour="#f4f7ff", lite=lite, name="rig_gpu_light",
                      collection=coll)
     o.data.materials[0] = K.mats()["gpu_light"]          # the same light as before (the room pulses it)
     o.data.transform(Matrix.Translation(-c))
     o.location = c
     return _brand_name(o, "rig_gpu_light", lite)
-
-
-def case_lettering(coll, root, lite):
-    """KAIRO at the foot of the front pillar (the rear chamber's white front panel), light grey print."""
-    from lib import brands
-    o = brands.decal("pc_case", parent=root, at=((XP + HW) / 2, -HD, ZB + 24.0 * MM), normal=(0, -1, 0),
-                     up=(0, 0, 1), height=CASE_LETTER_H, finish="printed", colour="#a4a8ad", lite=lite,
-                     name="rig_case_brand", spacing=1.4, collection=coll)
-    return _brand_name(o, "rig_case_brand", lite)
 
 
 def xarm(A, wl, wr, z, M):
@@ -666,10 +656,15 @@ def fan_frame(A, Ar, M, lite):
     seg = 32 if lite else 72
     hole = P.circle(ro, seg)
     plate(A, sq, [hole], -d, d, "fan_white", "fan_white", M=M)
-    # the light ring on the intake face and the strips along the four sides
-    Ar.ring_face(P.circle(ro + 2.6 * MM, seg), P.circle(ro + 0.4 * MM, seg), d + 0.15 * MM, "fan_light", m=M)
-    Ar.ring_face(P.circle(ro + 2.6 * MM, seg), P.circle(ro + 0.4 * MM, seg), d + 0.15 * MM, "fan_light",
-                 m=M @ Matrix.Rotation(math.pi, 4, "X"))
+    # the light ring on both faces and the strips along the four sides. The ring is the real fan's diffuser,
+    # about 5 mm wide: 55.2 to 60.2 mm, trimmed to the frame's square (0.1 mm in), so 4.7 mm at the side
+    # middles; its inner lip lies over the blade tips (57.0), 8 mm in front of them (was 2.2 mm, 58.9 to 61.1,
+    # past the frame's edge at the side middles; fix 2026-10-26: "Yes, widen the fan rings")
+    lim = s - 0.1 * MM
+    outer = [(max(-lim, min(lim, x)), max(-lim, min(lim, y))) for x, y in P.circle(60.2 * MM, seg)]
+    inner = P.circle(55.2 * MM, seg)
+    for Mf in (M, M @ Matrix.Rotation(math.pi, 4, "X")):
+        Ar.ring_face(outer, inner, d + 0.15 * MM, "fan_light", m=Mf)
     for k in range(4):
         R4 = M @ Matrix.Rotation(k * math.pi / 2, 4, "Z")
         # strip on the side face x = s: a thin raised bar, 76 mm long, 3 mm tall, mid-depth
@@ -952,8 +947,7 @@ def build(root, coll, lite=False):
     for o in [gpu] + gfans + [glight]:
         o.parent = groot
     gfans_names = [o.name for o in gfans]
-    cbrand = case_lettering(coll, root, lite)
-    names["case"] = [case.name, side.name, glass.name, cbrand.name]
+    names["case"] = [case.name, side.name, glass.name]          # no case logo: KAIRO is not placed (content)
     names["case_all"] = names["case"]
     names["gpu"] = [gpu.name, glight.name] + gfans_names
     names["gpu_all"] = names["gpu"]

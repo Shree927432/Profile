@@ -461,7 +461,7 @@ def build_keylight(n, coll, mp, rough=False, lite=False, pole_h=POLE_H, tilt=0.0
         # the logo plate's spot on the back box: centred, 25 mm under the box top, about 6 mm, light grey
         b = brand("keylights", panel, f"keylight_{n}_brand", sfx, lite,
                   at=(0, yf + KL_FRAME_T + bd, bz + bh / 2 - 0.025), normal=(0, 1, 0), up=(0, 0, 1),
-                  height=6 * MM, finish="printed", colour="#c9cacc", spacing=1.25, weight=0.035)
+                  height=6 * MM, finish="printed", colour="#c9cacc")
         out["kl_brand"] = [b.name]
     return root, out
 
@@ -693,7 +693,7 @@ def build_camera(coll, mp, rough=False, lite=False, sfx="", screen="selfie"):
         # the wordmark's spot: 47 mm from the grip-side edge (centre), 2.2 to 4.9 mm under the top, silver print
         b = brand("camera", body, "cam_brand", sfx, lite, at=(x0 - CB_W / 2 + 0.049, yf, H - 0.0036),
                   normal=(0, -1, 0), up=(0, 0, 1), height=3.2 * MM, finish="printed", colour="#c4c6c9",
-                  spacing=1.3, weight=0.025)
+                  max_width=15 * MM)
         out["cam_brand"] = [b.name]
     return root, out
 
@@ -890,15 +890,18 @@ def build_mic_head(coll, mp, parent, rough=False, lite=False, sfx=""):
         led = uv_strip(f"mic_led{sfx}", rings, mp["led_rainbow"], coll, tilt, Mb)
         out["mic_led"] = [led.name]
         # the side wordmark, along the axis, black pad print, conformed to the tapered body; on both sides,
-        # letter tops toward the stem (Shure's three-quarter shot), clear of the yoke band
-        yc = MIC_PIVOT - 0.0215              # 28.5 mm behind the pivot: clear of the knob, off the rear rounding
+        # letter tops toward the stem (Shure's three-quarter shot). Real spot (side-profile-yoke-open.jpg,
+        # 0.175 mm/px from the 50 mm rear plate to knob axis): SHURE runs 6 to 36 mm from the rear plate, about
+        # 30 x 5 mm. Ours: 15.5 to 43.5 mm behind the knob axis, 6 mm clear of the knob (9.35 mm radius, 4.5 mm
+        # proud), so no letter goes under it from any angle the photos show.
+        yc = 0.0295
         sides = [brand("mic", body, "mic_body_brand", sfx, lite, at=(s * MIC_R, yc, 0), normal=(s, 0, 0),
-                       up=(0, 0, 1), height=6.3 * MM, finish="printed", colour="#1c1c1d", spacing=1.1,
-                       weight=0.03, conform=body) for s in (1, -1)]
+                       up=(0, 0, 1), height=6.3 * MM, max_width=28 * MM, finish="printed", colour="#1c1c1d",
+                       conform=body) for s in (1, -1)]
         mb = join_into(*sides)
         # the rear plate: centred, 8.3 mm under the plate's centre, about 3 mm, dark grey
         rb = brand("mic", body, "mic_rear_brand", sfx, lite, at=(0, MIC_PIVOT, -0.0083), normal=(0, 1, 0),
-                   up=(0, 0, 1), height=2.8 * MM, finish="printed", colour="#3c3c3e", spacing=1.1, weight=0.03)
+                   up=(0, 0, 1), height=2.8 * MM, finish="printed", colour="#3c3c3e")
         out["mic_brand"] = [mb.name, rb.name]
     return hang, tilt, out
 
@@ -971,7 +974,7 @@ def build_mic(coll, mp, rough=False, lite=False, pose=None, sfx=""):
             return
         brands_.append(brand("boom_arm", seg_obj, nm, sfx, lite, at=(L - 0.095, ARM_COVER[0] / 2, 0),
                              normal=(0, 1, 0), up=(0, 0, 1), height=15 * MM, finish="printed",
-                             colour="#f7f7f5", spacing=1.15, weight=0.04).name)
+                             colour="#f7f7f5", max_width=73 * MM).name)
     cover_brand(lower, ARM_L1, "boom_lower_brand")
     A = P.Mesh()      # the elbow: the outer hinge discs (a jog plate between two pivots when ARM_JOG > 0)
     for sy in (-1, 1):
@@ -986,11 +989,12 @@ def build_mic(coll, mp, rough=False, lite=False, pose=None, sfx=""):
     upper = segment(f"mic_arm_upper{sfx}", ARM_L2, el)
     cover_brand(upper, ARM_L2, "boom_upper_brand")
     if not rough:
-        # the small mark on the clamp's cone, over the C-clamp's back (+Y), black (detail-white-clamp-mount.jpg)
+        # the small mark on the clamp's cone, over the C-clamp's back (+Y), a glossy true-black pad print
+        # (detail-white-clamp-mount.jpg)
         zc_, rc_ = 0.0095, 0.048 - 0.028 * (0.0095 - 0.004) / 0.028
         brands_.append(brand("boom_arm", static, "boom_clamp_brand", sfx, lite, at=(0, rc_, zc_),
-                             normal=(0, 1, 1), up=(0, -1, 1), height=3.6 * MM, finish="printed",
-                             colour="#111112", spacing=1.1, weight=0.03, conform=static).name)
+                             normal=(0, 1, 1), up=(0, -1, 1), height=3.6 * MM, finish="ink",
+                             colour="#050506", max_width=18 * MM, conform=static).name)
     level = math.radians(pose["shoulder"] + pose["elbow"])
     wr = empty(f"mic_j_wrist{sfx}", el, (ARM_L2, 0, 0), (0, level, 0), coll)
     wy = empty(f"mic_j_wrist_yaw{sfx}", wr, (0, 0, 0), (0, 0, math.radians(pose["wrist"])), coll)

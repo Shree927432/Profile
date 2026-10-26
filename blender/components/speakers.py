@@ -94,7 +94,7 @@ RIBBON = (26.0, 6.25, 2.75, 4, 1.0)         # width, strip height, gap, strips, 
 # mouth, centred between the two lower screws. MEASURED on white-front.jpg (x 487-590, y 325-338 px against
 # the screws at z 313.0 / 251.3, y 155 / 320 px; review round: 4.4 read small): cap height 4.7 mm, centre z 247.1, x 0, off-white pad print
 # (photo grey 228 on the black plate), a bold, open-spaced feel. The name comes from content/room-brands.json.
-BRAND = dict(z=247.1, height=4.7, colour="#e4e4e4", weight=0.035, spacing=1.35)
+BRAND = dict(z=247.1, height=4.7, colour="#e4e4e4")
 TW_SCREWS = [(sx * 31.0, z) for z in (313.0, 251.3) for sx in (-1, 1)]
 TW_LED = (0.0, 317.7)                       # the green status LED: in white-front.jpg (0.7, 318.5) and
                                             # black-front-1600.png (0, 314.2 on its 2.6 mm lower scale)
@@ -1272,7 +1272,7 @@ if bpy is not None:
         b1 = brands.decal("speakers", parent=parts["studio_speaker_01"],
                           at=(0.0, (FRONT_Y - TW_PLATE[3]) * m_, BRAND["z"] * m_), normal=(0, -1, 0), up=(0, 0, 1),
                           height=BRAND["height"] * m_, finish="printed", colour=BRAND["colour"],
-                          weight=BRAND["weight"], spacing=BRAND["spacing"], collection=collection, lite=lite,
+                          collection=collection, lite=lite,
                           name="a7v_1_brand" + suffix)
         names.set_name(b1, "a7v_1_brand" + suffix, data=False)
         b2 = bpy.data.objects.new("a7v_2_brand" + suffix, b1.data)

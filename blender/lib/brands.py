@@ -1,12 +1,15 @@
 """Invented brand names on the AI-lab gear (decision 2026-10-26).
 
 The names come only from content/room-brands.json. Each decal sits where the real maker's logo
-sits, at its size, colour and finish, in Blender's built-in font (plain lettering, never the real
-logo's typeface or graphic).
+sits, at its size, colour and finish, in the free lookalike font the owner picked for that name (`font` in
+content, a file in blender/assets/fonts/) with its `letter_spacing_em`, never the real logo's lettering. A
+brand with `placed: false` gets no decal (decal() returns None).
 
     from lib import brands
     brands.decal("speakers", parent=front_obj, at=(x, y, z), normal=(0, -1, 0), up=(0, 0, 1),
                  height=4 * MM, finish="printed", colour="#d8d8d8", name="a7v_1_brand", lite=lite)
+
+`height` is the letters' cap height; `max_width` (optional, the real logo's width) shrinks the word to fit.
 
 `at`, `normal` and `up` are in the parent's local space (world space when there is no parent).
 The text reads left to right for someone looking at the face from outside (along -normal).
@@ -21,6 +24,7 @@ material, no texture.
 import json
 import math
 import os
+import struct
 
 import bmesh
 import bpy
@@ -30,9 +34,12 @@ from mathutils.bvhtree import BVHTree
 MM = 0.001
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 JSON = os.path.join(REPO, "content", "room-brands.json")
+FONTS = os.path.join(REPO, "blender", "assets", "fonts")
+TRACK_PER_SPACE = 0.5     # Blender adds (space_character - 1) * 0.5 units per letter gap at size 1 (measured, 5.2)
 
 FINISH = {   # raised height (rich), roughness, metallic
     "printed": (0.12 * MM, 0.45, 0.0),
+    "ink": (0.12 * MM, 0.25, 0.0),          # a smooth true-black pad print (the PSA1+ cone), low specular
     "embossed": (0.30 * MM, 0.35, 0.0),
     "engraved": (0.03 * MM, 0.22, 0.0),
     "polished": (0.05 * MM, 0.08, 1.0),
@@ -51,9 +58,33 @@ def entry(key):
     return load()[key]
 
 
-def _font():
-    f = bpy.data.fonts.get("Bfont Regular")
-    return f or bpy.data.fonts.load("<builtin>")
+_FONTS = {}
+
+
+def _font(fname):
+    """The font file from content, loaded once per file; returns (font, Blender units per em)."""
+    if fname in _FONTS and _FONTS[fname][0].name in bpy.data.fonts:
+        return _FONTS[fname]
+    path = os.path.join(FONTS, fname)
+    f = bpy.data.fonts.load(path, check_existing=True)
+    _FONTS[fname] = (f, _em(f, path))
+    return _FONTS[fname]
+
+
+def _em(font, path):
+    """Blender's size of one em for this font: the H's height in Blender over the font's cap height
+    (OS/2 sCapHeight / unitsPerEm). Blender scales each font by its own vertical metrics, so it differs."""
+    b = open(path, "rb").read()
+    tab = {}
+    for i in range(struct.unpack(">H", b[4:6])[0]):
+        tag, _, off, _ = struct.unpack(">4sIII", b[12 + 16 * i:28 + 16 * i])
+        tab[tag] = off
+    upm = struct.unpack(">H", b[tab[b"head"] + 18:tab[b"head"] + 20])[0]
+    cap = struct.unpack(">h", b[tab[b"OS/2"] + 88:tab[b"OS/2"] + 90])[0]
+    bm = _outline("H", font, 1.0, 3)
+    ys = [v.co.y for v in bm.verts]
+    bm.free()
+    return (max(ys) - min(ys)) / (cap / upm)
 
 
 def _hex(h):
@@ -78,6 +109,8 @@ def material(finish, colour, emit=0.0, lite=False):
     b.inputs["Base Color"].default_value = col
     b.inputs["Roughness"].default_value = rough
     b.inputs["Metallic"].default_value = metal
+    if finish == "ink":       # at 0.5 the cone's grazing view mirrors the white studio and the print reads grey
+        b.inputs["Specular IOR Level"].default_value = 0.04
     if finish == "lit":
         b.inputs["Emission Color"].default_value = col
         b.inputs["Emission Strength"].default_value = emit or 2.0
@@ -85,14 +118,14 @@ def material(finish, colour, emit=0.0, lite=False):
     return m
 
 
-def _letters(text, lite, weight):
-    """Flat 2D letters as (verts xy, faces) centred on the origin, 1 unit cap height."""
+def _outline(text, font, space, res):
+    """Flat 2D letters as a bmesh, Blender's own layout (advance width and kerning per character)."""
     cu = bpy.data.curves.new("brand_tmp_text", "FONT")
     cu.body = text
-    cu.font = _font()
+    cu.font = font
     cu.align_x, cu.align_y = "CENTER", "CENTER"
-    cu.resolution_u = 3 if lite else 6
-    cu.offset = weight          # outline growth: bold feel without a different typeface
+    cu.resolution_u = res
+    cu.space_character = space
     cu.fill_mode = "BOTH"
     ob = bpy.data.objects.new("brand_tmp_text", cu)
     bpy.context.scene.collection.objects.link(ob)
@@ -106,6 +139,13 @@ def _letters(text, lite, weight):
     bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
     bmesh.ops.triangulate(bm, faces=bm.faces)
     return bm
+
+
+def _letters(e, lite):
+    """The brand's name in its font with its letter-spacing (em), centred on the origin."""
+    font, em = _font(e["font"])
+    space = 1.0 + e.get("letter_spacing_em", 0.0) * em / TRACK_PER_SPACE
+    return _outline(e["name"], font, space, 3 if lite else 6)
 
 
 def _ring(outer, inner, seg):
@@ -130,16 +170,17 @@ def frame(at, normal, up):
 
 
 def decal(key, at, normal, up, height=None, width=None, finish="printed", colour="#ffffff", parent=None,
-          collection=None, conform=None, lite=False, name=None, spacing=1.0, weight=0.0, emit=0.0,
-          mark=None, tilt_italic=0.0):
-    """Make one brand decal; returns the object (None if the brand has no name and no mark)."""
+          collection=None, conform=None, lite=False, name=None, emit=0.0, mark=None, max_width=None):
+    """Make one brand decal; returns the object (None if the brand has no name and no mark, or is not placed)."""
     e = entry(key)
+    if e.get("placed", True) is False:
+        return None
     text = e.get("name", "")
     mark = mark or e.get("mark")
     if not text and not mark:
         return None
     if text:
-        bm = _letters(text, lite, weight)
+        bm = _letters(e, lite)
     else:          # our own plain round mark: a ring, `height` is its outer diameter
         bm = _ring(0.5, 0.36, 24 if lite else 64)
     xs = [v.co.x for v in bm.verts]
@@ -150,12 +191,12 @@ def decal(key, at, normal, up, height=None, width=None, finish="printed", colour
         s = width / w0
     else:
         s = height / h0
+        if max_width and w0 * s > max_width:
+            s = max_width / w0
     for v in bm.verts:
         v.co.x = (v.co.x - cx) * s
         v.co.y = (v.co.y - cy) * s
         v.co.z = 0.0
-    if text and spacing != 1.0:
-        _spread(bm, spacing, s * h0)
     lift, _, _ = FINISH[finish]
     M = frame(at, normal, up)
     pw = parent.matrix_world.copy() if parent is not None else Matrix.Identity(4)
@@ -223,42 +264,6 @@ def decal(key, at, normal, up, height=None, width=None, finish="printed", colour
     ob["brand_key"] = key
     ob["brand_finish"] = finish
     return ob
-
-
-def _spread(bm, spacing, cap):
-    """Open up the letter-spacing: shift each letter (connected island) by its index from the centre."""
-    bm.verts.index_update()
-    parent = {}
-
-    def find(a):
-        while parent.setdefault(a, a) != a:
-            parent[a] = parent[parent[a]]
-            a = parent[a]
-        return a
-    for ed in bm.edges:
-        a, b = ed.verts
-        parent[find(a.index)] = find(b.index)
-    groups = {}
-    for v in bm.verts:
-        groups.setdefault(find(v.index), []).append(v)
-    spans = []
-    for vs in groups.values():
-        xs = [v.co.x for v in vs]
-        spans.append([min(xs), max(xs), vs])
-    spans.sort(key=lambda s: s[0])
-    letters = []
-    for s in spans:           # merge islands that overlap in x (O and its hole, A and its counter)
-        if letters and s[0] < letters[-1][1] - 1e-6:
-            letters[-1][1] = max(letters[-1][1], s[1])
-            letters[-1][2] += s[2]
-        else:
-            letters.append(s)
-    k = len(letters)
-    gap = (spacing - 1.0) * cap * 0.25
-    for i, (_, _, vs) in enumerate(letters):
-        d = (i - (k - 1) / 2) * gap
-        for v in vs:
-            v.co.x += d
 
 
 def triangles(obj):
