@@ -866,3 +866,7 @@ site or the room. Keep each entry short. No polishing; the post does that.
   backwards; the outline check caught it. My review: the mouse's thumb wheel read as a jagged fin and the
   Apollo's meter window and knob ring should be one black shape; one 25-minute fix round. Apollo moved 2.5 cm
   off the monitor pole for its rear cables.
+- Mouse rebuilt on Sircher's CC BY scan (owner downloaded it in Safari): the scan agrees with Logitech's size
+  within 1.3 %. Our own quad shell is wrapped onto it (blender/assets/mouse/), the scan stays local. Scan
+  silhouettes pass at 0.983 (thumb, right side). The first pass still had the USB-C missing, the thumb wheel
+  sticking out and a white nose; one more round fixed them. The owner watched it live and asked to be chimed.
