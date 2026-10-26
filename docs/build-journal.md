@@ -810,3 +810,22 @@ site or the room. Keep each entry short. No polishing; the post does that.
   to the right." 80 checks pass.
 - Went wrong: a reparenting bug put a speaker into the wall in the first test render; the PC glass
   read as a grey slab in EEVEE until screen-space refraction was turned on.
+
+## 2026-10-26: arms, key lights and mic, first pass; invented brand names
+
+- The builder finished the Flex Arm, both key lights and the MV7+ on the PSA1+ in 37 of its 75 minutes
+  and placed them in the room test. Its placement proposal B moves key light 1 to the far-left
+  corner as in the owner's photo, but needs the shelf 3 cm higher (the real speaker is taller than
+  plan v3's box).
+- My review of the 15 close-ups found ten misses, the biggest being the Flex Arm (plain tubes, no ball
+  joints, one tube floating), the MV7+ yoke (a round fork instead of a flat band) and the PSA1+ (round
+  tubes instead of padded covers). All went back in one fix round.
+- The owner wanted to watch the modelling live. First a page that refreshes with each new render, then
+  one Blender window that rebuilds on every save of the builder's script
+  (`blender/tools/live_watch.py`); the owner closed both after a look.
+- The owner offered to measure parts and to trace outlines by hand. Not needed yet: the red outlines are
+  cut from the makers' photos; hand tracing is kept for photos the automatic cut can't handle.
+- Owner: "i want all the names on component with same design, your can different branding names so
+  that we don't get copyright". Picked set A, coined tech names; they live in
+  `content/room-brands.json`.
+

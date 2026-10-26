@@ -1,0 +1,15 @@
+{
+  "_note": "Invented brand names printed on the room's gear, in place of the real makers' logos (owner, 2026-10-26: set A, coined tech names). Same spot, size, colour and finish as the real logo, in our own plain lettering. The Blender builders read this file; never type these names into scene or Blender code.",
+  "brands": {
+    "screens_g8": { "real_maker": "Samsung", "name": "ORVANE" },
+    "screens_sd": { "real_maker": "Apple", "name": "", "mark": "round" },
+    "screenbar": { "real_maker": "BenQ", "name": "TALLO" },
+    "speakers": { "real_maker": "ADAM Audio", "name": "OSTRA" },
+    "pc_case": { "real_maker": "Lian Li", "name": "KAIRO" },
+    "pc_gpu": { "real_maker": "NVIDIA", "name": "NOVRA" },
+    "camera": { "real_maker": "Sony", "name": "KESSO" },
+    "keylights": { "real_maker": "Elgato", "name": "BRILA" },
+    "mic": { "real_maker": "Shure", "name": "HALDEN" },
+    "boom_arm": { "real_maker": "RODE", "name": "TORVIK" }
+  }
+}

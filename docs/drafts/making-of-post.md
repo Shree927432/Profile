@@ -147,3 +147,8 @@ view of the two walls, 22 real products matched to my two photos (white monitors
 with the GPU on show, an L desk on drawers), a photo sheet to approve, and no logos on any of
 them. -->
 <!-- NOTE 2026-10-24: components first, layout second. Each piece of the AI lab built on its own from the makers' photos and official sizes, compared from every angle, the photo beside the model; the screens were approved, reopened ("still there are lot of problems in screen") and fixed, partly because the comparison itself had been wrong. -->
+
+<!-- NOTE 2026-10-26: I wanted to watch the modelling live, so Claude opened one Blender window
+that rebuilt the mic and arms every time the builder saved its script. Then the logos question:
+real brand names were off-limits, so every device in the room carries a made-up one (KESSO camera,
+HALDEN mic, BRILA lights) in the same spot as the real logo. -->
