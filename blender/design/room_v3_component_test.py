@@ -73,6 +73,23 @@ def build_arms(lite=False):
     return AR.build_set(AR.room_layout(ARMS), collection=col, lite=lite)
 
 
+# 2026-10-26: the desk-top group (Apollo x4, Stream Deck, keyboard, mouse) built live from
+# blender/components/desktop.py at plan v3's numbers (DESKTOP=0 keeps the stand-ins).
+DESKTOP = os.environ.get("DESKTOP", "plan")
+if DESKTOP != "0":
+    REPLACED = REPLACED | {"interface", "streamdeck", "keyboard", "mouse"}
+
+
+def build_desktop(lite=False):
+    """The desk-top group in its own collection 'desktop'."""
+    sys.path.insert(0, os.path.join(BL, "components"))
+    import desktop as DT
+    col = bpy.data.collections.get("desktop") or bpy.data.collections.new("desktop")
+    if col.name not in bpy.context.scene.collection.children:
+        bpy.context.scene.collection.children.link(col)
+    return DT.build_set(collection=col, lite=lite)
+
+
 def M_at(x, y, z=0.0, yaw=0.0):
     return Matrix.Translation((x, y, z)) @ Matrix.Rotation(math.radians(yaw), 4, "Z")
 
@@ -224,13 +241,22 @@ def music_side():
 # ---------------------------------------------------------------------------
 def groups():
     g = {"desk": [], "screens_pole": [], "g8": [], "studio_display": [], "screenbar": [], "speaker_L": [],
-         "speaker_R": [], "pc": [], "keylight_1": [], "keylight_2": [], "camera_arm": [], "mic": []}
+         "speaker_R": [], "pc": [], "keylight_1": [], "keylight_2": [], "camera_arm": [], "mic": [],
+         "interface": [], "streamdeck": [], "keyboard": [], "mouse": []}
     arms_col = bpy.data.collections.get("arms")
     arms_objs = set(arms_col.all_objects) if arms_col else set()
+    dt_col = bpy.data.collections.get("desktop")
+    dt_root = {"apollo": "interface", "deck": "streamdeck", "keyboard": "keyboard", "mouse": "mouse"}
     for o in bpy.data.objects:
         if o.type != "MESH" or o.hide_render:
             continue
         n = o.name
+        if dt_col and o.name in dt_col.all_objects:
+            r = o
+            while r.parent is not None:
+                r = r.parent
+            g[dt_root.get(r.name.replace("_lite", ""), "keyboard")].append(o)
+            continue
         if o in arms_objs:
             k = "keylight_1" if n.startswith("keylight_1") else "keylight_2" if n.startswith("keylight_2") else \
                 "camera_arm" if n.startswith("cam") else "mic"
@@ -353,6 +379,8 @@ def main():
     if ARMS != "0":
         arms_names = build_arms()
         print("ARMS", ARMS, arms_names.get("mic_pose"), arms_names.get("flex_reach"))
+    if DESKTOP != "0":
+        build_desktop()
     BO.lights()
     append_rich()
     music = music_side()
@@ -413,6 +441,11 @@ def main():
         for o in list(col.all_objects):
             bpy.data.objects.remove(o, do_unlink=True)
         build_arms(lite=True)
+    if DESKTOP != "0":                               # the desk-top group: rich out, lite in
+        col = bpy.data.collections.get("desktop")
+        for o in list(col.all_objects):
+            bpy.data.objects.remove(o, do_unlink=True)
+        build_desktop(lite=True)
     drop = {"sky", "ground", "ceiling"}
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:
