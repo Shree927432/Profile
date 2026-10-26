@@ -99,26 +99,27 @@ KB_ROWS = [     # (row y in u, [(id, x in u, width in u, colour)]) MEASURED from
 KB_DROPPED = {"up", "left", "down", "right"}
 KB_KNOB = (15.25, 0.0, 8.5, 9.0)              # MEASURED top photo: the knob in the nav column, row 0 (u, u, r mm, h above the frame EST)
 
-# MX Master 3S (23-mouse/SOURCES.md): 124.9 long, 84.3 wide, 51 high OFFICIAL
+# MX Master 3S (23-mouse/SOURCES.md): 124.9 long, 84.3 wide, 51 high OFFICIAL. Rebuilt on a 3D scan (decision
+# 2026-10-26): "Logitech MX Master 3S - Revopoint Mini 3D Scan" by Sircher, CC BY. Our own quad shell is wrapped
+# onto the scan by components/mouse_scan.py and saved to assets/mouse/mx-master-3s-shell.json; the scan itself
+# never ships. Feature positions MEASURED on the scan's depth maps (mm, nose +Y, thumb side -X, desk z = 0).
 MS_L, MS_W, MS_H = 124.9, 84.3, 51.0
-# MEASURED top.png alpha (0.0502 mm/px, the 124.9 length): the outline seen from above, (x, y), nose at -y
-MS_OUTLINE = [
-    (40.1, 2.5), (40.3, 5.7), (40.6, 8.9), (40.9, 12.3), (41.1, 15.9), (41.2, 19.6), (41.1, 23.7), (41.0, 28.1),
-    (40.4, 32.6), (39.3, 37.3), (37.7, 42.1), (35.5, 46.8), (32.5, 51.1), (28.9, 54.8), (24.7, 57.9), (20.0, 60.4),
-    (15.0, 61.9), (9.8, 62.5), (4.5, 62.0), (-0.6, 60.8), (-5.4, 58.7), (-9.9, 56.3), (-14.1, 53.7), (-18.1, 51.1),
-    (-21.9, 48.4), (-25.8, 45.8), (-29.6, 43.2), (-33.3, 40.4), (-36.7, 37.1), (-39.4, 33.3), (-40.9, 28.8),
-    (-41.2, 23.8), (-40.8, 19.0), (-40.2, 14.5), (-39.5, 10.3), (-38.9, 6.3), (-38.2, 2.5), (-37.6, -1.1),
-    (-36.7, -4.7), (-35.4, -8.1), (-32.9, -11.1), (-29.2, -13.2), (-25.4, -14.7), (-22.7, -16.5), (-20.9, -18.8),
-    (-20.3, -22.2), (-18.0, -24.3), (-16.6, -27.7), (-16.5, -33.8), (-16.2, -41.9), (-15.6, -52.9), (-12.2, -59.8),
-    (-6.9, -62.2), (-1.1, -62.0), (4.5, -61.1), (10.0, -60.1), (15.3, -58.9), (20.6, -57.5), (25.7, -55.8),
-    (30.8, -53.8), (35.2, -50.6), (37.9, -45.1), (39.0, -38.5), (39.6, -32.5), (40.1, -27.3), (40.3, -22.5),
-    (40.4, -18.2), (40.6, -14.3), (40.6, -10.6), (40.5, -7.1), (40.4, -3.8), (40.1, -0.6)]
-MS_WHEEL = (11.4, -37.0, 11.0, 7.0)           # MEASURED top.png: centre x, y; radius EST from the 17.6 visible chord; width
-MS_SLOT = (8.4, 19.2)                         # MEASURED top.png: the wheel's dark slot
-MS_MID = (11.6, -13.3, 5.9, 9.0)              # MEASURED top.png: the mode-shift button
-MS_LOGO = (-9.1, -20.0, 12.0)                 # MEASURED top.png: "logi" centre x, y, turn (deg)
-MS_THUMB = (-15.5, -1.6, 9.0, 10.0)           # MEASURED top.png: the thumb wheel centre x, y; radius, width EST
-MS_PEAK = 0.62                                # EST from side-thumb-profile: the hump's top along the length
+MS_SHELL = os.path.join(BLENDER_DIR, "assets", "mouse", "mx-master-3s-shell.json")
+MS_WHEEL = (10.7, 33.5, 25.0, 10.0, 6.0)     # MEASURED scan: centre x, y, z; radius (the crown at z 35.0); width
+MS_SLOT = (7.0, 14.6, 27.7, 46.3)            # MEASURED scan: the slot opening x0, x1, y0, y1
+MS_HOUSING = (5.4, 17.0, 16.3, 49.7)         # MEASURED scan: the wheel housing's seams x0, x1, rear y, front y
+MS_SPLIT_X = 10.7                             # MEASURED scan: the left/right split, the slot to the nose
+MS_MID = (10.7, 13.7, 5.4, 8.0)              # MEASURED scan: the mode button x, y, w, l
+MS_LOGO = (-9.3, 20.0, 12.0)                 # MEASURED top.png (frame matched to the scan): "logi" x, y, turn (deg)
+MS_THUMB = (2.7, 40.0, 9.0, 7.0, 4.0)        # MEASURED scan: thumb wheel y, z; radius, width (EST); 4.0 out of the pocket floor (1.0 past the wall)
+MS_POCKET = (-3.5, 41.8, 30.0, 7.5)          # MEASURED scan: the silver pocket y, z, length, height
+MS_SIDE_BTNS = [(-7.7, 32.9), (6.1, 28.7)]   # MEASURED scan: back, forward button centres y, z (11.5 x 4.4 each)
+MS_LED = (-13.0, 43.5)                       # MEASURED scan / side-thumb.jpg: behind the wheel on the pocket
+MS_USB = (10.6, 8.0)                         # MEASURED scan: USB-C on the nose x, z
+MS_REST_EDGE = [(21.7, 7.9), (23.0, 11.2), (22.3, 17.9), (19.0, 23.2), (9.7, 23.9), (-1.0, 25.2), (-14.3, 29.0),
+                (-25.0, 28.6), (-40.0, 26.0)]   # MEASURED scan (thumb side): the thumb rest's top edge y, z
+MS_RIGHT_SEAM = [(35.0, 9.7, 60.0), (42.6, 10.4, 37.0), (44.3, 21.4, 30.0), (45.4, 36.4, 23.0), (44.0, 44.4, 19.7),
+                 (40.4, 51.4, 14.0)]       # MEASURED scan (right side): the right button's outer edge (x, y, z approx)
 
 # Stream Deck MK.2 (24-control-pad/SOURCES.md)
 SD_W, SD_D, SD_T = 118.0, 84.0, 18.0          # W x D OFFICIAL; T MEASURED gallery-01 / desk-white-lowangle (the official 25 does not match the photos)
@@ -164,7 +165,7 @@ def mats():
     p["cap_e"] = get("mat_desktop_kb_cap_green", base="#62a58f", rough=0.62, spec=0.3)
     p["kb_knob"] = get("mat_desktop_kb_knob", base="#ecebe7", rough=0.35, metal=0.3)
     p["ms_top"] = get("mat_desktop_mouse_top", base="#e2e3e4", rough=0.62, spec=0.3)
-    p["ms_side"] = get("mat_desktop_mouse_side", base="#c4c6c9", rough=0.3, metal=0.55)
+    p["ms_side"] = get("mat_desktop_mouse_side", base="#a9acb1", rough=0.34, metal=0.6)
     p["ms_line"] = get("mat_desktop_mouse_seam", base="#8c8e91", rough=0.6)
     p["ms_thumb"] = bpy.data.materials.get("mat_desktop_mouse_thumbrest") or thumbrest_material()
     p["ms_wheel"] = get("mat_desktop_mouse_wheel", base="#b8bbbf", rough=0.22, metal=1.0)
@@ -632,212 +633,266 @@ def build_keyboard(coll, mp, rough=False, lite=False):
 
 
 # ---------------------------------------------------------------------------
-# 2c. MX Master 3S. Origin: desk under the top-view centre; nose -Y; thumb side -X.
+# 2c. MX Master 3S. Origin: desk under the top-view centre; nose +Y; thumb side -X.
 # ---------------------------------------------------------------------------
-def ms_height(x, y):
-    """The shell's height (mm) at (x, y): a hump peaking MS_PEAK back from the nose, the thumb shelf lower."""
-    u = min(max((-y + MS_L / 2) / MS_L, 0.0), 1.0)     # 0 at the nose (+Y)
-    if u < MS_PEAK:
-        t = u / MS_PEAK
-        h = 21.0 + (MS_H - 21.0) * (1 - (1 - t) ** 2)
-    else:
-        t = (u - MS_PEAK) / (1 - MS_PEAK)
-        h = MS_H - 19.0 * t ** 2
-    h *= 1.0 - 0.28 * ((x - 6.0) / 44.0) ** 2
-    # the thumb rest: a wide, flat, slightly cupped shelf, blended into the body in one sweep (coordinator 2026-10-26)
-    w = ms_thumb_w(x, y)
-    shelf = 20.5 + 2.0 * min(1.0, ((x + 29.0) / 12.0) ** 2) + 2.0 * _sstep(20.0, 55.0, -y)
-    return h * (1 - w) + shelf * w
+_MS_SHELL = {}
 
 
-def _sstep(a, b, v):
-    t = min(max((v - a) / (b - a), 0.0), 1.0)
-    return t * t * (3 - 2 * t)
+def ms_shell(res):
+    if not _MS_SHELL:
+        _MS_SHELL.update(json.load(open(MS_SHELL)))
+    return _MS_SHELL[res]
 
 
-def ms_thumb_w(x, y):
-    """0 on the main body, 1 on the thumb rest (world x, y; the tail is -y)."""
-    return _sstep(-11.0, -27.0, x) * _sstep(-22.0, 6.0, -y)
-
-
-def ms_outline(n=None):
-    pts = MS_OUTLINE
-    if n and n < len(pts):
-        step = len(pts) / n
-        pts = [pts[int(i * step)] for i in range(n)]
-    return [(x, -y) for x, y in reversed(pts)]      # the nose to +Y (away from the user); still CCW
+def _shell_obj(name, data, key, mp, coll, parent, smooth=60):
+    from lib import parts as P
+    A = P.Mesh()
+    vs = A.verts([tuple(c * MM for c in v) for v in data["v"]])
+    for f in data["f"]:
+        A.face([vs[i] for i in f], key)
+    return A.finish(name, mp, "+Z", (0, 0, 0), coll, parent, smooth=smooth)
 
 
 def build_mouse(coll, mp, rough=False, lite=False):
+    """MX Master 3S. Origin: desk under the top-view centre; nose +Y; thumb side -X. The body is our quad shell
+    wrapped onto the scan (assets/mouse/); every detail is built here, placed by the scan's features."""
     from lib import parts as P
     from mathutils.bvhtree import BVHTree
+    import bmesh as _bm
     sfx = "_lite" if lite else ""
     names = {}
     root = empty("mouse" + sfx, coll=coll)
-    out = ms_outline(36 if lite else None)
-    cx, cy = 3.0, -4.0                       # the rings shrink toward the hump
-    rings = [1.0, 0.97, 0.92, 0.85, 0.75, 0.62, 0.48, 0.33, 0.18] if not lite else [1.0, 0.9, 0.65, 0.3]
-    A = P.Mesh()
-    loops = []
-    # the side wall: the bottom tucked in 2.5 mm, then up the outline to the shoulder
-    def ring(s, zf):
-        pts = []
-        for x, y in out:
-            px, py = cx + (x - cx) * s, cy + (y - cy) * s
-            pts.append((px * MM, py * MM, zf(px, py, x, y) * MM))
-        return pts
-    def ins(x):
-        t = min(max((x + 18.0) / -20.0, 0.0), 1.0)
-        return 5.0 + 9.0 * t * t * (3 - 2 * t)      # MEASURED front.png: the base sits 5 in, 14 under the thumb wing
-    tuck = [((cx + (x - cx) * (1 - ins(x) / max(math.hypot(x - cx, y - cy), 1))), (cy + (y - cy) * (1 - ins(x) / max(
-        math.hypot(x - cx, y - cy), 1)))) for x, y in out]
-    loops.append(A.verts([(x * MM, y * MM, 1.2 * MM) for x, y in tuck]))
-    loops.append(A.verts([(x * MM, y * MM, (0.3 * ms_height(x, y) + 0.25 * ins(x)) * MM) for x, y in out]))
-    for s in rings:
-        loops.append(A.verts(ring(s, lambda px, py, x, y, s=s: ms_height(px, py) * (1 - 0.42 * s ** 6))))
-    A.face(list(reversed(loops[0])), "ms_side")
-    for i, (a, b) in enumerate(zip(loops, loops[1:])):
-        A.strip(a, b, "ms_side" if i < 2 else "ms_top")
-    A.face(loops[-1], "ms_top")
-    body = fin(A, "mouse_body" + sfx, mp, coll, root, smooth=89)
+    sh = ms_shell("lite" if (lite or rough) else "rich")
+    body = _shell_obj("mouse_body" + sfx, sh["body"], "ms_top", mp, coll, root, smooth=70)
+    band = _shell_obj("mouse_band" + sfx, sh["band"], "ms_side", mp, coll, root, smooth=70)
     if not (lite or rough):
-        sub = body.modifiers.new("subsurf", "SUBSURF")
-        sub.levels = sub.render_levels = 2
-    names["body"] = [body.name]
+        for o in (body, band):
+            sub = o.modifiers.new("subsurf", "SUBSURF")
+            sub.levels = sub.render_levels = 1
+            sub.boundary_smooth = "PRESERVE_CORNERS"
+    names["body"] = [body.name, band.name]
     if not (lite or rough):            # the thumb rest's fine diagonal ridges: its own bump-mapped material
         body.data.materials.append(mp["ms_thumb"])
         ti = len(body.data.materials) - 1
         for f in body.data.polygons:
-            c = f.center
-            if c.z > 8 * MM and ms_thumb_w(c.x / MM, c.y / MM) > 0.55 and f.normal.z > 0.3:
+            c = f.center / MM
+            if c.z > 8 and c.x < -21.0 and c.y < 16.0 and f.normal.z > 0.3:
                 f.material_index = ti
     if rough:
         return root, names
     bpy.context.view_layer.update()
     dg = bpy.context.evaluated_depsgraph_get()
-    bvh = BVHTree.FromObject(body, dg)
+    trees = [BVHTree.FromObject(body, dg), BVHTree.FromObject(band, dg)]
 
-    def hit(x, y):
-        loc, nrm, _, _ = bvh.ray_cast(Vector((x * MM, -y * MM, 0.2)), Vector((0, 0, -1)))   # top.png frame
-        return loc, nrm
+    def ray(o, d):
+        best = None
+        for t in trees:
+            h = t.ray_cast(Vector(o), Vector(d))
+            if h[0] is not None and (best is None or h[3] < best[3]):
+                best = h
+        return (best[0], best[1].normalized()) if best else (None, None)
 
-    def surf_strip(A, pts, w, key, lift=0.2):
-        """A thin line on the shell's top along a top-view polyline (mm)."""
-        prev = None
-        for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
-            dx, dy = x1 - x0, y1 - y0
-            L = math.hypot(dx, dy)
-            k = max(1, int(L / 2.0))
-            nx, ny = -dy / L * w / 2, dx / L * w / 2
-            for j in range(k):
-                ta, tb = j / k, (j + 1) / k
-                q = []
-                for (px, py) in ((x0 + dx * ta + nx, y0 + dy * ta + ny), (x0 + dx * tb + nx, y0 + dy * tb + ny),
-                                 (x0 + dx * tb - nx, y0 + dy * tb - ny), (x0 + dx * ta - nx, y0 + dy * ta - ny)):
-                    loc, nrm = hit(px, py)
-                    if loc is None:
-                        q = None
-                        break
-                    q.append(loc + nrm * lift * MM)
-                if q:
-                    A.face(A.verts(q), key)
-    # seams: the two button splits, the button rear edges, the wheel housing, the mode button (MEASURED top.png)
+    def near(p):
+        best = None
+        for t in trees:
+            h = t.find_nearest(Vector(p))
+            if h[0] is not None and (best is None or h[3] < best[3]):
+                best = h
+        return best[0], best[1].normalized()
+
+    def top(x, y):
+        return ray(mm(x, y, 100.0), (0, 0, -1))
+
+    def side(y, z, sgn=-1):            # the thumb wall (sgn -1) or the right wall, seen from outside
+        return ray(mm(sgn * 100.0, y, z), (-sgn, 0, 0))
+
+    def ribbon(A, pts, w, key, lift=0.2, closed=False):
+        """A thin line on the shell along surface points [(loc, nrm)]; w and lift in mm."""
+        n = len(pts)
+        L, R_ = [], []
+        for i, (p, nr) in enumerate(pts):
+            a = pts[(i - 1) % n][0] if (closed or i > 0) else p
+            b = pts[(i + 1) % n][0] if (closed or i < n - 1) else p
+            t = (b - a).normalized()
+            s = t.cross(nr).normalized() * (w / 2 * MM)
+            q = p + nr * lift * MM
+            L.append(q + s)
+            R_.append(q - s)
+        lv, rv = A.verts(L), A.verts(R_)
+        for i in range(n if closed else n - 1):
+            j = (i + 1) % n
+            A.face([lv[i], rv[i], rv[j], lv[j]], key)
+
+    def dense(poly, step=1.5):
+        out = []
+        for (x0, y0), (x1, y1) in zip(poly, poly[1:]):
+            k = max(1, int(math.hypot(x1 - x0, y1 - y0) / step))
+            out += [(x0 + (x1 - x0) * j / k, y0 + (y1 - y0) * j / k) for j in range(k)]
+        return out + [poly[-1]]
+
+    def top_line(poly, step=1.5):
+        return [h for h in (top(x, y) for x, y in dense(poly, step)) if h[0] is not None]
+
+    # seams (MEASURED scan): the split from the slot to the nose, the wheel housing, the buttons' rear edges,
+    # the right button's outer edge, the mode button; the band's top edge all round
     A = P.Mesh()
-    w = 0.45
-    surf_strip(A, [(1.0, -62.0), (1.2, -40.0)], w, "ms_line")                       # between the buttons, nose
-    surf_strip(A, [(5.0, -46.8), (5.0, -22.0), (6.0, -16.0)], w, "ms_line")           # wheel housing, left
-    surf_strip(A, [(18.0, -46.8), (18.0, -22.0), (17.0, -16.0)], w, "ms_line")        # right
-    surf_strip(A, [(5.0, -46.8), (18.0, -46.8)], w, "ms_line")
-    surf_strip(A, [(-17.5, -25.0), (6.0, -16.5)], w, "ms_line")                       # left button's rear edge
-    surf_strip(A, [(17.5, -16.5), (36.0, -9.0), (39.5, -12.0)], w, "ms_line")         # right button's rear edge
-    surf_strip(A, [(36.0, -9.0), (39.6, -45.0)], w, "ms_line")                       # right button's outer edge
-    mx, my, mw, mh = MS_MID
-    surf_strip(A, [(mx - mw / 2, my - mh / 2), (mx + mw / 2, my - mh / 2), (mx + mw / 2, my + mh / 2),
-                   (mx - mw / 2, my + mh / 2), (mx - mw / 2, my - mh / 2)], w * 0.9, "ms_line")
-    seams = fin(A, "mouse_seams" + sfx, mp, coll, root, smooth=0) if A.bm.faces else None
-    if seams:
-        names["seams"] = [seams.name]
-    # the MagSpeed wheel in its dark slot
-    wx, wy, wr, ww = MS_WHEEL
-    loc, nrm = hit(wx, wy)
-    sw, sl = MS_SLOT
+    w = 0.5 if not lite else 0.7
+    st = 1.5 if not lite else 4.0
+    hx0, hx1, hy0, hy1 = MS_HOUSING
+    ribbon(A, top_line([(MS_SPLIT_X, hy1), (MS_SPLIT_X, 66.0)], st), w, "ms_line")
+    ribbon(A, top_line([(hx0, hy0), (hx0, hy1), (hx1, hy1), (hx1, hy0)], st), w, "ms_line")
+    ribbon(A, top_line([(hx0, hy0), (-14.1, 13.7)], st), w, "ms_line")
+    rs = [near(mm(x + 6.0, y, z)) if z < 50 else top(x, y) for x, y, z in MS_RIGHT_SEAM]
+    rs = [top((hx1 + 35.0) / 2, (hy0 + 9.7) / 2)] + rs
+    rs = [top(hx1, hy0)] + rs
+    dn = []
+    for (pa, _), (pb, _) in zip(rs, rs[1:]):
+        k = max(1, int((pb - pa).length / MM / st))
+        dn += [near(pa.lerp(pb, j / k)) for j in range(k)]
+    ribbon(A, dn + [near(rs[-1][0])], w, "ms_line")
+    mx, my, mw, ml = MS_MID
+    ribbon(A, top_line([(mx - mw / 2 - 0.4, my - ml / 2 - 0.4), (mx + mw / 2 + 0.4, my - ml / 2 - 0.4),
+                        (mx + mw / 2 + 0.4, my + ml / 2 + 0.4), (mx - mw / 2 - 0.4, my + ml / 2 + 0.4),
+                        (mx - mw / 2 - 0.4, my - ml / 2 - 0.4)], 1.0), 0.4, "ms_line")
+    d0 = Vector((38.0, 0.0, -45.0)).normalized()        # the thumb rest's top edge, seen from outside and above
+    re_ = []
+    for (ya, za), (yb, zb) in zip(MS_REST_EDGE, MS_REST_EDGE[1:]):
+        k = max(1, int(math.hypot(yb - ya, zb - za) / st))
+        for j in range(k):
+            y_, z_ = ya + (yb - ya) * j / k, za + (zb - za) * j / k
+            h_ = ray(mm(-60.0, y_, z_ + 45.0), d0)
+            if h_[0] is not None:
+                re_.append(h_)
+    if len(re_) > 2:
+        ribbon(A, re_, w, "ms_line")
+    nb = len(sh["body"]["v"]) - 1                       # the band edge: the body's first ring
+    nu = len(sh["body"]["f"]) - len([f for f in sh["body"]["f"] if len(f) == 4])
+    nk1 = nb // nu
+    if not lite:                                       # the web model shows the band edge by its material alone
+        edge = [near(mm(*sh["body"]["v"][i * nk1])) for i in range(nu)]
+        ribbon(A, edge, 0.45, "ms_line", lift=0.15, closed=True)
+    seams = fin(A, "mouse_seams" + sfx, mp, coll, root, smooth=0)
+    names["seams"] = [seams.name]
+    # the wheel slot: a dark patch on the shell, the MagSpeed wheel through it
+    x0, x1, y0, y1 = MS_SLOT
     A = P.Mesh()
-    zs = loc.z / MM
-    wy = -wy
-    box(A, (wx - sw / 2) * MM, (wx + sw / 2) * MM, (wy - sl / 2) * MM, (wy + sl / 2) * MM, (zs - 6.0) * MM,
-        (zs + 0.25) * MM, "ms_slot", r=1.2 * MM, n=2 if lite else 4)
-    slot = fin(A, "mouse_wheel_slot" + sfx, mp, coll, root)
-    slot.matrix_basis = T(wx * MM, wy * MM, zs * MM) @ nrm.to_track_quat("Z", "Y").to_matrix().to_4x4() @ \
-        T(-wx * MM, -wy * MM, -zs * MM)
+    nx_, ny_ = (3, 6) if lite else (6, 16)
+    grid = [[top(x0 + (x1 - x0) * i / nx_, y0 + (y1 - y0) * j / ny_) for i in range(nx_ + 1)] for j in range(ny_ + 1)]
+    gv = [[A.verts([p + n * 0.25 * MM])[0] for p, n in row] for row in grid]
+    for j in range(ny_):
+        for i in range(nx_):
+            A.face([gv[j][i], gv[j][i + 1], gv[j + 1][i + 1], gv[j + 1][i]], "ms_slot")
+    slot = fin(A, "mouse_wheel_slot" + sfx, mp, coll, root, smooth=0)
+    wx, wy, wz, wr, ww = MS_WHEEL
     A = P.Mesh()
     seg = 16 if lite else 240
     ridge = (lambda a: 1.0 - 0.02 * (0.5 + 0.5 * math.cos(a * 60))) if not lite else None
-    prof = [(0, -ww / 2), (wr - 0.6, -ww / 2), (wr, -ww / 2 + 0.6), (wr, -0.9), (wr - 0.5, -0.5), (wr - 0.5, 0.5),
-            (wr, 0.9), (wr, ww / 2 - 0.6), (wr - 0.6, ww / 2), (0, ww / 2)]
+    if lite:
+        prof = [(0, -ww / 2), (wr - 0.6, -ww / 2), (wr, -ww / 2 + 0.6), (wr, ww / 2 - 0.6), (wr - 0.6, ww / 2), (0, ww / 2)]
+    else:
+        prof = [(0, -ww / 2), (wr - 0.6, -ww / 2), (wr, -ww / 2 + 0.6), (wr, -0.9), (wr - 0.5, -0.5), (wr - 0.5, 0.5),
+                (wr, 0.9), (wr, ww / 2 - 0.6), (wr - 0.6, ww / 2), (0, ww / 2)]
     prof = [(r_ * MM, z * MM, ridge) if (ridge and abs(r_ - wr) < 1e-6) else (r_ * MM, z * MM) for r_, z in prof]
-    A.lathe(prof, seg, "ms_wheel", m=T(wx * MM, wy * MM, (zs + 3.5 - wr) * MM) @ R(90, "Y"))
+    A.lathe(prof, seg, "ms_wheel", m=T(wx * MM, wy * MM, wz * MM) @ R(90, "Y"))
     wheel = fin(A, "mouse_wheel" + sfx, mp, coll, root, smooth=40)
-    names["wheels"] = [slot.name, wheel.name]
-    # the thumb wheel (coordinator 2026-10-26): a horizontal knurled drum, 22 long and 13 across, its axis along the
-    # mouse's length, its outer half showing out of a silver pocket in the thumb wall; two pill buttons under it,
-    # the green battery LED on the pocket behind it (Logitech three-quarter.png, side-thumb-profile.png)
-    TW_L, TW_R = 22.0, 6.5
-    ty = -MS_THUMB[1]
-    tz = 31.0
+    # the mode button behind the housing: a low rounded key on the shell
+    loc, nrm = top(mx, my)
+    A = P.Mesh()
+    P._rbox(A, mw * MM, ml * MM, 1.4 * MM, 1.2 * MM, 0.5 * MM, 0.0, 1 if lite else 3, "ms_top", z0=-0.8 * MM)
+    mode = fin(A, "mouse_mode_button" + sfx, mp, coll, root, smooth=40)
+    yl = (Vector((0, 1, 0)) - nrm * nrm.y).normalized()
+    mf = Matrix((yl.cross(nrm), yl, nrm)).transposed().to_4x4()
+    mf.translation = loc
+    mode.matrix_basis = mf
+    names["wheels"] = [slot.name, wheel.name, mode.name]
 
+    # the thumb side: the silver pocket, the slim thumb wheel set into it (axis up the wall, only an arc out),
+    # the back / forward buttons and the green LED (scan, side-thumb.jpg, closeup-thumb-area.jpg)
     def wall_frame(y, z):
-        h_ = bvh.ray_cast(Vector((-0.08, y * MM, z * MM)), Vector((1, 0, 0)))
-        p_, n_ = (h_[0], h_[1].normalized()) if h_[0] is not None else (Vector(mm(-18.0, y, z)), Vector((-1, 0, 0)))
-        zl = Vector((n_.x, 0.0, n_.z)).normalized()          # out of the wall, the axis kept along Y
+        p_, n_ = side(y, z)
+        if p_ is None:
+            p_, n_ = Vector(mm(-30.0, y, z)), Vector((-1, 0, 0))
+        zl = Vector((n_.x, 0.0, n_.z)).normalized()
         yl = Vector((0, 1, 0))
         xl = yl.cross(zl)
         m_ = Matrix((xl, yl, zl)).transposed().to_4x4()
         m_.translation = p_
         return m_
-    Mw = wall_frame(ty, tz)
+    py_, pz_, pl_, ph_ = MS_POCKET                       # a rounded silver panel laid onto the wall (projected)
+    Mp = wall_frame(py_, pz_)
+    zl = Mp.to_3x3() @ Vector((0, 0, 1))
     A = P.Mesh()
-    P._rbox(A, 16.0 * MM, 34.0 * MM, 9.0 * MM, 4.0 * MM, 1.2 * MM, 0.0, 1 if lite else 4, "ms_side", z0=-8.2 * MM)
-    pocket = A.finish("mouse_thumb_pocket" + sfx, mp, "+Z", (0, 0, 0), coll, root, smooth=40)
-    pocket.matrix_basis = Mw @ T(0, -3.0 * MM, 0)
+    out_ = P.ccw(P.stadium(ph_, pl_, 2 if lite else 6))   # (up the wall, along y) in mm
+    rv = []
+    for s_ in ((1.0,) if lite else (1.0, 0.66, 0.33)):
+        pts = []
+        for v_, u_ in out_:
+            q = Mp @ Vector(mm(v_ * s_, u_ * s_, 6.0))
+            h_ = ray(q, -zl)
+            pts.append(h_[0] + h_[1] * 0.25 * MM if h_[0] is not None else Mp @ Vector(mm(v_ * s_, u_ * s_, 0.25)))
+        rv.append(A.verts(pts))
+    for a_, b_ in zip(rv, rv[1:]):
+        A.strip(a_, b_, "ms_side")
+    A.face(rv[-1], "ms_side")
+    pocket = fin(A, "mouse_thumb_pocket" + sfx, mp, coll, root, smooth=40)
+    ty, tz, tr, tw, tshow = MS_THUMB
     A = P.Mesh()
-    knurl = (lambda a: 1.0 - 0.03 * (0.5 + 0.5 * math.cos(a * 40))) if not lite else None
-    L2, Rd = TW_L / 2, TW_R
-    prof = [(0, -L2), (Rd - 0.6, -L2), (Rd, -L2 + 0.6, knurl), (Rd, -1.0, knurl), (Rd - 0.8, -0.6), (Rd - 0.8, 0.6),
-            (Rd, 1.0, knurl), (Rd, L2 - 0.6, knurl), (Rd - 0.6, L2), (0, L2)]
+    knurl = (lambda a: 1.0 - 0.04 * (0.5 + 0.5 * math.cos(a * 48))) if not lite else None
+    h2 = tw / 2
+    if lite:
+        prof = [(0, -h2), (tr - 0.5, -h2), (tr, -h2 + 0.5), (tr, h2 - 0.5), (tr - 0.5, h2), (0, h2)]
+    else:
+        prof = [(0, -h2), (tr - 0.5, -h2), (tr, -h2 + 0.5, knurl), (tr, h2 - 0.5, knurl), (tr - 0.5, h2), (0, h2)]
     prof = [(p[0] * MM, p[1] * MM, p[2]) if len(p) > 2 and p[2] else (p[0] * MM, p[1] * MM) for p in prof]
-    A.lathe(prof, 12 if lite else 240, "ms_wheel", m=R(-90, "X"))
+    A.lathe(prof, 12 if lite else 200, "ms_wheel", m=R(90, "Y"))
     thumb = fin(A, "mouse_thumbwheel" + sfx, mp, coll, root, smooth=40)
-    thumb.matrix_basis = Mw @ T(0, 0, 0.8 * MM)          # the axis at the pocket's face: its outer half shows
-    import bmesh as _bm
+    thumb.matrix_basis = wall_frame(ty, tz) @ T(0, 0, -(tr - tshow) * MM)
     A = P.Mesh()
-    for yy in (ty + 6.0, ty - 6.0):                        # back / forward: two pills side by side under the wheel
+    a_ = math.degrees(math.atan2(-(MS_SIDE_BTNS[1][1] - MS_SIDE_BTNS[0][1]), MS_SIDE_BTNS[1][0] - MS_SIDE_BTNS[0][0]))
+    for yy, zz in MS_SIDE_BTNS:
         n0 = len(A.bm.verts)
-        P._rbox(A, 4.4 * MM, 10.0 * MM, 2.0 * MM, 2.2 * MM, 1.0 * MM, 0.0, 1 if lite else 4, "ms_top", z0=-0.6 * MM)
+        P._rbox(A, 4.4 * MM, 11.5 * MM, 2.0 * MM, 2.0 * MM, 0.8 * MM, 0.0, 1 if lite else 4, "ms_top", z0=-1.0 * MM)
         A.bm.verts.ensure_lookup_table()
-        _bm.ops.transform(A.bm, matrix=wall_frame(yy, 24.0), verts=A.bm.verts[n0:])
-    btns = A.finish("mouse_side_buttons" + sfx, mp, "+Z", (0, 0, 0), coll, root, smooth=40)
+        _bm.ops.transform(A.bm, matrix=wall_frame(yy, zz) @ R(a_, "Z"), verts=A.bm.verts[n0:])
+    btns = fin(A, "mouse_side_buttons" + sfx, mp, coll, root, smooth=40)
     A = P.Mesh()
-    P._rbox(A, 1.2 * MM, 3.6 * MM, 0.5 * MM, 0.55 * MM, 0.2 * MM, 0.0, 2, "led_green", z0=0.0)
-    led = A.finish("mouse_led" + sfx, mp, "+Z", (0, 0, 0), coll, root, smooth=0)
-    led.matrix_basis = Mw @ T(2.5 * MM, -16.5 * MM, 0.75 * MM)
+    A.face(A.verts([(x * MM, y * MM, 0.0) for x, y in P.ccw(P.stadium(1.1, 3.4, 2 if lite else 4))]), "led_green")
+    led = fin(A, "mouse_led" + sfx, mp, coll, root, smooth=0)
+    led.matrix_basis = wall_frame(*MS_LED) @ T(0, 0, 0.4 * MM)
     names["thumb"] = [pocket.name, thumb.name, btns.name, led.name]
-    # the nose: USB-C under the buttons (MEASURED front.png)
-    h_ = bvh.ray_cast(Vector((1.0 * MM, 0.12, 7.5 * MM)), Vector((0, -1, 0)))
-    at_ = h_[0] if h_[0] is not None else Vector(mm(1.0, 61.0, 7.5))
-    u = flat_port("mouse_usb_lite", tuple(at_), "+Y", coll, root, mp) if lite else \
-        P.port("mouse_usb", "usb_c", facing="+Y", at=tuple(at_), collection=coll, parent=root)
+    # the nose: USB-C centred low, in the silver band
+    ux, uz = MS_USB
+    at_, _ = ray(mm(ux, 100.0, uz), (0, -1, 0))
+    at_ = at_ if at_ is not None else Vector(mm(ux, 62.0, uz))
+    hu = ray(mm(ux, 100.0, uz), (0, -1, 0))
+    nu_ = hu[1] if hu[0] is not None else Vector((0, 1, 0))
+    zu = Vector((0, 0, 1))
+    zu = (zu - nu_ * zu.dot(nu_)).normalized()
+    Mu = Matrix((zu.cross(nu_), zu, nu_)).transposed().to_4x4()
+    Mu.translation = at_
+    A = P.Mesh()
+    sg = 3 if lite else 8
+    A.face(A.verts([(x * MM, y * MM, 0.12 * MM) for x, y in P.ccw(P.stadium(11.0, 4.6, sg))], Mu), "ms_wheel")
+    A.face(A.verts([(x * MM, y * MM, 0.22 * MM) for x, y in P.ccw(P.stadium(8.6, 2.8, sg))], Mu), "port")
+    u = fin(A, "mouse_usb" + sfx, mp, coll, root, smooth=0)
     names["front"] = [u.name]
-    feet = P.rubber_feet("mouse_feet" + sfx, [mm(-27, -10), mm(27, -10), mm(0, 45)], d=6 * MM, h=1.2 * MM, square=lite,
-                         z=1.2 * MM, lite=lite, collection=coll, parent=root)
+    # the feet (bottom.png): two long PTFE strips at the back, a round one at the nose
+    A = P.Mesh()
+    for fx, fy0, fy1 in ((-16.0, -40.0, -8.0), (30.0, -40.0, -8.0)):
+        box(A, (fx - 3.2) * MM, (fx + 3.2) * MM, fy0 * MM, fy1 * MM, 0.0, 1.25 * MM, "rubber", r=0.0 if lite else 2.5 * MM,
+            n=0 if lite else 4)
+    A.lathe([(0, 0), (3.5 * MM, 0), (3.5 * MM, 1.25 * MM), (0, 1.25 * MM)], 8 if lite else 32, "rubber",
+            m=T(MS_SPLIT_X * MM, 40.0 * MM, 0))
+    feet = fin(A, "mouse_feet" + sfx, mp, coll, root, smooth=30)
     names["feet"] = [feet.name]
-    # the invented name where "logi" sits: the left button's rear, turned 12 deg, mid grey print, on the shell
+    # the invented name where "logi" sits: the left button, turned 12 deg, mid grey print, on the shell
     lx, ly, la = MS_LOGO
-    loc, nrm = hit(lx, ly)
+    loc, nrm = top(lx, ly)
     a = math.radians(la)
-    up = Vector((-math.sin(a), math.cos(a), 0.0))      # the text's up toward the nose, turned la
+    up = Vector((-math.sin(a), math.cos(a), 0.0))
     up = (up - nrm * up.dot(nrm)).normalized()
     d = brand("mouse", root, "mouse_brand" + sfx, lite, at=tuple(loc), normal=tuple(nrm), up=tuple(up),
-              height=4.6 * MM, max_width=11.5 * MM, finish="printed", colour="#8e9094", conform=None if lite else body)
+              height=4.6 * MM, max_width=10.0 * MM, finish="printed", colour="#7c7e82", conform=None if lite else body)
     if d:
         names["brand"] = [d.name]
     return root, names
@@ -1021,21 +1076,35 @@ def outline_views(names):
                       explain="Keychron's render of the side-printed OSA set (taller caps); perspective searched"))
     if "mouse" in names:
         o = names["mouse"]
+        SC = os.path.join(FOOT, "mouse-scan", "cutouts")       # silhouettes of the sketchfab-ref views (Krystian, view-only)
         v.append(dict(name="mouse-top", title="MX Master 3S: top (Logitech image) vs our model",
                       photo=os.path.join(R_MS, "top.png"), mask="alpha", objects=o, camera={"mode": "ortho", "view": "top"}))
-        v.append(dict(name="mouse-front", title="MX Master 3S: front (Logitech image) vs our model",
+        v.append(dict(name="mouse-front", title="MX Master 3S: nose-on (Logitech image) vs our model",
                       photo=os.path.join(R_MS, "front.png"), mask="alpha", objects=o,
-                      camera={"mode": "free", "view": "back", "yaws": [-10.0, 0.0, 10.0], "tilts": [-20.0, -10.0, 0.0]},
-                      explain="Logitech's nose-on shot is tilted and turned; searched"))
+                      camera={"mode": "free", "view": "back", "yaws": [-8.0, -4.0, 0.0, 4.0, 8.0],
+                              "tilts": [-24.0, -18.0, -12.0, -6.0]},
+                      explain="Logitech's nose-on shot is a perspective render from above; searched"))
         v.append(dict(name="mouse-side", title="MX Master 3S: thumb side (Logitech image) vs our model",
                       photo=os.path.join(R_MS, "side-thumb-profile.png"), mask="alpha", objects=o,
-                      camera={"mode": "free", "view": "left", "yaws": [-30.0, -15.0, 0.0, 15.0],
-                              "tilts": [-35.0, -20.0, -5.0]},
+                      camera={"mode": "free", "view": "left", "yaws": [-60.0, -50.0, -40.0, -30.0],
+                              "tilts": [-50.0, -40.0, -30.0]},
                       explain="a low three-quarter from the thumb side, not a profile; searched"))
+        v.append(dict(name="mouse-thumb-profile", title="MX Master 3S: thumb side profile (sketchfab-ref) vs our model",
+                      photo=os.path.join(SC, "side-thumb-cut.png"), mask="alpha", objects=o,
+                      camera={"mode": "free", "view": "left", "yaws": [-6.0, -3.0, 0.0, 3.0, 6.0], "tilts": [-8.0, -4.0, 0.0]},
+                      explain="a screenshot of another author's model: an edge cutout, the floor line filled flat"))
+        v.append(dict(name="mouse-right", title="MX Master 3S: right side profile (sketchfab-ref) vs our model",
+                      photo=os.path.join(SC, "side-right-profile-cut.png"), mask="alpha", objects=o,
+                      camera={"mode": "free", "view": "right", "yaws": [-6.0, -3.0, 0.0, 3.0, 6.0], "tilts": [-8.0, -4.0, 0.0]},
+                      explain="a screenshot of another author's model: an edge cutout, the floor line filled flat"))
+        for k, vw, t in (("nose", "back", "nose-on"), ("thumb", "left", "thumb side"), ("right", "right", "right side")):
+            v.append(dict(name=f"mouse-scan-{k}", title=f"MX Master 3S: {t}, orthographic (the 3D scan of the real mouse) vs our model",
+                          photo=os.path.join(SC, f"scan-{k}-alpha.png"), mask="alpha", objects=o,
+                          camera={"mode": "ortho", "view": vw}))
         v.append(dict(name="mouse-3q", title="MX Master 3S: top, thumb side (Logitech image) vs our model",
                       photo=os.path.join(R_MS, "three-quarter.png"), mask="alpha", objects=o,
-                      camera={"mode": "free", "view": "top", "yaws": [-20.0, -10.0, 0.0, 10.0],
-                              "tilts": [-30.0, -15.0, 0.0]},
+                      camera={"mode": "free", "view": "top", "yaws": [-30.0, -20.0, -10.0, 0.0, 10.0],
+                              "tilts": [-40.0, -30.0, -15.0]},
                       explain="Logitech's tilted top shot; searched"))
     if "streamdeck" in names:
         o = names["streamdeck"]
@@ -1171,8 +1240,6 @@ def closeup_specs():
     out = []
 
     def W(root, p):
-        if root == "mouse":
-            p = (p[0], -p[1], p[2])      # mouse close-ups are given in top.png's frame (y toward the tail)
         return o[root].matrix_world @ Vector(mm(*p))
     if "apollo" in o:
         kx, ky = IF_KNOB[:2]
@@ -1203,16 +1270,23 @@ def closeup_specs():
              W("keyboard", (0, -40, -260)), W("keyboard", (0, -10, 2)), 50),
         ]
     if "mouse" in o:
+        SR = os.path.join(R_MS, "sketchfab-ref")
+        lx, ly = MS_LOGO[:2]
         out += [
-            ("mouse-wheels", "MX Master 3S: the MagSpeed wheel and the mode button", (os.path.join(R_MS, "top.png"),
-                                                                                       (1500, 2200, 300, 1300)),
-             W("mouse", (11, -30, 190)), W("mouse", (11, -28, 40)), 50),
-            ("mouse-thumb", "MX Master 3S: the thumb wheel and thumb rest", os.path.join(R_MS, "side-thumb-profile.png"),
-             W("mouse", (-210, -60, 110)), W("mouse", (-15, 5, 22)), 50),
-            ("mouse-brand", "MX Master 3S: the name on the left button", (os.path.join(R_MS, "top.png"), (1100, 1700, 700, 1250)),
-             W("mouse", (-9, -20, 140)), W("mouse", (-9, -20, 40)), 50),
+            ("mouse-wheels", "MX Master 3S: the scroll wheel, the button split and the mode button (sketchfab-ref)",
+             os.path.join(SR, "closeup-top-wheel-and-button-split.jpg"),
+             W("mouse", (-75, -45, 170)), W("mouse", (6, 30, 36)), 50),
+            ("mouse-thumb", "MX Master 3S: the thumb wheel, the side buttons and the LED", (os.path.join(R_MS, "side-thumb-profile.png"),
+                                                                                         (1900, 3000, 500, 1400)),
+             W("mouse", (-120, 120, 95)), W("mouse", (-26, -2, 36)), 50),
             ("mouse-front", "MX Master 3S: the nose and USB-C", os.path.join(R_MS, "front.png"),
-             W("mouse", (10, -260, 60)), W("mouse", (0, -40, 22)), 50),   # the nose (top.png -y)
+             W("mouse", (5, 260, 85)), W("mouse", (2, 30, 20)), 50),
+            ("mouse-rest", "MX Master 3S: the thumb rest (sketchfab-ref)", os.path.join(SR, "closeup-thumb-area.jpg"),
+             W("mouse", (-170, 60, 110)), W("mouse", (-22, -8, 22)), 50),
+            ("mouse-band", "MX Master 3S: the back and the silver band (sketchfab-ref)", os.path.join(SR, "closeup-back-silver-band.jpg"),
+             W("mouse", (-15, -230, 70)), W("mouse", (0, -20, 22)), 50),
+            ("mouse-brand", "MX Master 3S: the name on the left button", (os.path.join(R_MS, "top.png"), (1000, 1800, 600, 1300)),
+             W("mouse", (lx, ly, 150)), W("mouse", (lx, ly, 40)), 50),
         ]
     if "deck" in o:
         out += [
@@ -1527,7 +1601,7 @@ def main():
     a = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     st = next((x for x in a if not x.startswith("--") and os.path.sep not in x), "default")
     stages = ["build", "stills", "compare", "closeups", "export"] if st == "default" else st.split(",")
-    out = FOOT if PART == "all" else os.path.join(FOOT, PART)
+    out = os.environ.get("DESKTOP_OUT") or (FOOT if PART == "all" else os.path.join(FOOT, PART))
     os.makedirs(out, exist_ok=True)
     rep = {"stages": stages}
     t0 = time.time()
