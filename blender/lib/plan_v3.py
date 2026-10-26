@@ -69,8 +69,11 @@ DRAWERS = [
 # ---------------------------------------------------------------------------
 # The main run, against the left wall: the screen stack, the speakers, the key lights
 # ---------------------------------------------------------------------------
-KL_POLE = [(MAIN["x1"] - 0.06, MAIN["y0"] + 0.07), (MAIN["x1"] - 0.06, RET["y0"] + 0.18)]   # the two ends
-YM = round((KL_POLE[0][1] + KL_POLE[1][1]) / 2, 3)   # the stack's centre line, centred between the poles: 1.00
+YM = 1.00                                        # the stack's centre line (was centred between the old pole spots)
+# 2026-10-26, placement B (owner approved): key light 1 in the back corner, clamped on the main run's short
+# edge left of the speaker as in the photo; key light 2 on the main run's front edge, as before.
+KL_POLE = [(-1.95, MAIN["y0"] + 0.04), (MAIN["x1"] - 0.04, 1.65)]
+KL_CLAMP_YAW = [180.0, -90.0]                    # the clamp's front: the short edge (-Y), the front edge (+X)
 SEAT = (MAIN["x1"] + 0.45, YM)                   # the Aeron's post, parked at the main run
 EAR_SEATED = (SEAT[0] - 0.06, YM, 1.18)          # seat 46 + seated ear about 72
 EAR_STANDING = 1.55                              # standing ear of a 170 cm person
@@ -166,18 +169,19 @@ TWEETER_Z = SPK_Z + TWEETER_UP
 # of the pole, aimed at the seated face from the side (the aim point is just behind the head, so
 # the panels face the hero camera as in the photo).
 KL_PANEL = (0.35, 0.035, 0.25)
-KL_Z = 1.60                                      # panel bottom; centre 172.5, pole height 99 above the top
+KL_Z = 1.655                                     # panel bottom, 1.2 cm over the real speaker's top (164.4); B
 KL_POLE_TOP = KL_Z + KL_PANEL[2] / 2
 # Sony ZV-E10 II with the kit lens on an Elgato Flex Arm L (reach about 45) off the outer pole
-CAM_AT = (MAIN["x1"] - 0.30, YM - 0.38, 1.27)    # bottom centre
-CAM_ARM_FROM = (KL_POLE[0][0], KL_POLE[0][1], 1.42)
+CAM_AT = (-1.62, 0.36, 1.24)                     # bottom centre, left of the G8's top-left corner (B)
+CAM_ARM_FROM = (KL_POLE[0][0], KL_POLE[0][1], TOP + 0.64)   # the arm's clamp on pole 1, 1.405
 # Shure MV7+ white on a RODE PSA1+ white (reach 94 cm horizontal): clamped at the outer end's back
 # edge, parked left of the keyboard, the elbow kept under the speaker's plate.
-MIC = dict(clamp=(WL + 0.05, MAIN["y0"] + 0.08), riser=0.20, elbow=(WL + 0.30, MAIN["y0"] + 0.19, 1.16),
-           capsule=(MAIN["x1"] - 0.16, YM - 0.36, 1.06))
+# B: left of the G8, 9 cm off the snake plant; elbow from the arms component's solver (blender/components/arms.py)
+MIC = dict(clamp=(WL + 0.05, MAIN["y0"] + 0.045), riser=0.10, elbow=(-1.934, 0.35, 1.238),
+           capsule=(-1.56, 0.52, 0.95))
 PSA1_REACH = 0.94
 # Floating shelf above the run: three frames, trailing plants at its two ends
-SHELF = dict(x0=-RX, x1=-RX + 0.25, y0=0.15, y1=1.95, z=1.92, t=0.04)
+SHELF = dict(x0=-RX, x1=-RX + 0.25, y0=0.15, y1=1.95, z=1.95, t=0.04)   # 1.92 -> 1.95 for key light 1 (B)
 VINE_LEN = 0.57                                  # the trailing plants hang to about 131
 
 # ---------------------------------------------------------------------------
@@ -673,6 +677,8 @@ def run_checks():
     chk("posts canvas (16:10) inside the 27 in glass", SD_GLASS[0] - POSTS["w"], 0.0)
     chk("light bar to the shelf", SHELF["z"] - SHELF["t"] - (SD["z"] + SD["h"] + 0.03), 0.10)
     chk("key light panels under the shelf", SHELF["z"] - SHELF["t"] - (KL_Z + KL_PANEL[2]), 0.0)
+    # the approved speaker component stands taller than A7V's box here (its top at 164.4, measured by the arms build)
+    chk("key light panel bottoms over the real speaker's top (164.4)", KL_Z - 1.644, 0.01)
     for i in range(2):
         hgt = KL_POLE_TOP - TOP
         chk(f"key light pole {i + 1}: working height inside 55 to 125", min(hgt - 0.55, 1.25 - hgt), 0.0)

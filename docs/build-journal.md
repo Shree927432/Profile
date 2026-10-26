@@ -828,4 +828,7 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Owner: "i want all the names on component with same design, your can different branding names so
   that we don't get copyright". Picked set A, coined tech names; they live in
   `content/room-brands.json`.
+- Owner: "Yes, raise the shelf 3 cm to 1.95 m and use placement B." Applied to plan v3, with a new check
+  that the key-light panels clear the real speaker's top (the plan's speaker box was 3.6 cm short of the
+  built component, which is why plan v3's key light hid the speaker). 82 checks pass.
 
