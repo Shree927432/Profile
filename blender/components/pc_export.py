@@ -2,8 +2,8 @@
 close-up). Lite: build(lite=True) under its own root, the rich tree renamed out of the way while it exports.
 
 Glass for three.js: the lite GLB's glass is a plain alpha-blended material (no transmission extension):
-baseColor #eef7f5, alpha 0.16, roughness 0.05, metallic 0, alphaMode BLEND. In the room code:
-    new THREE.MeshStandardMaterial({ color: 0xeef7f5, transparent: true, opacity: 0.16, roughness: 0.05,
+baseColor #eef7f5, alpha 0.10, roughness 0.05, metallic 0, alphaMode BLEND. In the room code:
+    new THREE.MeshStandardMaterial({ color: 0xeef7f5, transparent: true, opacity: 0.10, roughness: 0.05,
                                      metalness: 0, depthWrite: false })
 render it after the inside (renderOrder 1) and let the scene's environment map give it its sheen. The
 perforated panels and hex mesh are alpha-tested tiles (alphaMode MASK, cutoff 0.5)."""
@@ -65,7 +65,7 @@ def lite_glass():
     g = bpy.data.materials.get("mat_pc_glass_lite") or M.principled("mat_pc_glass_lite", base="#eef7f5", rough=0.05,
                                                                        spec=0.5)
     b = next(n for n in g.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
-    b.inputs["Alpha"].default_value = 0.16
+    b.inputs["Alpha"].default_value = 0.10   # was 0.16 (milky over the lit inside, 2026-10-26)
     try:
         g.surface_render_method = "BLENDED"
     except AttributeError:
@@ -87,9 +87,19 @@ def swap_glass(objs):
                     o.data.materials[i] = e
 
 
+def web_glow():
+    """The GLBs carry the glow at GLOW_WEB (the renders keep GLOW_RING / GLOW_STRIP; pc.blend is not saved)."""
+    for mn in ("mat_pc_fan_light", "mat_pc_glow"):
+        m = bpy.data.materials.get(mn)
+        if m is not None:
+            e = next(n for n in m.node_tree.nodes if n.type == "EMISSION")
+            e.inputs["Strength"].default_value = K.GLOW_WEB
+
+
 def stage_export(R):
     t = time.time()
     clip_tiles()
+    web_glow()
     join_side(R)
     root = bpy.data.objects["pc"]
     rich_objs = [o for o in _tree(root) if not o.name.startswith("still_")]

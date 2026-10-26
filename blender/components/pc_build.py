@@ -885,6 +885,46 @@ def pc_gpu_point(x, y, z):
 
 
 # ---------------------------------------------------------------------------
+# the glow inside the case (fix 2026-10-26: "add a glow inside the case")
+# ---------------------------------------------------------------------------
+GLOW_W = 5.0 * MM        # EST: an LED strip's lit face
+GLOW_T = 2.0 * MM
+
+
+def build_glow(coll, parent, lite):
+    """rig_glow_strips: emissive strips where real builds put them, along the inside top edges (glass side
+    and front), along the bottom channel behind the front glass and up the tray's front edge; one mesh,
+    mat_pc_glow, 4 boxes (48 triangles). Rich builds also get lt_pc_inside, a small area light under the
+    top glass so the parts are lit in renders (never exported; the lite GLB glows with emission alone)."""
+    A = P.Mesh()
+    xg = -HW + K.GLASS_FS + 1.0 * MM            # just inside the side glass
+    yf = -HD + K.GLASS_FS + 1.0 * MM            # just inside the front glass
+    xr = K.TRAY_X - 32.0 * MM                   # clear of the top frame over the tray
+    zt = ZG - 0.5 * MM                          # just under the top glass
+    zb = ZB + K.BASE_T + 2.0 * MM               # on the bottom channel
+    slab(A, xg, xg + GLOW_W, yf + 8 * MM, HD - 24 * MM, zt - GLOW_T, zt, "glow")       # top, glass side
+    slab(A, -HW + 10 * MM, xr, yf, yf + GLOW_W, zt - GLOW_T, zt, "glow")               # top, front
+    slab(A, -HW + 10 * MM, xr, yf + 2 * MM, yf + 2 * MM + GLOW_W, zb, zb + GLOW_T, "glow")  # bottom, front
+    slab(A, K.TRAY_X - GLOW_W, K.TRAY_X, yf + 6 * MM, yf + 6 * MM + GLOW_T, zb + 4 * MM, ZG - 8 * MM,
+         "glow")                                                                     # tray's front edge
+    o = new_obj(A, "rig_glow_strips", coll, parent, smooth=0)
+    if not lite:
+        d = bpy.data.lights.get("lt_pc_inside") or bpy.data.lights.new("lt_pc_inside", "AREA")
+        d.shape, d.size, d.size_y = "RECTANGLE", 0.16, 0.36
+        d.energy = K.GLOW_LAMP_W
+        d.color = tuple((int(K.GLOW_COLOUR[i:i + 2], 16) / 255) ** 2.2 for i in (1, 3, 5))
+        L = bpy.data.objects.new("lt_pc_inside", d)
+        coll.objects.link(L)
+        L.parent = parent
+        L.location = (-0.045, 0.0, ZG - 0.02)          # under the top glass, over the card; faces down
+        try:
+            L.visible_camera = False
+        except AttributeError:
+            pass
+    return o
+
+
+# ---------------------------------------------------------------------------
 # the whole
 # ---------------------------------------------------------------------------
 def build(root, coll, lite=False):
@@ -895,6 +935,7 @@ def build(root, coll, lite=False):
     Afans = P.Mesh()
     static = build_static(coll, root, lite, Afans)
     rings = new_obj(Afans, "rig_fans", coll, root)
+    glow = build_glow(coll, root, lite)
     rotors = []
     for i, (c, f) in enumerate(all_fans()):
         r = fan_rotor(f"rig_fan_{i + 1:02d}", coll, fan_matrix(c, f), lite, phase=0.17 * i)
@@ -916,7 +957,7 @@ def build(root, coll, lite=False):
     names["case_all"] = names["case"]
     names["gpu"] = [gpu.name, glight.name] + gfans_names
     names["gpu_all"] = names["gpu"]
-    names["fans"] = [rings.name] + [r.name for r in rotors]
+    names["fans"] = [rings.name, glow.name] + [r.name for r in rotors]
     names["static"] = [static.name]
     names["pc_all"] = names["case"] + names["gpu"] + names["fans"] + names["static"]
     names["all"] = names["pc_all"]

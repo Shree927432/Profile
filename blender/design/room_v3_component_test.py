@@ -144,7 +144,7 @@ def eevee_glass():
     sc.eevee.use_raytracing = True
     fixed = []
     for m in bpy.data.materials:
-        if not m.use_nodes:
+        if not m.use_nodes or m.get("eevee_thin"):     # has its own thin EEVEE glass (the PC, 2026-10-26)
             continue
         for n in m.node_tree.nodes:
             if n.type == "BSDF_PRINCIPLED" and n.inputs["Transmission Weight"].default_value > 0.5:

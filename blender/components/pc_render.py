@@ -150,7 +150,7 @@ def roles():
     n["case_all"] = n["case"]
     n["gpu"] = [x for x in ("rig_gpu", "rig_gpu_light", "rig_gpu_fan_01", "rig_gpu_fan_02") if x in objs]
     n["gpu_all"] = n["gpu"]
-    n["fans"] = ["rig_fans"] + sorted(o.name for o in objs if o.name.startswith("rig_fan_"))
+    n["fans"] = ["rig_fans"] + [x for x in ("rig_glow_strips",) if x in objs] + sorted(o.name for o in objs if o.name.startswith("rig_fan_"))
     n["static"] = ["rig_static"]
     n["pc_all"] = n["case"] + n["gpu"] + n["fans"] + n["static"]
     n["all"] = n["pc_all"]

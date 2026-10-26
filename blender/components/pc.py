@@ -182,6 +182,15 @@ GPU_TONES = {
 }
 
 
+GLOW_COLOUR = "#5f9fff"   # reads cool blue-white once lit (AgX/ACES lift it); the hue is what shows in daylight
+GLOW_RING = 4.0           # the fan rings and side strips (was #eaf4ff at 6.0, read as white plastic)
+GLOW_STRIP = 4.0          # rig_glow_strips, the light strips inside the case
+GLOW_LAMP_W = 20.0        # renders only: the area light under the top glass (never exported)
+GLOW_WEB = 1.5            # the GLBs' emissive strength for both glow materials: three.js (ACES) keeps the
+                          # blue hue up to a bright exposure (1.6); at 4 it washes to white there
+GLASS_ALPHA_EEVEE = 0.10  # EEVEE's thin glass
+
+
 def mats():
     """The materials, created once. Glass is a plain principled glass (transmission 1) so the GLB
     carries KHR_materials_transmission; the site uses its own simple transparent material."""
@@ -234,15 +243,24 @@ def mats():
         nt.links.new(tr.outputs[0], mix.inputs[2])
         out.target = "CYCLES"
         nt.links.new(mix.outputs[0], out.inputs["Surface"])
+        # EEVEE (fix 2026-10-26): a thin, non-refracting glass. Screen-space refraction read milky and grainy
+        # in the room, so EEVEE gets its own Principled: no transmission, alpha-blended, the same tint, a sharp
+        # sheen. eevee_thin tells the room test's EEVEE switch to leave this material alone.
+        e3 = nt.nodes.new("ShaderNodeBsdfPrincipled")
+        e3.inputs["Base Color"].default_value = M.rgba("#eef7f5")
+        e3.inputs["Roughness"].default_value = 0.02
+        e3.inputs["IOR"].default_value = 1.52
+        e3.inputs["Alpha"].default_value = GLASS_ALPHA_EEVEE
         o2 = nt.nodes.new("ShaderNodeOutputMaterial")
         o2.target = "EEVEE"
-        nt.links.new(b.outputs[0], o2.inputs["Surface"])
-        for k, v in (("surface_render_method", "DITHERED"), ("use_raytrace_refraction", True),
-                     ("thickness_mode", "SLAB")):
+        nt.links.new(e3.outputs[0], o2.inputs["Surface"])
+        for k, v in (("surface_render_method", "BLENDED"), ("use_raytrace_refraction", False),
+                     ("use_transparency_overlap", False), ("use_transparent_shadow", True)):
             try:
                 setattr(g, k, v)
             except (AttributeError, TypeError):
                 pass
+        g["eevee_thin"] = 1
         g.diffuse_color = (0.85, 0.95, 0.93, 0.25)
         # the glass's green-blue edge (SOURCES.md): a darker teal on the thin faces
         e = M.principled("mat_pc_glass_edge", base="#5fae9e", rough=0.1, spec=0.5)
@@ -251,7 +269,11 @@ def mats():
     d["glass"] = bpy.data.materials["mat_pc_glass"]
     d["glass_edge"] = bpy.data.materials["mat_pc_glass_edge"]
     from lib import materials as M
-    d["fan_light"] = bpy.data.materials.get("mat_pc_fan_light") or M.emission("mat_pc_fan_light", "#eaf4ff", 6.0)
+    # the glow (fix 2026-10-26, the owner's photo: cool white with a slight blue). Strong enough to read in the
+    # daylight room without bloom; the GLBs carry it as KHR_materials_emissive_strength.
+    d["fan_light"] = bpy.data.materials.get("mat_pc_fan_light") or M.emission("mat_pc_fan_light", GLOW_COLOUR,
+                                                                                GLOW_RING)
+    d["glow"] = bpy.data.materials.get("mat_pc_glow") or M.emission("mat_pc_glow", GLOW_COLOUR, GLOW_STRIP)
     d["gpu_light"] = bpy.data.materials.get("mat_gpu_light") or M.emission("mat_gpu_light", "#f4f7ff", 5.0)
     return d
 
