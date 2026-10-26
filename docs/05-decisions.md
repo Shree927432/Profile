@@ -117,6 +117,7 @@ it before finishing. Re-opening a decision needs the owner's say-so.
 | 2026-10-25 | Home tagline and intro say what is real: what the owner has built (the CI diagnosis MCP server, the GST matching engine), what they are building now (a LoRA fine-tune of a small Qwen model, proven on a held-out test set) and where they are headed (agents that reason, use tools and learn from feedback; the frontier). Tagline: "AI engineer in Pune, building agents, developer tools and small language models." | Owner: "change this section", "It has to be real, shows my capabilites and work and what i'm persuaing", picked draft A. |
 | 2026-10-26 | Component test in the plan v3 room (`blender/design/room_v3_component_test.py`): the PC turns to yaw 90 so its side glass faces the room (option B); plan v3 takes the fit fixes the test found: the desk 3 cm off both walls (the pole clamp was 2.7 cm in the wall), the screen stack and its heights as the approved component builds them, the speakers re-spaced and centred on the real Studio Display. | Owner: "PC option B: yaw 90, side glass toward the room. Also apply the plan v3 fit fixes it found." |
 | 2026-10-26 | The window moves 3 cm right (x -0.27 to 1.13) so the desk return still ends 8 cm short of it after the desk moved 3 cm off the walls; the INTRO camera follows the window's centre line. 80 plan checks pass. | Owner: "Keep the window 3 cm to the right." |
+| 2026-10-26 | The PC component is approved (O11 Vision white, all-white build, RTX 5090 FE, fan rings and GPU light bar as emissive parts). | Owner: "pc is approved". |
 
 ## Open questions (move to the table when answered)
 
@@ -128,8 +129,7 @@ it before finishing. Re-opening a decision needs the owner's say-so.
   the rich one for renders. Also whether to add Draco or meshopt compression (a
   decoder dependency, about 5x smaller files).
 - Video recording: MIDI keyboard plus audio, or audio only?
-- Approve the PC component (O11 Vision white, white build, RTX 5090 FE). Small leftovers: the
-  card's back fin windows a little light, its end caps less round than the real card.
+- PC lights wash out in a bright room (owner: "where are no lights in PC"): add an interior glow light and stronger rings now, or settle it with the room's lighting pass.
 - Speakers' height: standing ear height beside the top screen (plan v3, as the photo), or seated.
 - `obj_studio` now spans the room (speakers and Apollo in the lab, decks and lightstick by the piano):
   one object with two close-ups, or move the decks' part into the piano's close-up.
