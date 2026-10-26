@@ -797,3 +797,16 @@ site or the room. Keep each entry short. No polishing; the post does that.
   docs/00-vision.md (the current premise), docs/03-roadmap.md, scene/objects/MESHES.md (proposed
   component names), docs/10-video-plan.md, the open questions. The stalled plan-v2 rebuild was moved
   to branch `wip/room-rebuild-v2-stalled` so main is clean.
+
+## 2026-10-26: the components meet the room
+
+- Owner: "can we test the all the component that we have created in the room", then "i want see
+  it in blender". The approved desk, screens, speakers and the PC went into the plan v3 room at
+  its numbers, with the piano and two guitars on the music side (`blender/design/room_v3_component_test.py`,
+  `blender/out/room_v3_component_test.blend`). The test found what a plan cannot: the screen pole's
+  clamp 2.7 cm inside the wall, the real arms holding the screens 7 to 13 cm further forward than
+  planned, the speakers 1.5 cm from the top screen, and the PC's glass facing the wrong way.
+  Owner: "PC option B ... Also apply the plan v3 fit fixes it found", then "Keep the window 3 cm
+  to the right." 80 checks pass.
+- Went wrong: a reparenting bug put a speaker into the wall in the first test render; the PC glass
+  read as a grey slab in EEVEE until screen-space refraction was turned on.
