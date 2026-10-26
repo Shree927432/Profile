@@ -59,6 +59,34 @@
       "name": "TORVIK",
       "font": "LibreCaslonText-Bold.ttf",
       "letter_spacing_em": 0.03
+    },
+    "interface": {
+      "real_maker": "Universal Audio",
+      "name": "SOLANT",
+      "font": "Montserrat-SemiBold.ttf",
+      "letter_spacing_em": 0.3,
+      "status": "proposed 2026-10-26, owner to confirm at review"
+    },
+    "keyboard": {
+      "real_maker": "Keychron",
+      "name": "TAVEN",
+      "font": "RobotoCondensed-Bold.ttf",
+      "letter_spacing_em": 0.03,
+      "status": "proposed 2026-10-26, owner to confirm at review"
+    },
+    "mouse": {
+      "real_maker": "Logitech",
+      "name": "MIRREX",
+      "font": "Comfortaa-Bold.ttf",
+      "letter_spacing_em": 0.02,
+      "status": "proposed 2026-10-26, owner to confirm at review"
+    },
+    "streamdeck": {
+      "real_maker": "Elgato",
+      "name": "BRILA",
+      "font": "Saira-ExtraBoldItalic.ttf",
+      "letter_spacing_em": 0.01,
+      "note": "same maker as the key lights"
     }
   },
   "_fonts": "Fonts in blender/assets/fonts/ (Google Fonts, SIL Open Font License; owner picked column C on 2026-10-26). Letter spacing in em, as on the comparison page."
