@@ -24,3 +24,6 @@ blender/out/
 
 # Python bytecode from the Blender scripts
 __pycache__/
+
+# personal Claude Code settings (local hooks)
+.claude/settings.local.json
