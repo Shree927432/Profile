@@ -837,3 +837,12 @@ site or the room. Keep each entry short. No polishing; the post does that.
   covers, T-handle clamp). Left as is: the Flex Arm's balls sit mostly inside their sockets in the room pose;
   the fins and foam texture are rich-only. The room test now reads plan v3's numbers (B). Rich GLB 3.7 MB,
   lite 537 KB.
+- Brand names printed (17:25 to 17:42): one helper, blender/lib/brands.py, reads content/room-brands.json; four
+  parallel forks did the screens, speakers, PC and arms. 15 decals; lite grew by about 1,230 triangles and 57 KB.
+  Went wrong: two forks overwrote lite stills and report JSON in the approved 2026-10-24 footage folders
+  (git-ignored, so not recoverable from git; they can be re-rendered); the helper's letter spacing moves
+  overlapping letters as one group; the MV7+ knob covers the first letter of HALDEN on one side; the PC
+  case shows no logo in any photo, so KAIRO's spot is a guess. Owner: "there are some render issues with
+  pc, and why every reflective thing is reflecting the shadow of tree" (the trees were Blender's Material
+  Preview forest light, not the room); the PC glass and glow fix started right after.
+
