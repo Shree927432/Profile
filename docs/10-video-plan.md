@@ -219,3 +219,13 @@ next to the clips it renders.
   hero, close-ups, clay, wire, the outline check and the photo-vs-model sheets. The "photo vs our
   model" pairs are strong material for the making-of: the real product beside ours, then the overlay.
 
+## Update 2026-10-26: live building, names and the scan
+
+- The owner watched the modelling live: one Blender window that rebuilt the arms on every save
+  (`blender/tools/live_watch.py`) and a page of the newest renders (`video-local/viewer/live.html`). A
+  screen recording of that window during a build is a good shot for the "how it was made" part.
+- New sheet types worth showing: the logo pairs (real logo, Blender's default font, the owner's pick) in
+  `video-local/footage/2026-10-26-components/brand-fonts/`, and the mouse's three-way sheet (scan, ours, real)
+  in `.../desktop/mouse-scan/r4/threeway/`. The scan-to-model step reads well as a wipe.
+- No change to the music or the shot plan.
+

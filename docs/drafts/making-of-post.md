@@ -152,3 +152,12 @@ them. -->
 that rebuilt the mic and arms every time the builder saved its script. Then the logos question:
 real brand names were off-limits, so every device in the room carries a made-up one (KESSO camera,
 HALDEN mic, BRILA lights) in the same spot as the real logo. -->
+
+<!-- NOTE 2026-10-26: the fonts. My first look at the brand names: "fonts are really bad". I asked for the
+original fonts; they don't exist (each logo is drawn by hand for its one word) and copying them is the
+trademark risk, so Claude put every real logo beside three free lookalikes and I picked a column. -->
+<!-- NOTE 2026-10-26: the mouse. Built from photos it was "in really bad shape" from the side. I found a free
+CC BY 3D scan of the real mouse; Claude wrapped its own light shell onto the scan and rebuilt the wheels,
+buttons and port by hand. A paid-looking model I found first was view-only, so it became screenshots for
+reference instead. I asked for a chime whenever it needed me, and went to work on something else. -->
+

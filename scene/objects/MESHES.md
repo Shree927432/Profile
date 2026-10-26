@@ -499,4 +499,19 @@ Not final until the room rebuild adopts them; the component reports in
 - **set_desk:** `desk_top`, `desk_led`, `desk_pole`, `desk_screenbar`, `desk_screenbar_dial`,
   `desk_drawers_01`..`_03` (empties), `desk_drawers_NN_carcass`, `desk_drawers_NN_drawer_01`..`_05`
   (top to bottom; slides 0.40 m along local -Y), `desk_drawers_NN_risers`.
+- **Arms group (2026-10-26):** `keylight_1`/`_2` (empties) with `_static`, `_mount`, `_tilt`, `_panel`, `_glow`,
+  `_brand`; the camera `cam` (`cam_body`, `cam_lens`, `cam_lens_glass`, `cam_screen`, `cam_screen_lcd`, `cam_brand`)
+  on `cam_arm` (the Flex Arm). **obj_mic:** `mic_static`, `mic_arm_knuckle`, `mic_arm_lower`, `mic_arm_elbow`,
+  `mic_arm_upper`, `mic_arm_tip`, `mic_stem`, `mic_yoke`, `mic_body` (click target), `mic_knobs`, `mic_led`,
+  `mic_body_brand`, `mic_rear_brand`, `boom_upper_brand`, `boom_lower_brand`, `boom_clamp_brand`; joints are
+  empties `mic_j_swivel`, `_shoulder`, `_elbow`, `_wrist`, `_wrist_yaw`, `_mount`, `_stem`, `_tilt` (posed by name).
+- **Desk-top group (2026-10-26):** roots `apollo`, `keyboard`, `mouse`, `deck`. Apollo: `apollo_body`, `apollo_knob`,
+  `apollo_meter_window`, `apollo_leds`, `apollo_button_1`..`_8`, `apollo_jack_1`..`_4`, `apollo_brand`. Keyboard:
+  `kb_case`, `kb_plate`, one mesh per key `kb_key_<id>` (81 keys; move along the plate's local Z to animate typing),
+  `kb_knob`, `kb_brand`. Mouse: `mouse_body`, `mouse_band`, `mouse_seams`, `mouse_wheel_slot`, `mouse_wheel`,
+  `mouse_mode_button`, `mouse_thumb_pocket`, `mouse_thumbwheel`, `mouse_side_buttons`, `mouse_led`, `mouse_usb`,
+  `mouse_feet`, `mouse_brand`. Stream Deck: `deck_stand`, `deck_body_frame`, `deck_body`, `deck_key_01`..`_15`,
+  `deck_icon_01`..`_15`, `deck_brand`. Lite copies add `_lite`.
+- **Brand decals (all components):** `<part>_brand` (e.g. `g8_brand`, `sd_brand`, `a7v_1_brand`); the GPU's lit name
+  keeps `rig_gpu_light`. New PC glow: `rig_glow_strips`.
 

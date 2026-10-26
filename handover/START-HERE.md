@@ -1,6 +1,6 @@
 # Start here (new session, new account, or new agent)
 
-Last updated: 2026-10-25 (Phase 4: plan v3 approved, components being built one by one). Everything below is also on GitHub:
+Last updated: 2026-10-26 (Phase 4: components approved through the desk-top group; mouse rebuilt on a scan). Everything below is also on GitHub:
 https://github.com/Shree927432/Profile
 
 ## 1. Get the project
@@ -44,16 +44,16 @@ Shorter prompts for single steps:
 | Premise for the 3D room | Since 2026-10-24: half AI lab (exactly the owner's desk photo), half music studio kept secret for About. The site opens on the sky and city through the window, then pulls back to the AI lab. Ten objects incl. `obj_rig` (the PC). History in docs/05-decisions.md |
 | Posts screen (Phase 2) | Done and live 2026-10-19. A screen module on the home page, keyboard, click and tap. Titles only on phones |
 | Room shell (Phase 3) | Done 2026-10-21, on main. Shows only with `?room` (`?room&debug` for fps and quality). Placeholder desk and monitor; clicking or Enter on the post glides into the screen, then opens it. Tuned after the owner's phone test: no glow pass, draws only on change, eased zoom. See `handover/phase-3-brief.md` |
-| Room model (Phase 4) | Piano, guitar_02 Strat and guitar_04 Number One done. Plan v3 approved. Components: screens, speakers, desk approved; PC built, waiting. The room GLB on main is still the v1 shell. See `handover/phase-4-brief.md` |
+| Room model (Phase 4) | Piano, guitar_02 Strat and guitar_04 Number One done. Plan v3 approved (82 checks). Components approved: screens, speakers, desk, PC (glass and glow fixed), camera, Flex Arm, key lights, mic and boom arm, the desk-top group (Apollo, keyboard, mouse rebuilt on a CC BY scan, Stream Deck). Every one carries an invented brand name (content/room-brands.json). The room GLB on main is still the v1 shell. See `handover/phase-4-brief.md` |
 | Making-of video and blog | Planned: `docs/10-video-plan.md` (Moonlight Sonata, storm then dawn, the owner plays), `docs/drafts/making-of-post.md` (outline), `docs/build-journal.md` (facts as we go). A first card-style timelapse is in `video-local/` (local only) |
 | Agents | `.claude/agents/`: builder (Sonnet), designer (Opus), quick (Haiku) |
 
 ## 4. Next steps, in order
 
-The current list is in `handover/phase-4-brief.md`, section "Next steps". In short: owner
-approves the PC; camera, mic and key lights; the remaining components one at a time; rebuild
-the room from plan v3 with the real models; the intro, hero and About camera moves in the site;
-the four remaining guitars; lighting and phone performance; then the new room goes live.
+The current list is in `handover/phase-4-brief.md`, section "Next steps". In short: keyboard
+legends; the wall group, the return desk and the Aeron, one at a time; rebuild the room from plan v3
+with the real models; the lighting pass; the intro, hero and About camera moves in the site; the four
+remaining guitars; phone performance; then the new room goes live.
 Whenever the owner buys a domain: add it in Cloudflare Pages and set `site` in `astro.config.mjs`.
 
 ## 5. Things a new agent should know (not obvious from the code)

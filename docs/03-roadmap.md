@@ -56,7 +56,7 @@ Time: 2 to 4 sessions.
 - [x] Every interactive mesh named per a list (scene/objects/MESHES.md, 2026-10-21)
 - [x] Layout plan v3 with clearance checks, approved (`blender/lib/plan_v3.py`, 2026-10-24)
 - [x] Modelling toolkit: lens-corrected references, backdrops, every-angle compare test, parts library, render queue (2026-10-24)
-- [ ] AI-lab components, one at a time, compared from every angle (screens, speakers, desk done; PC waiting; the rest to do)
+- [ ] AI-lab components, one at a time, compared from every angle (done: screens, speakers, desk, PC, camera, arms, key lights, mic, desk-top group with the mouse on a scan; invented brand names on all; to do: keyboard legends, the wall group, the return desk, the Aeron)
 - [ ] Rebuild the room from plan v3 with the real components
 - [ ] Intro (window, city) to hero (AI lab) to About (music side) camera moves in the site
 - [ ] Bake lighting with Cycles into atlases, export GLTF

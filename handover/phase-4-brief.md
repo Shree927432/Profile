@@ -1,6 +1,6 @@
 # Phase 4 brief (the room model in Blender)
 
-Last updated: 2026-10-25. Read this first when resuming Phase 4.
+Last updated: 2026-10-26. Read this first when resuming Phase 4.
 
 ## Where it stands
 
@@ -9,7 +9,7 @@ Last updated: 2026-10-25. Read this first when resuming Phase 4.
   laid out exactly as the owner's photo `docs/moodboard/local/ai-desk-reference-1.jpg`. The music side
   (piano, guitars, rack, DJ controller) is a secret, revealed with About. Rows in `docs/05-decisions.md`
   from 2026-10-23 on explain every choice.
-- **Layout:** plan v3, approved. Numbers and 68 clearance checks in `blender/lib/plan_v3.py`
+- **Layout:** plan v3, approved. Numbers and 82 clearance checks in `blender/lib/plan_v3.py`
   (`cd blender && python3 -m lib.plan_v3`), sheet `blender/design/room_plan_v3_sheet.py`, blockout
   `blender/design/room_plan_v3_blockout.py`, images in `video-local/footage/2026-10-24-room-plan-v3/`.
   Desk at 76.5 cm on 3 cm risers; screens and pegboard raised to match. Cameras: INTRO (out of the
@@ -21,14 +21,19 @@ Last updated: 2026-10-25. Read this first when resuming Phase 4.
 | Screens: Samsung G8 34 + Apple Studio Display 27 on a pole, ScreenBar Halo 2 | approved (round 2b) | `blender/components/screens*.py` |
 | Speakers: ADAM A7V pair, gloss white, desk-pole mounts (ISO-155 alternative) | approved | `blender/components/speakers*.py` |
 | Desk: LAGKAPTEN L top on three ALEX units, 3 cm risers, LED strip | approved | `blender/components/desk*.py` |
-| PC: Lian Li O11 Vision white, white build, RTX 5090 FE (`obj_rig`) | built, waiting for owner approval | `blender/components/pc*.py` |
-| Camera (ZV-E10 II on Flex Arm), mic (MV7+ white on PSA1+ white), key lights | next | |
-| Apollo x4 (Gen 2 silver), Keychron Q1 Max, MX Master 3S, Stream Deck MK.2 white | approved; mouse rebuilt on a CC BY scan (2026-10-26); keyboard legends to do | `blender/components/desktop.py`, `mouse_scan.py`, `blender/assets/mouse/` |
+| PC: Lian Li O11 Vision white, white build, RTX 5090 FE (`obj_rig`) | approved; glass and blue-white glow fixed 2026-10-26 | `blender/components/pc*.py` |
+| Camera (ZV-E10 II), Flex Arm, two Key Lights, mic (MV7+ white on PSA1+ white) | approved; placement B in plan v3 (shelf at 1.95) | `blender/components/arms.py` |
+| Apollo x4 (Gen 2 silver), Keychron Q1 Max, MX Master 3S, Stream Deck MK.2 white | approved; mouse rebuilt on a CC BY scan and approved "for now" (2026-10-26); keyboard legends to do | `blender/components/desktop.py`, `mouse_scan.py`, `blender/assets/mouse/` |
 | Shelf and three frames, hanging plants, SKADIS pegboard + ATH-M50x, neon (words from content), Nanoleaf triangles | to do | |
 | MacBook Pro 16 on Rain mStand, DJ controller (DDJ-FLX4 shape), K-pop lightstick | to do | |
 | Herman Miller Aeron, Mineral (hardest) | to do | |
 | Guitars: 01 Lucille, 03 Page double-neck, 05 Hetfield Explorer, 06 Henson TOD10 | to do (02 Strat and 04 Number One done) | `blender/props/guitar_0*.py` |
 
+  Brand names: every approved component carries an invented name in place of the real logo, from
+  `content/room-brands.json`, printed by `blender/lib/brands.py` in the owner's lookalike fonts
+  (`blender/assets/fonts/`, OFL). Room test: `blender/design/room_v3_component_test.py` places every
+  approved component at plan v3's numbers (hero.png, desk-corner.png, room-v3-test.glb in
+  `video-local/footage/2026-10-26-component-test/`).
   Each component's GLBs (rich for renders, lite for the web) are in `blender/out/components/`
   (git-ignored, rebuilt from the scripts); stills, compare sheets and NOTE.md in
   `video-local/footage/2026-10-24-components/<name>/`.
@@ -60,17 +65,28 @@ the component's reference folder, an approved component as a pattern, and a time
 
 ## Next steps, in order
 
-1. Owner approves the PC (view it: `preview_start` "glb-viewer", then
-   `/video-local/viewer/index.html?f=blender/out/components/pc-lite.glb`).
-2. Camera, mic and key lights (one builder, about 1.5 h, time-boxed).
-3. The remaining components in the table, one at a time.
-4. Fold the components' proposed mesh names into `scene/objects/MESHES.md` (see its section
-   "Proposed names from the component builds").
+1. Keyboard legends on the Keychron (letters, numbers, F-keys, Mac symbols), stopped on 2026-10-26 when the
+   owner put the mouse first; brief: print them as on the white Q1 Max photos, fonts from blender/assets/fonts.
+2. Mouse leftovers, only if the owner asks: the thumb pocket reads dark from directly above, the wheel slot
+   lacks its white frame, the shell sits 1 to 2 mm inside the official size.
+3. The wall group: shelf and three frames, hanging plants, SKADIS pegboard + ATH-M50x, neon (words from
+   content), Nanoleaf triangles. Then the return desk (MacBook on mStand, DJ controller, lightstick), then the
+   Aeron. Each gets an invented brand name in content/room-brands.json first.
+4. Fold the proposed mesh names into `scene/objects/MESHES.md` (its section "Proposed names").
 5. Rebuild the room from plan v3 with the real components; owner judges the layout by eye.
-6. Site: the intro (window, city) → zoom out → AI lab → About reveals the music side; posts on the
+6. Lighting pass: the room renders too bright (washes out the PC glow and the glass); set exposure, an
+   environment map for glass and gloss, bake.
+7. Site: the intro (window, city) → zoom out → AI lab → About reveals the music side; posts on the
    Studio Display; `obj_rig` (PC fans pulse) as the tenth object; piano lid limited to 60 degrees.
-7. The four remaining guitars, lighting bake, phone performance (under 3 s on 4G, 60 fps mid phone),
-   then the new room replaces the placeholder at `/?room`.
+8. The four remaining guitars, phone performance (under 3 s on 4G, 60 fps mid phone), then the new room
+   replaces the placeholder at `/?room`.
+
+Tools added 2026-10-26: `blender/tools/live_watch.py` (one Blender window that rebuilds a component on every
+save, for the owner to watch), `video-local/viewer/` pages (local): `index.html?f=<glb>&only=<part>&exp=<n>`,
+`compare.html` (real photos beside the live model), `fonts.html`, `live.html?d=<footage folder>`
+(newest renders), `sketchfab-ref.html` (exact views of a view-only Sketchfab model via its embed API).
+The owner wants a chime when input is needed: `afplay /System/Library/Sounds/Glass.aiff` before ending such
+a turn (a Notification hook in `.claude/settings.local.json` does it for permission prompts).
 
 ## Open questions for the owner
 

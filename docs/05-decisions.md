@@ -154,3 +154,6 @@ it before finishing. Re-opening a decision needs the owner's say-so.
 - Large assets: room.glb is 1.7 MB; at 2 MB choose git-lfs or a CDN bucket.
 - Credits page: needed only if a CC-BY model ships (none so far; the six downloaded Sketchfab models
   are local bases; see `docs/moodboard/local/ai-lab/VERDICTS.md`).
+  Update 2026-10-26: one now ships derived: the mouse shell comes from Sircher's CC BY scan, so a credits line
+  is needed ("Logitech MX Master 3S - Revopoint Mini 3D Scan" by Sircher, CC BY 4.0, with its Sketchfab link; text
+  in blender/assets/mouse/README.md). The fonts are OFL (credit optional, licences kept in blender/assets/fonts/).
