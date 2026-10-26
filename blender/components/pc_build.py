@@ -525,14 +525,47 @@ def build_gpu(coll, parent, lite):
                                        ("displayport", 76.0))):
             ports.append(P.port(f"gpu_port_{i}", kind, facing="-X", at=(bx0, y * MM, -T / 2), collection=coll))
         o = join_into(o, ports)
-    # the light bar on the top edge (where the maker's lettering is lit), its own emissive mesh
-    B = P.Mesh()
-    slab(B, LIGHT[0], LIGHT[1], -1.8 * MM, 1.8 * MM, -0.05 * MM, 0.25 * MM, "gpu_light", Mtop)
-    light = new_obj(B, "rig_gpu_light", coll, None, origin=((LIGHT[0] + LIGHT[1]) / 2, H, -T / 2))
+    # the lit lettering on the top edge, where the maker's name is lit: our invented name, its own emissive
+    # mesh (it keeps the name rig_gpu_light, MESHES.md; it replaced the plain light bar, 2026-10-26)
+    light = gpu_lettering(coll, lite)
     fans = []
     for i, fx in enumerate(K.GPU_FAN_X):
         fans.append(gpu_fan(f"rig_gpu_fan_{i + 1:02d}", coll, (fx, YC, -2.0 * MM), lite, phase=0.3 * i))
     return o, fans, light
+
+
+# the brand names (decision 2026-10-26): names from content/room-brands.json via lib/brands.py
+GPU_LETTER_H = 6.0 * MM      # EST detail-logo-edge.jpg: GEFORCE RTX cap height about 1/6 of the 40 mm edge
+CASE_LETTER_H = 4.0 * MM     # EST: small print, as the O11 family's front pillar carries it
+
+
+def _brand_name(o, wanted, lite):
+    """brands.decal adds _lite in lite builds; the PC's lite tree uses the plain names (the rich tree is
+    renamed out of the way while it exports)."""
+    if lite:
+        NM.set_name(o, wanted)
+    return o
+
+
+def gpu_lettering(coll, lite):
+    from lib import brands
+    c = Vector(((LIGHT[0] + LIGHT[1]) / 2, H, -T / 2))
+    o = brands.decal("pc_gpu", at=c, normal=(0, 1, 0), up=(0, 0, -1), height=GPU_LETTER_H, finish="lit",
+                     colour="#f4f7ff", lite=lite, name="rig_gpu_light", spacing=1.25, weight=0.025,
+                     collection=coll)
+    o.data.materials[0] = K.mats()["gpu_light"]          # the same light as before (the room pulses it)
+    o.data.transform(Matrix.Translation(-c))
+    o.location = c
+    return _brand_name(o, "rig_gpu_light", lite)
+
+
+def case_lettering(coll, root, lite):
+    """KAIRO at the foot of the front pillar (the rear chamber's white front panel), light grey print."""
+    from lib import brands
+    o = brands.decal("pc_case", parent=root, at=((XP + HW) / 2, -HD, ZB + 24.0 * MM), normal=(0, -1, 0),
+                     up=(0, 0, 1), height=CASE_LETTER_H, finish="printed", colour="#a4a8ad", lite=lite,
+                     name="rig_case_brand", spacing=1.4, collection=coll)
+    return _brand_name(o, "rig_case_brand", lite)
 
 
 def xarm(A, wl, wr, z, M):
@@ -878,7 +911,8 @@ def build(root, coll, lite=False):
     for o in [gpu] + gfans + [glight]:
         o.parent = groot
     gfans_names = [o.name for o in gfans]
-    names["case"] = [case.name, side.name, glass.name]
+    cbrand = case_lettering(coll, root, lite)
+    names["case"] = [case.name, side.name, glass.name, cbrand.name]
     names["case_all"] = names["case"]
     names["gpu"] = [gpu.name, glight.name] + gfans_names
     names["gpu_all"] = names["gpu"]

@@ -7,7 +7,8 @@ docs/moodboard/local/ai-desk-reference-1.jpg:
   - Shure MV7+ white on a RODE PSA1+ white, posable from named joint angles (obj_mic)
 
 Built from Sony's drawing and the makers' sizes (no base model: the Innixicated ZV-E10 was not used).
-No logos, names or printed text. Always headless:
+Invented brand names (content/room-brands.json, lib/brands.py) at the real logos' spots; no other printed
+text. Always headless:
 
     /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \\
         --python blender/components/arms.py -- [outline|build,stills,compare,closeups,export] [--cycles]
@@ -325,6 +326,31 @@ def fin(A, name, mp, coll, parent=None, at=(0, 0, 0), bevel=None, lite=False):
     return A.finish(name, mp, "+Z", at, coll, parent, bevel=None if lite else bevel)
 
 
+# invented brand names (decision 2026-10-26): the name comes from content/room-brands.json via lib/brands.py;
+# each sits at the real logo's spot, size, colour and finish. Positions: the parent part's local frame.
+# Photos: 18-camera/front-body-hires-commons.jpg, 17-key-lights/back-in-use.jpg, 11-mic/three-quarter.png,
+# side-profile-yoke-open.jpg, back-straight-white-1500.png, 12-boom-arm/white-three-quarter-extended-2000.png,
+# detail-white-clamp-mount.jpg.
+def brand(key, parent, name, sfx, lite, at, normal, up, **kw):
+    from lib import brands
+    bpy.context.view_layer.update()
+    return brands.decal(key, at=at, normal=normal, up=up, parent=parent, lite=lite, name=f"{name}{sfx}", **kw)
+
+
+def join_into(a, b):
+    """Merge decal b into decal a (same parent, both identity transforms)."""
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(a.data)
+    bm.from_mesh(b.data)
+    bm.to_mesh(a.data)
+    bm.free()
+    me = b.data
+    bpy.data.objects.remove(b)
+    bpy.data.meshes.remove(me)
+    return a
+
+
 # ---------------------------------------------------------------------------
 # 2a. key light on its pole. Origin: the pole's axis on the desk top; the panel faces -Y.
 # ---------------------------------------------------------------------------
@@ -431,6 +457,12 @@ def build_keylight(n, coll, mp, rough=False, lite=False, pole_h=POLE_H, tilt=0.0
     rbox(A, gw, gh, 0.0004, KL_R - KL_BORDER, 0, 0, 4 if lite else 10, "glow", Mg)
     glow = fin(A, f"keylight_{n}_glow{sfx}", mp, coll, tilt_e, lite=True)
     out = {"kl_static": [static.name, static_adapter.name], "kl_panel": [panel.name], "kl_glow": [glow.name]}
+    if not rough:
+        # the logo plate's spot on the back box: centred, 25 mm under the box top, about 6 mm, light grey
+        b = brand("keylights", panel, f"keylight_{n}_brand", sfx, lite,
+                  at=(0, yf + KL_FRAME_T + bd, bz + bh / 2 - 0.025), normal=(0, 1, 0), up=(0, 0, 1),
+                  height=6 * MM, finish="printed", colour="#c9cacc", spacing=1.25, weight=0.035)
+        out["kl_brand"] = [b.name]
     return root, out
 
 
@@ -658,6 +690,11 @@ def build_camera(coll, mp, rough=False, lite=False, sfx="", screen="selfie"):
         Md = T(xb + 0.0023 + sw / 2, ys - 0.00015, SCREEN_Z + sh / 2) @ R(90, "X")
         rbox(A, sw - 0.005, sh - 0.005, 0.0002, 0.002, 0, 0, 2, "lcd", Md)
         out["cam_screen"].append(fin(A, f"cam_screen_lcd{sfx}", mp, coll, root, lite=True).name)
+        # the wordmark's spot: 47 mm from the grip-side edge (centre), 2.2 to 4.9 mm under the top, silver print
+        b = brand("camera", body, "cam_brand", sfx, lite, at=(x0 - CB_W / 2 + 0.049, yf, H - 0.0036),
+                  normal=(0, -1, 0), up=(0, 0, 1), height=3.2 * MM, finish="printed", colour="#c4c6c9",
+                  spacing=1.3, weight=0.025)
+        out["cam_brand"] = [b.name]
     return root, out
 
 
@@ -852,6 +889,17 @@ def build_mic_head(coll, mp, parent, rough=False, lite=False, sfx=""):
                           for k in range(na + 1)])
         led = uv_strip(f"mic_led{sfx}", rings, mp["led_rainbow"], coll, tilt, Mb)
         out["mic_led"] = [led.name]
+        # the side wordmark, along the axis, black pad print, conformed to the tapered body; on both sides,
+        # letter tops toward the stem (Shure's three-quarter shot), clear of the yoke band
+        yc = MIC_PIVOT - 0.0215              # 28.5 mm behind the pivot: clear of the knob, off the rear rounding
+        sides = [brand("mic", body, "mic_body_brand", sfx, lite, at=(s * MIC_R, yc, 0), normal=(s, 0, 0),
+                       up=(0, 0, 1), height=6.3 * MM, finish="printed", colour="#1c1c1d", spacing=1.1,
+                       weight=0.03, conform=body) for s in (1, -1)]
+        mb = join_into(*sides)
+        # the rear plate: centred, 8.3 mm under the plate's centre, about 3 mm, dark grey
+        rb = brand("mic", body, "mic_rear_brand", sfx, lite, at=(0, MIC_PIVOT, -0.0083), normal=(0, 1, 0),
+                   up=(0, 0, 1), height=2.8 * MM, finish="printed", colour="#3c3c3e", spacing=1.1, weight=0.03)
+        out["mic_brand"] = [mb.name, rb.name]
     return hang, tilt, out
 
 
@@ -913,6 +961,18 @@ def build_mic(coll, mp, rough=False, lite=False, pose=None, sfx=""):
         return fin(A, name, mp, coll, parent, bevel=0.0012, lite=lite)
 
     lower = segment(f"mic_arm_lower{sfx}", ARM_L1, sh)
+    brands_ = []
+
+    def cover_brand(seg_obj, L, nm):
+        # white-on-white, 15 mm, on the cover's +Y side near the far end, letter tops to the arm's top, reading
+        # from the far end towards the base (the photo: R at the wrist end of the upper arm, at the elbow end
+        # of the lower, upright)
+        if rough:
+            return
+        brands_.append(brand("boom_arm", seg_obj, nm, sfx, lite, at=(L - 0.095, ARM_COVER[0] / 2, 0),
+                             normal=(0, 1, 0), up=(0, 0, 1), height=15 * MM, finish="printed",
+                             colour="#f7f7f5", spacing=1.15, weight=0.04).name)
+    cover_brand(lower, ARM_L1, "boom_lower_brand")
     A = P.Mesh()      # the elbow: the outer hinge discs (a jog plate between two pivots when ARM_JOG > 0)
     for sy in (-1, 1):
         for zz in sorted({0.0, -ARM_JOG}):
@@ -924,6 +984,13 @@ def build_mic(coll, mp, rough=False, lite=False, pose=None, sfx=""):
     fin(A, f"mic_arm_elbow{sfx}", mp, coll, sh, bevel=0.001, lite=lite)
     el = empty(f"mic_j_elbow{sfx}", sh, (ARM_L1, 0, -ARM_JOG), (0, -math.radians(pose["elbow"]), 0), coll)
     upper = segment(f"mic_arm_upper{sfx}", ARM_L2, el)
+    cover_brand(upper, ARM_L2, "boom_upper_brand")
+    if not rough:
+        # the small mark on the clamp's cone, over the C-clamp's back (+Y), black (detail-white-clamp-mount.jpg)
+        zc_, rc_ = 0.0095, 0.048 - 0.028 * (0.0095 - 0.004) / 0.028
+        brands_.append(brand("boom_arm", static, "boom_clamp_brand", sfx, lite, at=(0, rc_, zc_),
+                             normal=(0, 1, 1), up=(0, -1, 1), height=3.6 * MM, finish="printed",
+                             colour="#111112", spacing=1.1, weight=0.03, conform=static).name)
     level = math.radians(pose["shoulder"] + pose["elbow"])
     wr = empty(f"mic_j_wrist{sfx}", el, (ARM_L2, 0, 0), (0, level, 0), coll)
     wy = empty(f"mic_j_wrist_yaw{sfx}", wr, (0, 0, 0), (0, 0, math.radians(pose["wrist"])), coll)
@@ -937,7 +1004,7 @@ def build_mic(coll, mp, rough=False, lite=False, pose=None, sfx=""):
     stem_top = empty(f"mic_j_mount{sfx}", wy, (0, 0, -ARM_TIP + 0.010), coll=coll)
     hang, tilt, head = build_mic_head(coll, mp, stem_top, rough, lite, sfx)
     tilt.rotation_euler = (math.radians(pose["tilt"]), 0, 0)
-    out = {"mic_static": [static.name, knuckle.name],
+    out = {"mic_static": [static.name, knuckle.name], "boom_brand": brands_,
            "mic_arm": [lower.name, f"mic_arm_elbow{sfx}", upper.name, tip.name]}
     out.update(head)
     return root, out

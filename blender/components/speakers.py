@@ -90,6 +90,11 @@ TW_LIP = 3.0                                # EST: the mouth's rounded lip
 TW_THROAT = (29.0, 36.4, 2.5, 280.6)        # the ribbon's opening: w, h, corner r, centre z (ribbon 263.7 to 297.3)
 TW_DEPTH = 18.0                             # EST: lip to the ribbon's frame; the photos' shading reads deep
 RIBBON = (26.0, 6.25, 2.75, 4, 1.0)         # width, strip height, gap, strips, pleat pitch (1600 photo: 4 px pitch)
+# invented brand (decision 2026-10-26): in the spot of the maker's logo on the waveguide plate, under the
+# mouth, centred between the two lower screws. MEASURED on white-front.jpg (x 487-590, y 325-338 px against
+# the screws at z 313.0 / 251.3, y 155 / 320 px; review round: 4.4 read small): cap height 4.7 mm, centre z 247.1, x 0, off-white pad print
+# (photo grey 228 on the black plate), a bold, open-spaced feel. The name comes from content/room-brands.json.
+BRAND = dict(z=247.1, height=4.7, colour="#e4e4e4", weight=0.035, spacing=1.35)
 TW_SCREWS = [(sx * 31.0, z) for z in (313.0, 251.3) for sx in (-1, 1)]
 TW_LED = (0.0, 317.7)                       # the green status LED: in white-front.jpg (0.7, 318.5) and
                                             # black-front-1600.png (0, 314.2 on its 2.6 mm lower scale)
@@ -400,7 +405,7 @@ if bpy is not None:
     import sys
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    from lib import geo, materials as M, names  # noqa: E402
+    from lib import brands, geo, materials as M, names  # noqa: E402
     from screens import Acc, frame, rr  # noqa: E402  (the approved component's mesh accumulator)
 
     V = Vector
@@ -1263,6 +1268,18 @@ if bpy is not None:
                 objs[k].location = (sx * PAIR_X * m_, 0, 0)
             objs[""].location = (sx * PAIR_X * m_, -(FRONT_Y + BACK_Y) / 2 * m_, cab_z(mount))
             parts.update({nn + k: o for k, o in objs.items()})
+        # the brand on each tweeter plate (speaker 02 shares speaker 01's decal mesh, like the cabinet)
+        b1 = brands.decal("speakers", parent=parts["studio_speaker_01"],
+                          at=(0.0, (FRONT_Y - TW_PLATE[3]) * m_, BRAND["z"] * m_), normal=(0, -1, 0), up=(0, 0, 1),
+                          height=BRAND["height"] * m_, finish="printed", colour=BRAND["colour"],
+                          weight=BRAND["weight"], spacing=BRAND["spacing"], collection=collection, lite=lite,
+                          name="a7v_1_brand" + suffix)
+        names.set_name(b1, "a7v_1_brand" + suffix, data=False)
+        b2 = bpy.data.objects.new("a7v_2_brand" + suffix, b1.data)
+        collection.objects.link(b2)
+        names.set_name(b2, "a7v_2_brand" + suffix, data=False)
+        b2.parent = parts["studio_speaker_02"]
+        parts["a7v_1_brand"], parts["a7v_2_brand"] = b1, b2
         set_mount(r, mount, suffix)
         r["parts"] = list(parts)
         return r

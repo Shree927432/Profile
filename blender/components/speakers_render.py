@@ -66,10 +66,27 @@ if "--cpu" in ARGS:          # fallback when the Metal device hangs (seen 2026-1
         bpy.context.scene.cycles.device = "CPU"
     run.setup_render = _setup_cpu
 log = run.log
-PARTS = [f"studio_speaker_{i:02d}{k}" for i in (1, 2) for k in ("", "_woofer", "_pole", "_iso")]
+PARTS = [f"studio_speaker_{i:02d}{k}" for i in (1, 2) for k in ("", "_woofer", "_pole", "_iso")] + \
+    ["a7v_1_brand", "a7v_2_brand"]          # the invented brand decals (2026-10-26), not in the atlas bake
+from lib import renderqueue  # noqa: E402
+_plain_render_to = run.render_to
+
+
+def _queued_render_to(path, animation=False):
+    """Every Cycles render waits for the shared GPU slot (lib/renderqueue.py); EEVEE/Workbench do not."""
+    if bpy.context.scene.render.engine == "CYCLES":
+        with renderqueue.slot("speakers " + os.path.basename(path)):
+            return (yield from _plain_render_to(path, animation))
+    return (yield from _plain_render_to(path, animation))
+
+
+run.render_to = _queued_render_to
+_still_dir = next((a[len("--still-dir="):] for a in ARGS if a.startswith("--still-dir=")), None)
 
 
 def out_path(name):
+    if _still_dir:
+        return os.path.join(_still_dir, f"hero-speakers.png" if name == "hero" else f"speakers-{name}.png")
     return os.path.join(FOOTAGE, f"speakers-{name}{'-quick' if QUICK else ''}.png")
 
 
@@ -814,10 +831,11 @@ def export_lite(size=1024, orm_size=512):
     rough = _image("speakers_rough_tmp", orm_size, True)
     metal = _image("speakers_metal_tmp", orm_size, True)
     ao = _image("speakers_ao_tmp", orm_size, True)
-    _bake(baked, base, "base", 4)
-    _bake(baked, rough, "rough", 4)
-    _bake(baked, metal, "metal", 4)
-    _bake(baked, ao, "ao", 48)
+    with renderqueue.slot("speakers lite bake"):
+        _bake(baked, base, "base", 4)
+        _bake(baked, rough, "rough", 4)
+        _bake(baked, metal, "metal", 4)
+        _bake(baked, ao, "ao", 48)
     world.light_settings.distance = old_ao
     for o in hidden:
         o.hide_render = False

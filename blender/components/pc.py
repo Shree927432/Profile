@@ -1,6 +1,7 @@
 """pc: the AI lab's training rig, a Lian Li O11 Vision (white, O11VW) with an all-white build and an
 NVIDIA RTX 5090 Founders Edition, at real size, away from the room layout (component, 2026-10-24).
-No logos, brand names or printed text anywhere.
+No real logos; our invented names (content/room-brands.json) where the makers' sit: KAIRO on the case,
+NOVRA lit on the card's top edge (decision 2026-10-26).
 
 Always headless:
 

@@ -6,7 +6,9 @@ As in the owner's photo docs/moodboard/local/ai-desk-reference-1.jpg:
   top     Apple Studio Display 27-inch, VESA mount adapter version, silver aluminium
   pole    a white desk-clamp pole with two tilt/swivel VESA arms
   light   BenQ ScreenBar Halo 2 (the official drawing we have is the Halo 2) on the top screen's top edge
-No logos, names or printed text anywhere.
+Logos: the real makers' logos are replaced by our invented names from content/room-brands.json
+(decision 2026-10-26), each where the real logo sits (add_brands below): g8_brand, sd_brand,
+screenbar_brand. No other printed text.
 
 Built from scratch, at real size, in metres, away from any room layout. Frame: Blender, front at -Y,
 right at +X, Z up, the desk top at z = 0, the pole on x = 0. Every part is a child of the empty
@@ -288,6 +290,18 @@ def halo_bar_section():
 
 HALO_ARM = [(-36.0, 31.5), (1.3, 21.9), (60.5, 21.9), (60.5, 7.6), (1.3, 7.6), (-34.5, 14.5)]
 HALO_HINGE = (75.0, -1.0)
+
+# Brand spots (decision 2026-10-26: invented names where the real logos sit, content/room-brands.json).
+# G8: Samsung's word sits on a small dark tab just under the panel's bottom edge, centred (g8-01, 0.465 mm/px:
+# letters 4.5 px = 2.1 mm tall, the word 36 px = 16.6 mm wide, light grey pad print). We have no tab, so the
+# name sits on the black chin straight above it, just over the silver bottom strip.
+BRAND_G8 = dict(z=6.0 * MM, height=2.1 * MM, track=0.6 * MM, weight=0.03, colour="#a3a5a8", finish="printed")
+# Studio Display: Apple's mark, centred between the adapter rails (diagram-back-vesa-adapter, 0.705 mm/px:
+# 68 x 85 mm, its body's centre 134 mm below the top), polished. Ours: a plain ring, 70 mm across.
+BRAND_SD = dict(below_top=134 * MM, height=70 * MM, colour="#dcdee1", finish="polished")
+# ScreenBar Halo: BenQ's word, tone on tone, on the user-facing face of the rear block above the arm
+# (three-quarter-bar-with-controller: about 10 mm wide, letters about 2.5 mm). The block face is y = 60.5 mm.
+BRAND_HALO = dict(y=60.5, z=34.0 * MM, height=2.5 * MM, spacing=1.0, colour="#3a3c40", finish="engraved")
 HALO_WEIGHT = [(-18.8, 0.0), (5.6, 0.0), (4.0, -48.0), (1.5, -53.5), (-3.0, -55.7), (-14.0, -55.7),
                (-17.8, -53.0), (-18.8, -49.0)]
 
@@ -310,7 +324,7 @@ if bpy is not None:
     import os
     import sys
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-    from lib import geo, materials as M, names  # noqa: E402
+    from lib import brands, geo, materials as M, names  # noqa: E402
 
     V = Vector
     _SFX = [""]          # name suffix while a lite copy is built next to the rich one
@@ -1092,6 +1106,67 @@ if bpy is not None:
                 cap_start=False, cap_end=False)
         return A.finish(name, mats, coll, parent)
 
+    def _brand(key, part, at, normal, up, name, lite, coll, **kw):
+        """A brand decal on `part`, `at`/`normal`/`up` in the screens root frame (root at the origin)."""
+        bpy.context.view_layer.update()
+        inv = part.matrix_world.inverted()
+        root_m = part.parent.matrix_world if part.parent is not None else Matrix.Identity(4)
+        m = inv @ root_m
+        track = kw.pop("track", 0.0)
+        n, u = (m.to_3x3() @ V(normal)).normalized(), (m.to_3x3() @ V(up)).normalized()
+        o = brands.decal(key, m @ V(at), n, u, parent=part, collection=coll, name=nm(name), lite=lite, **kw)
+        if o is not None and track:
+            _track(o, u.cross(n).normalized(), track)
+        return o
+
+    def _track(o, right, gap):
+        """Open the letter-spacing: each letter (one connected island; our names are all capitals with no
+        dots) moves `gap` per step from the word's centre along `right`."""
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        left = set(bm.verts)
+        islands = []
+        while left:
+            stack = [left.pop()]
+            isl = [stack[0]]
+            while stack:
+                v = stack.pop()
+                for e in v.link_edges:
+                    w = e.other_vert(v)
+                    if w in left:
+                        left.discard(w)
+                        stack.append(w)
+                        isl.append(w)
+            islands.append(isl)
+        islands.sort(key=lambda vs: sum(v.co.dot(right) for v in vs) / len(vs))
+        k = len(islands)
+        for i, vs in enumerate(islands):
+            d = right * ((i - (k - 1) / 2) * gap)
+            for v in vs:
+                v.co += d
+        bm.to_mesh(o.data)
+        bm.free()
+
+    def add_brands(parts, coll, lite, halo_on, z_sd):
+        out = {}
+        b = BRAND_G8
+        f = g8_front(0.0, b["z"])
+        out["g8_brand"] = _brand("screens_g8", parts["rig_display"], (f[0], f[1], f[2] + G8_Z0), (0, -1, 0),
+                                 (0, 0, 1), "g8_brand", lite, coll, height=b["height"], track=b["track"],
+                                 weight=b["weight"], colour=b["colour"], finish=b["finish"])
+        b = BRAND_SD
+        out["sd_brand"] = _brand("screens_sd", parts["monitor_body"], (0.0, SD_Y + SD_T, z_sd + SD_H - b["below_top"]),
+                                 (0, 1, 0), (0, 0, 1), "sd_brand", lite, coll, height=b["height"],
+                                 colour=b["colour"], finish=b["finish"])
+        if halo_on == "top":
+            b = BRAND_HALO
+            off = halo_fit(SD_T / MM)[0]
+            out["screenbar_brand"] = _brand("screenbar", parts["desk_screenbar"],
+                                            (0.0, SD_Y + (off + b["y"]) * MM, z_sd + SD_H + b["z"]), (0, -1, 0),
+                                            (0, 0, 1), "screenbar_brand", lite, coll, height=b["height"],
+                                            spacing=b["spacing"], colour=b["colour"], finish=b["finish"])
+        return {k: o for k, o in out.items() if o is not None}
+
     # -----------------------------------------------------------------------
     # the whole component
     # -----------------------------------------------------------------------
@@ -1137,6 +1212,7 @@ if bpy is not None:
             parts["desk_screenbar"] = build_screenbar(mats, coll, r, 0.0, G8_Z0 + G8_H, depth_at=g8_back_y_mm,
                                                       lite=lite)
         parts["desk_screenbar_dial"] = build_dial(mats, coll, r, lite)
+        parts.update(add_brands(parts, coll, lite, halo_on, z_sd))
         _SFX[0] = ""
         r["parts"] = list(parts)
         return r

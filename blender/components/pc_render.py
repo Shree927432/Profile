@@ -146,7 +146,7 @@ def stage_build():
 def roles():
     n = {}
     objs = bpy.data.objects
-    n["case"] = [x for x in ("rig_case", "rig_case_side", "rig_case_glass") if x in objs]
+    n["case"] = [x for x in ("rig_case", "rig_case_side", "rig_case_glass", "rig_case_brand") if x in objs]
     n["case_all"] = n["case"]
     n["gpu"] = [x for x in ("rig_gpu", "rig_gpu_light", "rig_gpu_fan_01", "rig_gpu_fan_02") if x in objs]
     n["gpu_all"] = n["gpu"]

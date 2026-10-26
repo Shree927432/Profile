@@ -66,6 +66,8 @@ run.render_to = _queued_render_to
 ROUND2 = os.path.join(C.FOOTAGE, "2026-10-24-components", "screens", "round2")
 PARTS =["rig_display", "rig_screen", "rig_static", "monitor_body", "monitor_screen", "monitor_static",
          "desk_pole", "desk_screenbar", "desk_screenbar_dial"]
+BRANDS = ["g8_brand", "sd_brand", "screenbar_brand"]     # own small materials, never in the lite atlas bake
+PARTS = PARTS + BRANDS
 
 
 def out_path(name):
@@ -1058,7 +1060,7 @@ def export_lite(size=1024, orm_size=512):
     lroot = S.build(collection=coll, lite=True, suffix="_lite")
     bpy.context.view_layer.update()
     parts = {k: bpy.data.objects[k + "_lite"] for k in PARTS}
-    baked = [o for k, o in parts.items() if k not in ("monitor_screen", "rig_screen")]
+    baked = [o for k, o in parts.items() if k not in ("monitor_screen", "rig_screen") and k not in BRANDS]
     # one shared UV atlas across the baked parts
     for o in bpy.context.view_layer.objects:
         o.select_set(False)
