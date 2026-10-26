@@ -59,7 +59,8 @@ DESK_T = 0.035                         # plan v3 TOP_T
 CB_W, CB_H, CB_D = 114.8 * MM, 67.5 * MM, 54.2 * MM  # OFFICIAL Sony drawing
 CB_SHELL = 30 * MM                      # EST: 54.2 = grip 17 + shell 30 + screen 7 (top-pb.jpg: grip 18 proud)
 CB_TOP = 65.0 * MM                      # MEASURED front compare: the main top line (67.5 OFFICIAL is to the shutter)
-CB_GRIP = (38 * MM, 17 * MM, 62.0 * MM)  # MEASURED Henry's front (0.1226 mm/px) 35.7 to 40 (top-pb), proud 17 (top-pb), height
+CB_GRIP = (38 * MM, 17 * MM, 62.0 * MM)
+GRIP_R = dict(body=5 * MM, outer=13 * MM, inner=9 * MM, fillet=4 * MM)   # MEASURED top-pb.jpg (0.239 mm/px)  # MEASURED Henry's front (0.1226 mm/px) 35.7 to 40 (top-pb), proud 17 (top-pb), height
 LENS_X = 19 * MM                        # MEASURED front: lens axis 19 right of the body centre
 LENS_Z = 35.7 * MM                      # MEASURED front: lens axis above the base
 LENS_R, LENS_L = 33 * MM, 31.3 * MM     # OFFICIAL Sony: 66 x 31.3 retracted
@@ -107,10 +108,12 @@ def mats():
         return bpy.data.materials.get(n) or M.principled(n, **v)
     p["matte"] = get("mat_arms_matte_black", base="#121314", rough=0.62)
     p["satin"] = get("mat_arms_satin_black", base="#0e0f10", rough=0.38)
-    p["cam"] = get("mat_arms_camera_black", base="#070708", rough=0.5)
+    p["cam"] = get("mat_arms_camera_black", base="#0f0f10", rough=0.55, spec=0.22)
+    p["lens"] = get("mat_arms_lens_black", base="#0e0e0f", rough=0.5, spec=0.24)
+    p["lens_front"] = get("mat_arms_lens_print_ring", base="#0d0d0e", rough=0.62, spec=0.25)
     p["grip"] = bpy.data.materials.get("mat_arms_grip") or grip_material()
     p["mount"] = get("mat_arms_mount_silver", base="#b9bcc1", rough=0.25, metal=1.0)
-    p["glass"] = get("mat_arms_lens_glass", base="#0b1018", rough=0.02, metal=0.3, coat=1.0, coat_rough=0.02)
+    p["glass"] = get("mat_arms_lens_glass", base="#06070a", rough=0.02, coat=1.0, coat_rough=0.02)
     p["lcd"] = get("mat_arms_lcd", base="#0a0c10", rough=0.08, emit="#7d93b0", emit_strength=0.3)
     p["white"] = get("mat_arms_white", base="#eeeeec", rough=0.42, coat=0.1)
     p["mic_white"] = get("mat_arms_mic_white", base="#ececea", rough=0.45)
@@ -125,7 +128,7 @@ def grip_material():
     """The grip's fine pebble texture: a noise bump (no image, so it survives the GLB as plain black)."""
     from lib import materials as M
     m, nt, b = M._new("mat_arms_grip")
-    M._set(b, base="#050506", rough=0.78)
+    M._set(b, base="#080809", rough=0.82, spec=0.16)
     co = M._coords(nt, scale=(1, 1, 1))
     n = M._noise(nt, co, 2600.0, detail=2, rough=0.6)
     M._bump(nt, b, n, 0.25, distance=0.0002)
@@ -284,6 +287,67 @@ def build_keylight(n, coll, mp, rough=False, lite=False, pole_h=POLE_H, tilt=0.0
 # ---------------------------------------------------------------------------
 # 2b. the camera. Origin: under the lens axis on the base plate (the 1/4 thread); front -Y.
 # ---------------------------------------------------------------------------
+
+def body_outline(ins, d, n=6):
+    """Top-view outline of body + grip at one height (mm-free, metres; x about the body centre, y from the
+    front plate, + back). ins: inset (edge rounding); d: how far the grip stands proud of the front plate
+    (0 = the grip has rounded away). Radii shrink with d so the grip melts into the plate. Fixed point count."""
+    W, D, GW, GD = CB_W, CB_SHELL, CB_GRIP[0], CB_GRIP[1]
+    t = max(0.0, min(1.0, d / GD))
+    eps = 0.0003
+    rb = GRIP_R["body"] - ins * 0.5
+    rg1 = max(eps, rb + (GRIP_R["outer"] - rb) * t)
+    rg2 = max(eps, GRIP_R["inner"] * t)
+    rf = max(eps, GRIP_R["fillet"] * t)
+    xl, xr, yb = -W / 2 + ins, W / 2 - ins, D - ins
+    yfr = ins                       # the front plate
+    yg = -d + ins if d > 0 else ins # the grip's front
+    xg = -W / 2 + GW
+    pts = []
+
+    def arc(cx, cy, r, a0, a1):
+        for k in range(n + 1):
+            a = math.radians(a0 + (a1 - a0) * k / n)
+            pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+    arc(xl + rg1, yg + rg1, rg1, 180, 270)          # grip, front outer corner
+    arc(xg - rg2, yg + rg2, rg2, 270, 360)          # grip, front inner corner
+    arc(xg + rf, yfr - rf, rf, 180, 90)             # the concave fillet into the front plate
+    arc(xr - rb, yfr + rb, rb, 270, 360)            # front plate, the lens end
+    arc(xr - rb, yb - rb, rb, 0, 90)
+    arc(xl + rb, yb - rb, rb, 90, 180)
+    return pts
+
+
+def body_shell(A, key, m, rough=False, lite=False):
+    """The body and the grip as ONE closed surface: horizontal outlines lofted from the base up. The grip
+    keeps its full depth to 6 mm under its top, rounds over (6 mm), steps onto its flat top 3 mm under the
+    body's, and a 2 mm concave fillet runs it into the front plate above."""
+    H, GT, GD = CB_TOP, CB_GRIP[2], CB_GRIP[1]
+    rB, rT, RT, FIL = 0.0025, 0.0010, 0.006, 0.0015    # the front-top edge is crisp (about 1 mm)
+    nb = 2 if lite else 4
+    lv = []
+    for i in range(nb + 1):
+        a = math.pi / 2 * i / nb
+        lv.append((rB * (1 - math.cos(a)), rB * (1 - math.sin(a)), GD))
+    lv.append((GT - RT, 0.0, GD))
+    for i in range(1, nb + 1):
+        a = math.pi / 2 * i / nb
+        lv.append((GT - RT + RT * math.sin(a), 0.0, GD - RT + RT * math.cos(a)))
+    for i in range(nb + 1):
+        a = math.pi / 2 * i / nb
+        lv.append((GT + 0.0003 + FIL - FIL * math.cos(a), 0.0, FIL - FIL * math.sin(a)))   # 0.3 mm: no flat faces
+    lv.append((H - rT, 0.0, 0.0))
+    for i in range(1, nb + 1):
+        a = math.pi / 2 * i / nb
+        lv.append((H - rT + rT * math.sin(a), rT * (1 - math.cos(a)), 0.0))
+    n = 2 if lite else 6
+    loops = [A.verts([(x, y, z) for x, y in body_outline(ins, d, n)], m) for z, ins, d in lv]
+    for a, b in zip(loops, loops[1:]):
+        A.strip(a, b, key)
+    A.face(list(reversed(loops[0])), key)
+    A.face(loops[-1], key)
+
+
 def build_camera(coll, mp, rough=False, lite=False, sfx="", screen="selfie"):
     """Positions on the top plate are MEASURED from top-pb.jpg (0.239 mm/px from the 114.8 width), heights
     and the front from Henry's front image (0.227 mm/px in the compare sheet). Model x: + = the camera's
@@ -296,13 +360,9 @@ def build_camera(coll, mp, rough=False, lite=False, sfx="", screen="selfie"):
     yf = -0.0135                          # the shell's front face
     H = CB_TOP
     A = P.Mesh()
-    # main shell: 114.8 x 30 x 65, soft vertical corners, small top and bottom radii
-    rbox(A, CB_W, CB_SHELL, H, 0.005, 0.0025 if not rough else 0, 0.0025 if not rough else 0, cs, "cam",
-         T(x0, yf + CB_SHELL / 2, 0))
-    # the grip on the camera's right (-X): rounded front, 3 mm lower than the top
-    gx = x0 - CB_W / 2 + CB_GRIP[0] / 2
-    rbox(A, CB_GRIP[0], CB_GRIP[1] + 0.012, CB_GRIP[2], 0.012, 0.004 if not rough else 0, 0.003 if not rough else 0,
-         cs, "grip", T(gx, yf - CB_GRIP[1] / 2 + 0.006, 0))
+    # body and grip: one lofted surface (the grip's pebble finish is its own material on the separate
+    # cam_grip skin below, so the shell itself stays one smooth piece)
+    body_shell(A, "cam", T(x0, yf, 0), rough, lite)
     if not rough:
         X = lambda mm: x0 + mm * MM       # noqa: E731  (mm from the body centre, + = the camera's left)
         Y = lambda mm: yf + mm * MM       # noqa: E731  (mm behind the front face)
@@ -360,34 +420,52 @@ def build_camera(coll, mp, rough=False, lite=False, sfx="", screen="selfie"):
                 T(X(-39), Y(30), 0.022) @ R(-90, "X"))
         A.lathe([(0, 0), (0.0040, 0), (0.0040, 0.0010), (0, 0.0010)], 24, "satin", T(X(-39), Y(30), 0.022) @ R(-90, "X"))
     body = fin(A, f"cam_body{sfx}", mp, coll, root, bevel=0.0005, lite=lite)
+    if not rough:
+        body.data.materials.append(mp["grip"])
+        gi = len(body.data.materials) - 1
+        xg = x0 - CB_W / 2 + CB_GRIP[0] + 0.0005
+        for poly in body.data.polygons:      # the grip's faces (left of the grip's inner edge, in front of
+            c = poly.center                  # the plate or on its outer end) take the grip material
+            if c.x < xg and (c.y < yf + 0.0004 or c.x < x0 - CB_W / 2 + 0.0004) and c.z < CB_GRIP[2] + 0.0005 \
+                    and abs(poly.normal.z) < 0.9:
+                poly.material_index = gi
     # the lens (E PZ 16-50 II, retracted), its own mesh: barrel, the ribbed control ring, the stepped front
     A = P.Mesh()
     Ml = T(0, yf, LENS_Z) @ R(90, "X")             # local +Z -> world -Y (forward)
     r, L = LENS_R, LENS_L
-    seg = 24 if lite else (32 if rough else 96)    # 2 vertices per rib of the 48-rib control ring
+    seg = 24 if lite else (32 if rough else 144)   # 2 vertices per rib of the 72-rib zoom ring
     if rough:
-        A.lathe([(0, 0), (r, 0), (r, L), (0, L)], seg, "satin", Ml)
+        A.lathe([(0, 0), (r, 0), (r, L), (0, L)], seg, "lens", Ml)
     else:
-        ribs = 0 if lite else 48
-        kn = (lambda a: 1.0 + 0.010 * max(0.0, math.cos(ribs * a))) if ribs else None
+        # MEASURED top-pb.jpg (proportions along the axis) and Henry's front (radial rings, 0.1226 mm/px):
+        # mount ring 2.8 long, plain printed barrel 61.6 across, the ribbed zoom ring at the front (14 long,
+        # 66 across), a flat front ring r 31.5 to 22, a black inner ring, the element (30 across) sunk 5.8 mm
+        ribs = 0 if lite else 72
+        kn = (lambda a: 1.0 + 0.0045 * max(0.0, math.cos(ribs * a))) if ribs else None
+
         def k(rr, z):
             return (rr, z, kn) if kn else (rr, z)
-        prof = [(0, 0.0), (r - 0.0045, 0.0), (r - 0.0040, 0.0015), (r - 0.0012, 0.0025), (r, 0.0045),
-                (r, 0.0105), k(r, 0.0115), k(r, 0.0275), (r, 0.0285), (r - 0.0005, L - 0.0008), (r - 0.0018, L),
-                (0.0285, L), (0.0272, L - 0.0006), (0.0262, L - 0.0030),          # the printed front ring, a step
-                (0.0238, L - 0.0034), (0.0205, L - 0.0072),                         # the inner barrel's cone
-                (0.0198, L - 0.0074), (0.0172, L - 0.0076),                         # the filter-thread ledge
-                (0.0150, L - 0.0105), (0.0140, L - 0.0110), (0, L - 0.0110)]        # the front element's seat
-        keys = ["satin", "satin", "satin", "satin", "satin", "matte", "matte", "satin", "satin", "satin",
-                "satin", "satin", "matte", "matte", "satin", "satin", "matte", "matte", "satin", "satin"]
+        rp = 0.0308
+        prof = [(0, 0.0), (0.0300, 0.0), (0.0313, 0.0005), (0.0313, 0.0028), (rp, 0.0030), (rp, 0.0168),
+                (0.0326, 0.0172), (0.0330, 0.0178), k(r, 0.0182), k(r, 0.0300), (0.0326, 0.0308), (0.0316, L),
+                (0.0220, L), (0.0216, L - 0.0014), (0.0185, L - 0.0016), (0.0181, L - 0.0040),
+                (0.0152, L - 0.0058), (0, L - 0.0058)]
+        keys = ["lens", "lens", "lens", "lens", "lens", "lens", "lens", "lens", "lens", "lens", "lens",
+                "lens_front", "lens", "lens", "lens", "lens", "lens"]
         A.lathe(prof, seg, keys, Ml)
+        # the element's black retaining ring: leaves a clear centre 23 across (Henry's: dark to r 10-11)
+        zg = L - 0.0059
+        A.lathe([(0.0115, zg + 0.0012), (0.0151, zg + 0.0008), (0.0151, zg + 0.0019), (0.0122, zg + 0.0026),
+                 (0.0115, zg + 0.0026)], seg, "lens", Ml)
+        # the zoom/focus switch tab on the barrel's left (+X) side
+        rbox(A, 0.004, 0.009, 0.007, 0.0015, 0, 0, 2, "lens", T(rp + 0.0018, yf - 0.009, LENS_Z) @ R(90, "Y"))
     lens = fin(A, f"cam_lens{sfx}", mp, coll, root, bevel=None, lite=lite)
     out = {"cam_body": [body.name], "cam_lens": [lens.name], "cam_screen": []}
     if not rough:   # the front element: a glass dome inside the filter ring (40.5 thread)
         A = P.Mesh()
-        z0 = L - 0.0112
-        A.lathe([(0, z0), (0.0142, z0), (0.0138, z0 + 0.0008), (0.0100, z0 + 0.0022), (0.0050, z0 + 0.0029),
-                 (0, z0 + 0.0031)], seg, "glass", Ml)
+        z0 = L - 0.0059
+        A.lathe([(0, z0), (0.0152, z0), (0.0148, z0 + 0.0006), (0.0110, z0 + 0.0016), (0.0055, z0 + 0.0022),
+                 (0, z0 + 0.0024)], seg, "glass", Ml)
         out["cam_lens"].append(fin(A, f"cam_lens_glass{sfx}", mp, coll, root, lite=lite).name)
     # the vari-angle screen: hinge on the camera's left (+X); "selfie" = swung out and facing front
     A = P.Mesh()
@@ -955,7 +1033,10 @@ def stage_stills(out, names, cycles=False):
              "side": look_cam("still_side", (c.x + 6, c.y, c.z), c, ortho=max((hi - lo).y, (hi - lo).z * 16 / 9) * 1.4),
              "top": look_cam("still_top", (c.x, c.y, c.z + 6), c, ortho=max((hi - lo).x, (hi - lo).y * 16 / 9) * 1.1)}
     paths = {}
+    only = os.environ.get("ARMS_STILLS")
     for k, cam in shots.items():
+        if only and k not in only.split(","):
+            continue
         p = os.path.join(out, f"{NAME}-{k}{'-cycles' if cycles else ''}.png")
         _shoot(sc, cam, p, cycles, k)
         paths[k] = p
