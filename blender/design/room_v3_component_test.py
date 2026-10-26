@@ -53,6 +53,24 @@ SUFFIX = f"-pc{PC_YAW:.0f}" if OPTION else ""
 
 REPLACED = {"pole", "ultrawide", "studio_display", "screenbar", "pc"} | {f"{p}_{i}" for p in ("spk_pole", "spk_plate", "a7v") for i in (1, 2)}
 COMPONENTS = ("set_desk", "screens", "speakers", "pc")      # the .blend collections
+# 2026-10-26: the arms component (key lights, the camera on its Flex Arm, the mic on its PSA1+) is built live from
+# blender/components/arms.py at plan v3's numbers (ARMS=plan, the default; ARMS=0 keeps the stand-ins).
+ARMS = os.environ.get("ARMS", "plan")
+if ARMS != "0":
+    REPLACED = REPLACED | {"keylight_pole_1", "keylight_pole_2", "keylight_1", "keylight_2", "camera", "mic"}
+    SUFFIX = SUFFIX + ("" if ARMS == "plan" else f"-arms-{ARMS}")
+
+
+def build_arms(lite=False):
+    """The arms set at plan v3 or the proposal, in its own collection 'arms'."""
+    os.environ["ARMS_PART"] = "all"
+    sys.path.insert(0, os.path.join(BL, "components"))
+    import arms as AR
+    AR.PART = "all"
+    col = bpy.data.collections.get("arms") or bpy.data.collections.new("arms")
+    if col.name not in bpy.context.scene.collection.children:
+        bpy.context.scene.collection.children.link(col)
+    return AR.build_set(AR.room_layout(ARMS), collection=col, lite=lite)
 
 
 def M_at(x, y, z=0.0, yaw=0.0):
@@ -206,12 +224,18 @@ def music_side():
 # ---------------------------------------------------------------------------
 def groups():
     g = {"desk": [], "screens_pole": [], "g8": [], "studio_display": [], "screenbar": [], "speaker_L": [],
-         "speaker_R": [], "pc": []}
+         "speaker_R": [], "pc": [], "keylight_1": [], "keylight_2": [], "camera_arm": [], "mic": []}
+    arms_col = bpy.data.collections.get("arms")
+    arms_objs = set(arms_col.all_objects) if arms_col else set()
     for o in bpy.data.objects:
         if o.type != "MESH" or o.hide_render:
             continue
         n = o.name
-        if n.startswith("desk_drawers") or n in ("desk_top", "desk_led"):
+        if o in arms_objs:
+            k = "keylight_1" if n.startswith("keylight_1") else "keylight_2" if n.startswith("keylight_2") else \
+                "camera_arm" if n.startswith("cam") else "mic"
+            g[k].append(o)
+        elif n.startswith("desk_drawers") or n in ("desk_top", "desk_led"):
             g["desk"].append(o)
         elif n.startswith("desk_pole"):
             g["screens_pole"].append(o)
@@ -324,6 +348,11 @@ def main():
     for o in list(bpy.data.objects):
         if o.name.startswith("pole_arm"):            # the stand-in VESA arms; the screens bring their own
             bpy.data.objects.remove(o, do_unlink=True)
+        elif ARMS != "0" and o.name.startswith(("mic_arm", "mic_hang", "mic_capsule", "flex_arm")):
+            bpy.data.objects.remove(o, do_unlink=True)   # the stand-in mic arm and flex arm
+    if ARMS != "0":
+        arms_names = build_arms()
+        print("ARMS", ARMS, arms_names.get("mic_pose"), arms_names.get("flex_reach"))
     BO.lights()
     append_rich()
     music = music_side()
@@ -343,7 +372,7 @@ def main():
     with open(os.path.join(OUT, f"fit-check{SUFFIX}.json"), "w") as f:
         json.dump(report, f, indent=1)
     print("FIT", json.dumps(report))
-    if not OPTION:
+    if not OPTION and ARMS in ("plan", "0"):
         bpy.ops.wm.save_as_mainfile(filepath=BLEND)
         print("saved", BLEND)
 
@@ -364,7 +393,7 @@ def main():
                 "s.save(sys.argv[3],quality=90)\n")
         subprocess.run([PY, "-c", code, PHOTO, portrait, os.path.join(OUT, f"hero-portrait{SUFFIX}-vs-photo.jpg")], check=False)
 
-    if os.environ.get("SKIP_GLB") or OPTION:
+    if os.environ.get("SKIP_GLB") or OPTION or ARMS not in ("plan", "0"):
         return
     # --- the GLB: lite components plus the room shell and the AI-lab stand-ins
     for name in COMPONENTS:
@@ -379,6 +408,11 @@ def main():
         if o.type == "MESH" and o.parent is None and o.name.startswith(("piano_", "guitar_")):
             bpy.data.objects.remove(o, do_unlink=True)
     import_lite()
+    if ARMS != "0":                                  # the arms: rich out, lite in
+        col = bpy.data.collections.get("arms")
+        for o in list(col.all_objects):
+            bpy.data.objects.remove(o, do_unlink=True)
+        build_arms(lite=True)
     drop = {"sky", "ground", "ceiling"}
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:

@@ -177,8 +177,8 @@ CAM_ARM_FROM = (KL_POLE[0][0], KL_POLE[0][1], TOP + 0.64)   # the arm's clamp on
 # Shure MV7+ white on a RODE PSA1+ white (reach 94 cm horizontal): clamped at the outer end's back
 # edge, parked left of the keyboard, the elbow kept under the speaker's plate.
 # B: left of the G8, 9 cm off the snake plant; elbow from the arms component's solver (blender/components/arms.py)
-MIC = dict(clamp=(WL + 0.05, MAIN["y0"] + 0.045), riser=0.10, elbow=(-1.934, 0.35, 1.238),
-           capsule=(-1.56, 0.52, 0.95))
+MIC = dict(clamp=(WL + 0.05, MAIN["y0"] + 0.045), clamp_yaw=180.0, riser=0.10, elbow=(-1.934, 0.35, 1.238),
+           capsule=(-1.56, 0.52, 0.95))           # clamp_yaw: the jaw on the main run's short edge
 PSA1_REACH = 0.94
 # Floating shelf above the run: three frames, trailing plants at its two ends
 SHELF = dict(x0=-RX, x1=-RX + 0.25, y0=0.15, y1=1.95, z=1.95, t=0.04)   # 1.92 -> 1.95 for key light 1 (B)
