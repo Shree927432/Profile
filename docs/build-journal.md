@@ -859,3 +859,10 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Desk-top group: the first builder was lost when the Claude session restarted, about 35 minutes in, with
   no files written. Owner: "You also said 60 minutes half an hour ago". Restarted with a 75-minute box and a
   PROGRESS.md the owner can check at each stage.
+- Desk-top group built in about 50 of 75 minutes: Apollo x4 silver, Keychron Q1 Max (81 separate keys for
+  typing later), MX Master 3S, Stream Deck MK.2 on its stand, with SOLANT, TAVEN, MIRREX and BRILA printed.
+  Went wrong: importing speakers_render.py for its bake helpers ran that whole job and overwrote four approved
+  speaker stills (video-local is not in git; the new renders are of the same model). The mouse was first built
+  backwards; the outline check caught it. My review: the mouse's thumb wheel read as a jagged fin and the
+  Apollo's meter window and knob ring should be one black shape; one 25-minute fix round. Apollo moved 2.5 cm
+  off the monitor pole for its rear cables.
