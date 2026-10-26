@@ -159,7 +159,7 @@ def plan(px, py, pw, ph):
         ("keylight_1", (-1.25, 0.20), "key lights on poles at both ends; the camera on a flex arm off pole 1"),
         ("mic", (-1.25, 0.55), "MV7+ on the PSA1+, parked left of the keyboard"),
         ("shelf", (-2.40, 1.60), f"floating shelf {c(P.SHELF['y1'] - P.SHELF['y0'])} × 25 at {c(P.SHELF['z'])}: three frames, trailing plants"),
-        ("pc", (-1.05, 1.32), "training rig (PC) in the inner corner, front glass to the room"),
+        ("pc", (-1.05, 1.32), "training rig (PC) in the inner corner, turned 90: side glass to the room"),
         ("laptop", (-0.20, 1.40), "MacBook on the mStand, turned to the chair"),
         ("pegboard", (-0.55, 2.55), "pegboard (backlit), neon above, light panels by the corner"),
         ("plant", (0.75, 2.55), f"window {c(WIN['x1'] - WIN['x0'])} × {c(WIN['head'] - WIN['sill'])}, sill {c(WIN['sill'])}; plant on the ledge"),
@@ -189,12 +189,12 @@ def plan(px, py, pw, ph):
     xr = v.p(RX + 0.15, 0)[0] + 34
     dim(xr, v.p(0, RY)[1], xr, v.p(0, -RY)[1], "420 inside", side=-1, size=13)
     xl = v.p(-RX - 0.15, 0)[0] - 26
-    dim(xl, v.p(0, RY)[1], xl, v.p(0, P.MAIN["y0"])[1], f"main run {c(P.MAIN_LEN)}", size=12)
+    dim(xl, v.p(0, P.MAIN["y1"])[1], xl, v.p(0, P.MAIN["y0"])[1], f"main run {c(P.MAIN_LEN)}", size=12)
     dim(xl, v.p(0, P.MAIN["y0"])[1], xl, v.p(0, DOOR["y1"])[1], c(P.MAIN["y0"] - DOOR["y1"]), size=12)
     yd = v.p(0, P.RET["y0"])[1] + 22
     dim(v.p(P.MAIN["x1"], 0)[0], yd, v.p(P.RET["x1"], 0)[0], yd, f"return {c(P.RET_LEN)} beyond the run, 60 deep", side=-1, size=11)
     yd = v.p(0, P.MAIN["y0"])[1] + 22
-    dim(v.p(-RX, 0)[0], yd, v.p(P.MAIN["x1"], 0)[0], yd, "80", side=-1, size=12)
+    dim(v.p(P.MAIN["x0"], 0)[0], yd, v.p(P.MAIN["x1"], 0)[0], yd, "80, 3 off the wall", side=-1, size=12)
     xpz = v.p(RX, 0)[0] + 10
     py0, py1 = max(y for _, y in P.PIANO_FOOT), min(y for _, y in P.PIANO_FOOT)
     dim(xpz, v.p(0, RY)[1], xpz, v.p(0, py0)[1], c(RY - py0), side=-1, size=11)
@@ -292,11 +292,11 @@ def elevations(px, py, pw, ph):
         vb.line((U2(WIN["x0"]), z), (U2(WIN["x1"]), z), "#7d8696", 0.7)
     vb.line((U2((WIN["x0"] + WIN["x1"]) / 2), WIN["sill"]), (U2((WIN["x0"] + WIN["x1"]) / 2), WIN["head"]), INK, 0.8)
     vb.rect(U2(WIN["x0"] - WIN["ledge_horn"]), U2(WIN["x1"] + WIN["ledge_horn"]), WIN["sill"] - WIN["ledge_t"], WIN["sill"], "#d2ccc0", INK, 0.8)
-    vb.rect(U2(-RX), U2(P.RET["x1"]), P.TOP - P.TOP_T, P.TOP, "#fff", INK, 1.3)
+    vb.rect(U2(P.MAIN["x0"]), U2(P.RET["x1"]), P.TOP - P.TOP_T, P.TOP, "#fff", INK, 1.3)
     vb.line((U2(P.MAIN["x1"]), P.TOP - P.TOP_T - 0.006), (U2(P.RET["x1"]), P.TOP - P.TOP_T - 0.006), "#7fb6ff", 2.2)
     for k in ("alex_2", "alex_3"):
         alex_front(vb, *sorted(U2(q) for q in ext(CP[k], "x")))
-    vb.rect(U2(-RX + 0.21), U2(P.MAIN["x1"] - 0.01), 0, P.ALEX[2], "none", MUTED, 0.9, extra=DASH)    # drawer unit 1, end-on
+    vb.rect(U2(P.MAIN["x0"] + 0.21), U2(P.MAIN["x1"] - 0.01), 0, P.ALEX[2], "none", MUTED, 0.9, extra=DASH)    # drawer unit 1, end-on
     for key, lab in (("pc", "rig"), ("desk_plant", None), ("mstand", None), ("laptop", "laptop"), ("pegboard", "pegboard"),
                      ("headphones", None), ("neon", "neon: our words"), ("nanoleaf", "panels"), ("plant", None),
                      ("a7v_2", None), ("spk_pole_2", None), ("frame_3", None), ("vine_2", None), ("vine_pot_2", None)):
@@ -311,7 +311,7 @@ def elevations(px, py, pw, ph):
     yq = vb.p(0, WIN["head"] + 0.10)[1]
     dim(vb.p(U2(WIN["x0"]), 0)[0], yq, vb.p(U2(WIN["x1"]), 0)[0], yq, c(WIN["x1"] - WIN["x0"]), size=11)
     yq = vb.p(0, 0)[1] + 18
-    dim(vb.p(U2(-RX), 0)[0], yq, vb.p(U2(P.RET["x1"]), 0)[0], yq, f"desk {c(P.RET['x1'] + RX)} from the corner", side=-1, size=11)
+    dim(vb.p(U2(P.MAIN["x0"]), 0)[0], yq, vb.p(U2(P.RET["x1"]), 0)[0], yq, f"desk {c(P.RET['x1'] - P.MAIN['x0'])}, 3 off the walls", side=-1, size=11)
     dim(vb.p(U2(P.RET["x1"]), 0)[0], yq, vb.p(U2(WIN["x0"]), 0)[0], yq, "8", side=-1, size=11)
     pg = CP["pegboard"]
     xq = vb.p(U2(P.PEG["x"] - P.PEG["w"] / 2) - 0.05, 0)[0]
@@ -550,9 +550,9 @@ def numbers_panel(px, py, pw, ph):
     sp = P.SPEAKERS[0]
     lines = [
         ("Desk", INK, 650),
-        f"Main run {c(P.MAIN_LEN)} × 80 on the left wall, y {c(P.MAIN['y0'])} to {c(RY)}.",
+        f"Main run {c(P.MAIN_LEN)} × 80, 3 off the left wall, y {c(P.MAIN['y0'])} to {c(P.MAIN['y1'])}.",
         f"Return {c(P.RET_LEN)} × 60 beyond it on the back wall, to x {c(P.RET['x1'])},",
-        f"8 cm short of the window. Top at 73.5, 3.5 thick, no pucks.",
+        f"8 cm short of the window. Top at {c(P.TOP, 1)}, 3.5 thick, 3 cm risers.",
         "ALEX 1 under the run's outer end, faces the room; ALEX 2",
         "and 3 under the return, by the corner and at its end.",
         "",
@@ -567,7 +567,7 @@ def numbers_panel(px, py, pw, ph):
         f"Aeron parked {c(P.SEAT[0] - P.MAIN['x1'])} from the edge; swing 40.",
         "",
         ("Return and window", INK, 650),
-        f"PC x {c(P.PC_AT[0] - P.PC_SIZE[0] / 2)} to {c(P.PC_AT[0] + P.PC_SIZE[0] / 2)}, 48 deep, front to the room.",
+        f"PC x {c(P.PC_AT[0] - P.PC_SIZE[1] / 2)} to {c(P.PC_AT[0] + P.PC_SIZE[1] / 2)}, turned 90: side glass to the room.",
         f"Laptop on the mStand at x {c(P.LAPTOP_AT[0])}, turned {abs(P.LAPTOP_YAW):.0f}° to the chair.",
         f"Pegboard {c(P.PEG['z'])} to {c(P.PEG['z'] + P.PEG['h'])}, neon above, panels by the corner.",
         f"Window x {c(WIN['x0'])} to {c(WIN['x1'])}: {c(WIN['x1'] - WIN['x0'])} × {c(WIN['head'] - WIN['sill'])}, sill {c(WIN['sill'])}, ledge 20 in.",
@@ -596,12 +596,12 @@ def owner_panel(px, py, pw, ph):
     para(px + 18, py + 96, [
         ("1. Speakers at standing ear (tweeters 154).", INK, 650),
         "   As the photo: beside the top screen. Seated, they", "   would sit beside the 34 in at 118 and crowd the camera.",
-        ("2. The window moved 10 cm right of the quick blockout.", INK, 650),
-        "   The return is 102 beyond the run (172 from the", "   wall): the PC, a plant and the laptop fit with air.",
+        ("2. The desk stands 3 cm off both walls (2026-10-26).", INK, 650),
+        "   The window moved 3 cm right with it, so the return", "   still ends 8 cm short of it.",
         ("3. obj_studio is split across the room.", INK, 650),
         "   Speakers and Apollo in the lab; decks and lightstick", "   by the piano. Keep, or move the decks' part to", "   obj_piano's close-up?",
-        ("4. The PC's front glass faces the room, its side glass", INK, 650),
-        ("   the window, so the hero sees both.", INK, 650),
+        ("4. The PC turned 90 (owner, 2026-10-26): side glass", INK, 650),
+        ("   to the room, front glass to the window side.", INK, 650),
         ("5. Snake plant on the desk's outer end, under the", INK, 650),
         ("   camera, beside the key light.", INK, 650),
         ("6. The DJ stand stands by the front of the right wall:", INK, 650),

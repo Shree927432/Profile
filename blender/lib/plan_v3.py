@@ -35,7 +35,9 @@ SWITCH = C.SWITCH
 # 10 cm right of the quick blockout, so the return is 102 long and holds the PC, a plant and
 # the laptop without crowding.
 # ---------------------------------------------------------------------------
-WINDOW_V3 = dict(x0=-0.30, x1=1.10, sill=0.95, head=2.35, ledge_d=0.25, ledge_horn=0.02, ledge_t=0.03)
+# 2026-10-26: 3 cm right (was -0.30 to 1.10), with the desk 3 cm off the walls, so the real return
+# (182 from its corner) still ends 8 cm short of it.
+WINDOW_V3 = dict(x0=-0.27, x1=1.13, sill=0.95, head=2.35, ledge_d=0.25, ledge_horn=0.02, ledge_t=0.03)
 LEDGE_IN = WINDOW_V3["ledge_d"] - 0.05           # 20 cm into the room
 
 # ---------------------------------------------------------------------------
@@ -43,11 +45,16 @@ LEDGE_IN = WINDOW_V3["ledge_d"] - 0.05           # 20 cm into the room
 # (owner, 2026-10-24: "Option B: short 3 cm risers, desk at about 76.5 cm").
 # ---------------------------------------------------------------------------
 RISER = 0.03
+# 2026-10-26 (component test, owner approved): the desk stands 3 cm off the left and back walls, so the
+# monitor pole's clamp (6.7 cm behind its axis) clears the wall and the ALEX backs clear the skirting.
+DESK_OFF = 0.03
+WL, WB = -RX + DESK_OFF, RY - DESK_OFF          # the desk's wall edges: left (x) and back (y)
+SKIRT_T = 0.012                                  # skirting board thickness (the blockout's)
 TOP, TOP_T = 0.70 + RISER + 0.035, 0.035      # 0.765
 ALEX = (0.36, 0.58, 0.70)                        # IKEA ALEX w, d, h (official 36 x 58 x 70)
 MAIN_LEN, MAIN_D, RET_D = 1.85, 0.80, 0.60
-MAIN = dict(x0=-RX, x1=-RX + MAIN_D, y0=RY - MAIN_LEN, y1=RY)                       # y 25 to 210
-RET = dict(x0=-RX + MAIN_D, x1=WINDOW_V3["x0"] - 0.08, y0=RY - RET_D, y1=RY)       # x -140 to -38
+MAIN = dict(x0=WL, x1=WL + MAIN_D, y0=WB - MAIN_LEN, y1=WB)                         # y 22 to 207
+RET = dict(x0=WL + MAIN_D, x1=WINDOW_V3["x0"] - 0.08, y0=WB - RET_D, y1=WB)         # x -137 to -35
 RET_LEN = RET["x1"] - RET["x0"]                  # beyond the main run: 102 (182 from the left wall)
 DESK_L = [(MAIN["x0"], MAIN["y0"]), (MAIN["x1"], MAIN["y0"]), (MAIN["x1"], RET["y0"]), (RET["x1"], RET["y0"]),
           (RET["x1"], RET["y1"]), (MAIN["x0"], MAIN["y1"])]                         # the top, as one outline
@@ -55,8 +62,8 @@ LED_IN = 0.05                                    # LED strip under both front ed
 # Three ALEX units, flush (1 cm) with the front edges, as in the photo: (centre x, centre y, yaw)
 DRAWERS = [
     (MAIN["x1"] - 0.01 - ALEX[1] / 2, MAIN["y0"] + 0.01 + ALEX[0] / 2, 90),   # 1: main run, outer end, faces the room
-    (RET["x0"] + 0.01 + ALEX[0] / 2, RY - 0.01 - ALEX[1] / 2, 0),             # 2: return, by the corner
-    (RET["x1"] - 0.01 - ALEX[0] / 2, RY - 0.01 - ALEX[1] / 2, 0),             # 3: return, far end by the window
+    (RET["x0"] + 0.01 + ALEX[0] / 2, WB - 0.01 - ALEX[1] / 2, 0),             # 2: return, by the corner
+    (RET["x1"] - 0.01 - ALEX[0] / 2, WB - 0.01 - ALEX[1] / 2, 0),             # 3: return, far end by the window
 ]
 
 # ---------------------------------------------------------------------------
@@ -67,12 +74,16 @@ YM = round((KL_POLE[0][1] + KL_POLE[1][1]) / 2, 3)   # the stack's centre line, 
 SEAT = (MAIN["x1"] + 0.45, YM)                   # the Aeron's post, parked at the main run
 EAR_SEATED = (SEAT[0] - 0.06, YM, 1.18)          # seat 46 + seated ear about 72
 EAR_STANDING = 1.55                              # standing ear of a 170 cm person
-POLE = (-RX + 0.04, YM)                          # the dual monitor pole, clamped at the back edge
-UW = dict(w=0.8136, d=0.128, h=0.364, z=0.89)    # Samsung G8 34: 813.6 wide, 128.1 deep (no stand); h UNSURE
-UW["x"] = POLE[0] + 0.02 + 0.02 + UW["d"] / 2    # 2 cm behind it for the VESA arm
+# The screen stack as the approved screens component builds it (blender/components/screens.py, 2026-10-26):
+# the pole 4.5 cm in from the desk's back edge, the clamp reaching 6.7 cm behind the pole's axis,
+# the G8's front 23.7 cm and the Studio Display's front 19 cm in front of the axis, 1.45 cm between them.
+POLE = (WL + 0.045, YM)                          # the dual monitor pole, clamped at the back edge
+POLE_CLAMP_BACK = 0.067                          # the clamp's back face behind the pole's axis (screens.py)
+UW = dict(w=0.8136, d=0.128, h=0.364, z=0.880)   # Samsung G8 34: 813.6 wide, 128.1 deep (no stand); 88.0 to 124.4
+UW["x"] = POLE[0] + 0.237 - UW["d"] / 2          # front 23.7 cm in front of the pole (the component's VESA arm)
 SD = dict(w=0.623, d=0.031, h=0.362)             # Apple Studio Display 27, VESA (Apple: 362 x 623 x 31)
-SD["z"] = UW["z"] + UW["h"] + 0.04
-SD["x"] = POLE[0] + 0.04 + SD["d"] / 2
+SD["z"] = 1.2585                                 # the component: 1.45 cm over the G8
+SD["x"] = POLE[0] + 0.19 - SD["d"] / 2           # front 19 cm in front of the pole
 SD_GLASS = (0.597, 0.336)                        # 27 in 16:9 active area
 POSTS = dict(w=0.538, h=SD_GLASS[1])             # monitor_screen 16:10, 53.8 x 33.6, centred in the glass
 UW_ACTIVE = (0.797, 0.334)                       # rig_screen 21:9
@@ -80,10 +91,10 @@ UW_ACTIVE = (0.797, 0.334)                       # rig_screen 21:9
 # ADAM A7V white, raised beside the TOP screen on desk poles, as in the photo. The cabinets line
 # up with the Studio Display (centre on centre), which puts the tweeters at standing ear level:
 # the photo's look, and the site's camera stands. Toed in towards the seat.
-A7V = (0.200, 0.280, 0.337)                      # ADAM official W x D x H
+A7V = (0.200, 0.294, 0.337)                      # ADAM official W x H, depth 28 + the grille: 29.4 (component)
 TWEETER_UP = 0.265                               # UNSURE: tweeter centre above the cabinet's base
 SPK_Z = SD["z"] + SD["h"] / 2 - A7V[2] / 2       # cabinet base
-SPK_X = -RX + 0.04 + A7V[1] / 2                  # back 4 cm off the wall (front ports)
+SPK_X = WL + 0.04 + A7V[1] / 2                   # back 4 cm in from the desk's back edge (front ports)
 SPK_PLATE = 0.02                                 # the pole's top plate under each cabinet
 
 
@@ -162,7 +173,7 @@ CAM_AT = (MAIN["x1"] - 0.30, YM - 0.38, 1.27)    # bottom centre
 CAM_ARM_FROM = (KL_POLE[0][0], KL_POLE[0][1], 1.42)
 # Shure MV7+ white on a RODE PSA1+ white (reach 94 cm horizontal): clamped at the outer end's back
 # edge, parked left of the keyboard, the elbow kept under the speaker's plate.
-MIC = dict(clamp=(-RX + 0.05, MAIN["y0"] + 0.08), riser=0.20, elbow=(-RX + 0.30, MAIN["y0"] + 0.19, 1.16),
+MIC = dict(clamp=(WL + 0.05, MAIN["y0"] + 0.08), riser=0.20, elbow=(WL + 0.30, MAIN["y0"] + 0.19, 1.16),
            capsule=(MAIN["x1"] - 0.16, YM - 0.36, 1.06))
 PSA1_REACH = 0.94
 # Floating shelf above the run: three frames, trailing plants at its two ends
@@ -170,12 +181,14 @@ SHELF = dict(x0=-RX, x1=-RX + 0.25, y0=0.15, y1=1.95, z=1.92, t=0.04)
 VINE_LEN = 0.57                                  # the trailing plants hang to about 131
 
 # ---------------------------------------------------------------------------
-# The return, against the back wall: the PC in the inner corner (front glass to the room, side
-# glass towards the window and the camera), a small plant, the MacBook on the mStand at the end
+# The return, against the back wall: the PC in the inner corner, a small plant, the MacBook on the
+# mStand at the end. PC turned 90 (owner, 2026-10-26, option B): the O11 Vision's glass side is on its
+# left, so the front glass faces the window side (+X) and the side glass the room (-Y).
 # ---------------------------------------------------------------------------
 PC_SIZE = (0.304, 0.480, 0.4645)                 # Lian Li O11 Vision W x D x H (official)
-PC_AT = (RET["x0"] + 0.02 + PC_SIZE[0] / 2, RY - 0.04 - PC_SIZE[1] / 2, TOP)
-LAPTOP_AT = (RET["x1"] - 0.24, RY - 0.29)
+PC_YAW = 90
+PC_AT = (RET["x0"] + 0.274, WB - 0.192, TOP)     # back (PSU bracket, 1.4 cm) 2 cm off the corner; 4 cm off the back edge
+LAPTOP_AT = (RET["x1"] - 0.24, WB - 0.29)
 LAPTOP_YAW = _aim(*LAPTOP_AT, *SEAT)             # turned to the chair, as in the photo
 PEG = dict(w=0.76, h=0.56, x1=WINDOW_V3["x0"] - 0.06, z=1.28, off=0.04)   # SKADIS, 4 cm off the wall, backlit
 PEG["x"] = PEG["x1"] - PEG["w"] / 2
@@ -233,7 +246,7 @@ LIGHT_V3 = dict(C.LIGHT, x=0.20, y=-0.30)
 # ---------------------------------------------------------------------------
 # INTRO: inside the room, at the window, looking out at the sky and the city. A click pulls back
 # into the room and turns left to HERO_V3.
-INTRO = dict(pos=(0.40, 1.10, 1.55), target=(0.40, 6.0, 1.78), vfov=50)
+INTRO = dict(pos=(0.43, 1.10, 1.55), target=(0.43, 6.0, 1.78), vfov=50)   # on the window's centre line
 # HERO_V3: the AI lab as in the photo: standing in the room, looking into the back-left corner.
 HERO_V3 = dict(pos=(1.10, -0.80, 1.85), target=(-1.75, 1.20, 0.78), vfov=54, portrait_vfov=66)
 # ABOUT: the camera turns right to the music side: piano and guitars, rack, decks.
@@ -298,9 +311,9 @@ part("mic", "Microphone on its arm", "Shure MV7+ white on a RODE PSA1+ white", (
      (MIC["capsule"][0], MIC["capsule"][1], MIC["capsule"][2] - 0.045), _aim(*MIC["capsule"][:2], *EAR_SEATED[:2]),
      role="obj_mic", shape="special", note="parked left of the keyboard; email")
 part("interface", "Audio interface", "Universal Audio Apollo x4 Gen 2, silver", (0.233, 0.15, 0.066),
-     (-RX + 0.185, YM - 0.10, TOP), 90, role="obj_studio", col=G_, note="233 x 149 x 66 (retailers)")
+     (WL + 0.185, YM - 0.10, TOP), 90, role="obj_studio", col=G_, note="233 x 149 x 66 (retailers)")
 part("streamdeck", "Stream Deck", "Elgato Stream Deck MK.2 white, on its stand", (0.118, 0.084, 0.075),
-     (-RX + 0.28, YM + 0.17, TOP), 90, note="118 x 84 x 25 flat (Elgato); on its stand UNSURE")
+     (WL + 0.28, YM + 0.17, TOP), 90, note="118 x 84 x 25 flat (Elgato); on its stand UNSURE")
 part("mat", "Felt desk mat", "grey felt, 80 x 30", (0.80, 0.30, 0.004), (MAIN["x1"] - 0.25, YM, TOP), 90, col="#8d9096")
 part("keyboard", "Keyboard", "Keychron Q1 Max, white", (0.3275, 0.145, 0.032), (MAIN["x1"] - 0.22, YM - 0.05, TOP + 0.004), 90)
 part("mouse", "Mouse", "Logitech MX Master 3S, pale grey", (0.0843, 0.1249, 0.051), (MAIN["x1"] - 0.22, YM + 0.25, TOP + 0.004), 90,
@@ -320,8 +333,8 @@ for i, y in enumerate((SHELF["y0"] + 0.07, SHELF["y1"] - 0.07)):
 part("chair", "Chair", "Herman Miller Aeron, size B, Mineral", (0.686, 0.686, 1.044), (SEAT[0], SEAT[1], 0), -90,
      shape="special", col="#c9ccd0", note="base about 69 across; swing radius 40 (UNSURE)")
 # --- the return
-part("pc", "Training rig (PC)", "Lian Li O11 Vision white, RTX 5090 Founders Edition inside", PC_SIZE, PC_AT, 0,
-     role="obj_rig", note="front glass to the room, side glass to the window and the camera", glow="#9fd0ff")
+part("pc", "Training rig (PC)", "Lian Li O11 Vision white, RTX 5090 Founders Edition inside", PC_SIZE, PC_AT, PC_YAW,
+     role="obj_rig", note="turned 90: front glass to the window side, side glass to the room and the camera", glow="#9fd0ff")
 part("desk_plant", "Small plant", "small fern in a white pot", (0.10, 0.10, 0.20), (PC_AT[0] + 0.25, RET["y0"] + 0.15, TOP),
      shape="cyl", col="#4f7a46")
 part("mstand", "Laptop stand", "Rain Design mStand, silver", (0.253, 0.262, 0.15), (*LAPTOP_AT, TOP), LAPTOP_YAW, col=G_)
@@ -646,6 +659,16 @@ def run_checks():
         chk(f"chair swing to {CP[k]['label'].lower()}", gap(sw, foot(CP[k])), 0.03)
     chk("chair base, parked, to the main run (knees under the top)", gap(circ(*SEAT, CHAIR_BASE_R), MAIN_POLY), 0.0)
     # 7. the main run's stack
+    chk("desk off the left wall (clamps, cables)", WL + RX, 0.02)
+    chk("desk off the back wall", RY - WB, 0.02)
+    chk("monitor pole clamp to the left wall", POLE[0] - POLE_CLAMP_BACK - (-RX), 0.005)
+    for k in ("alex_2", "alex_3"):
+        chk(f"{CP[k]['label'].lower()} back to the skirting", (RY - SKIRT_T) - max(y for _, y in foot(CP[k])), 0.005)
+    sd = rect_w(SD["x"], YM, SD["w"], SD["d"], 90)
+    for i, s in enumerate(SPEAKERS):
+        chk(f"speaker {'LR'[i]} cabinet to the Studio Display's edge", gap(foot(CP[f"a7v_{i + 1}"]), sd), 0.03)
+        chk(f"speaker {'LR'[i]} cabinet to the left wall", wall_gap(CP[f"a7v_{i + 1}"]), 0.02)
+    chk("G8 to Studio Display gap (component: 1.45)", SD["z"] - (UW["z"] + UW["h"]), 0.0145)
     chk("ultrawide bottom over the Apollo and the Stream Deck", UW["z"] - (TOP + max(CP["interface"]["size"][2], CP["streamdeck"]["size"][2])), 0.03)
     chk("posts canvas (16:10) inside the 27 in glass", SD_GLASS[0] - POSTS["w"], 0.0)
     chk("light bar to the shelf", SHELF["z"] - SHELF["t"] - (SD["z"] + SD["h"] + 0.03), 0.10)
@@ -666,7 +689,10 @@ def run_checks():
         chk(f"camera arm to {CP[k]['label'].lower()}", min(_pt_box_dist(p, CP[k]) for p in flex) - 0.01, 0.02)
     chk("tweeters at standing ear level (within 5 cm)", 0.05 - abs(TWEETER_Z - EAR_STANDING), 0.0)
     # 8. the return
-    chk("PC inside the return's front edge", PC_AT[1] - PC_SIZE[1] / 2 - RET["y0"], 0.05)
+    pc = foot(CP["pc"])
+    chk("PC inside the return's front edge", min(y for _, y in pc) - RET["y0"], 0.05)
+    chk("PC (PSU bracket, 1.4 cm) inside the return's corner end", min(x for x, _ in pc) - 0.014 - RET["x0"], 0.005)
+    chk("PC back to the desk's back edge", WB - max(y for _, y in pc), 0.02)
     chk("laptop top to the pegboard", PEG["z"] - (TOP + 0.15 + 0.24), 0.10)
     lap = foot(CP["laptop"])
     chk("laptop inside the return's end", RET["x1"] - max(x for x, _ in lap), 0.02)
