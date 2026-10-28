@@ -905,3 +905,5 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - The owner asked why AI can't model an exact replica of a complex object and what the bottlenecks are,
   then for a researched essay on language models versus world models. Draft written to
   docs/drafts/world-models-essay.md for the owner to edit; not in content/posts until they approve.
+- Owner: "Publish as is". The essay went live as content/posts/the-chair-that-wouldnt-come-out-right.md;
+  build passed, main pushed (which also backs up tonight's chair, keyboard and wall work).
