@@ -54,13 +54,15 @@ ROOM_SEAT_H = 480.0        # EST: a mid setting in the room (OFFICIAL range 406 
 SEAT_FRONT = -277.0        # MEASURED side: front lip (y, mm behind the cylinder axis negative = forward)
 SEAT_BACK = SEAT_FRONT + SEAT_D   # 155
 SEAT_HW_FRONT, SEAT_HW_BACK = 250.0, 222.0   # MEASURED front: 500 across the front corners, 444 at the back
-SEAT_RAIL = (26.0, 18.0)   # EST: the seat frame rail (wide, tall)
-WATERFALL = (-225.0, 55.0)  # MEASURED side: the front edge starts curving at y -225 and drops 55
-SEAT_DISH = 14.0           # EST: the mesh sags in the middle
+SEAT_RAIL = (26.0, 20.0)   # EST: the seat frame rail (wide, tall); the front lip swells to about 1.9 x
+WATERFALL = (-215.0, 42.0)  # MEASURED side: the front edge starts curving at y -215 and drops about 40 (the thick lip)
+SEAT_BOLSTER = 28.0        # EST side/3q: the frame sides rise at the rear corners (hip bolsters)
+SEAT_TILT = 2.5            # EST: the seat pan tilts back 2 to 3 degrees
+SEAT_DISH = 20.0           # EST: the mesh dishes into the frame
 # Back: half-width and centre line (y behind the axis) per height above the seat, MEASURED front and side
 BACK_HW = [(0, 206), (25, 200), (50, 195), (75, 194), (100, 193), (130, 194), (160, 197), (190, 204), (215, 212),
            (240, 223), (265, 234), (290, 245), (320, 253), (345, 257), (370, 258), (400, 255), (425, 249), (452, 218)]
-BACK_YC = [(0, 185), (100, 192), (200, 199), (300, 216), (370, 230), (400, 238), (425, 248), (452, 262), (479, 284)]
+BACK_YC = [(0, 202), (60, 190), (130, 181), (200, 186), (260, 199), (320, 218), (380, 240), (425, 258), (452, 271), (479, 294)]   # an S: lumbar bowed forward, about 11 degrees overall, the top rail curling back
 BACK_TOP = 479.0           # MEASURED: the top arc's crown above the seat (1079 overall in the photo)
 BACK_CORNER_Z = 440.0      # MEASURED: where the side rails turn into the top arc
 BACK_RAIL = (36.0, 28.0)   # MEASURED front: the frame rail about 36 across its face; 28 deep EST
@@ -78,9 +80,9 @@ ARM_H = 182.0              # MEASURED side: pad top above the seat in the photos
 PAD = (250.0, 80.0, 26.0)  # MEASURED side/front: the pad 250 long, 80 wide, 26 thick
 PAD_Y = (-137.0, 113.0)    # MEASURED side: the pad from 137 in front of the axis to 113 behind
 PAD_X = 295.0              # MEASURED front: the pad's centre (outer edge at 335)
-MECH = (300.0, 240.0, 110.0)   # MEASURED front/side: the mechanism housing 300 wide, 240 long, 110 tall
-MECH_Y = 95.0              # MEASURED side: housing centre 95 behind the axis (from -25 to +215)
-MECH_Z = -175.0            # MEASURED side: housing bottom 175 below the seat top
+MECH = (250.0, 200.0, 90.0)    # MEASURED front/side, coordinator 2026-10-28: the cast tilt housing 250 wide, 200 long, 90 tall
+MECH_Y = 95.0              # MEASURED side: housing centre 95 behind the axis
+MECH_Z = -160.0            # MEASURED side: housing bottom 160 below the seat top
 LEVER = (110.0, 22.0)      # EST: paddle length, width
 COLUMN_R = 13.5            # MEASURED front: the black column 27 across
 COLLAR = (24.0, 40.0)      # MEASURED front: the polished collar 48 across, 40 tall above the hub
@@ -140,7 +142,8 @@ def mats():
     get("pad", base="#cfd2d1", rough=0.8, spec=0.3)                  # the arm pads and lumbar pads
     get("polished", base="#eef0f3", rough=0.05, metal=1.0)           # polished aluminium
     get("black", base="#1a1a1b", rough=0.55)                         # casters, the column
-    get("dark", base="#4a4c4f", rough=0.5)                           # the tension knob's grip
+    get("dark", base="#3e4043", rough=0.5)                           # the tension knob's grip
+    get("cast", base="#6d7075", rough=0.42, metal=0.85)              # the cast tilt housing, dark grey metal
     get("mesh", base="#d2d5d5", rough=0.5, sheen=0.6, sheen_tint="#ffffff")
     return d
 
@@ -154,7 +157,12 @@ def mesh_material(lite):
         return m
     from lib import materials as M
     m, nt, b = M._new(name)
-    M._set(b, base="#9a9e9e", rough=0.5, spec=0.5, sheen=0.5)
+    M._set(b, base="#a9a59c", rough=0.42, spec=0.5, sheen=0.6, sheen_tint="#fff4e4")   # a touch warmer than the frame
+    try:
+        b.inputs["Anisotropic"].default_value = 0.6
+        b.inputs["Anisotropic Rotation"].default_value = 0.25
+    except KeyError:
+        pass
     m.use_backface_culling = False
     if lite:
         im = weave_image()
@@ -163,7 +171,7 @@ def mesh_material(lite):
         tex.interpolation = "Linear"        # Closest exported a nearest-mip sampler that moires in three.js
         uv = nt.nodes.new("ShaderNodeUVMap")
         mp = nt.nodes.new("ShaderNodeMapping")
-        mp.inputs["Scale"].default_value = (90.0, 90.0, 1.0)
+        mp.inputs["Scale"].default_value = (170.0, 170.0, 1.0)
         nt.links.new(uv.outputs[0], mp.inputs[0])
         nt.links.new(mp.outputs[0], tex.inputs[0])
         gt = nt.nodes.new("ShaderNodeMath")
@@ -183,10 +191,10 @@ def mesh_material(lite):
         nt.links.new(tc.outputs["UV"], mp.inputs[0])
         w1 = nt.nodes.new("ShaderNodeTexWave")
         w1.bands_direction, w1.wave_profile = "X", "SAW"
-        w1.inputs["Scale"].default_value = 180.0
+        w1.inputs["Scale"].default_value = 400.0
         w2 = nt.nodes.new("ShaderNodeTexWave")
         w2.bands_direction, w2.wave_profile = "Y", "SAW"
-        w2.inputs["Scale"].default_value = 180.0
+        w2.inputs["Scale"].default_value = 300.0
         nt.links.new(mp.outputs[0], w1.inputs[0])
         nt.links.new(mp.outputs[0], w2.inputs[0])
         mx = nt.nodes.new("ShaderNodeMath")
@@ -221,9 +229,9 @@ def weave_image(px=32):
     data = []
     for y in range(px):
         for x in range(px):
-            on = (x % 6) < 2 or (y % 6) < 2
-            shade = 0.62 if (x % 6) < 2 else 0.56
-            data += [shade, shade + 0.01, shade, 1.0 if on else 0.0]
+            on = (x % 4) < 2 or (y % 8) < 2          # dense warps, sparser wefts: fine vertical stripes
+            shade = 0.66 if (x % 4) < 2 else 0.58
+            data += [shade, shade - 0.015, shade - 0.05, 1.0 if on else 0.0]
     im.pixels = data
     im.pack()
     return im
@@ -397,21 +405,24 @@ def build_back(coll, mp, parent, rough=False, lite=False, sfx=""):
     return names
 
 
-def seat_outline(n_corner=5):
-    """The seat frame's centre line in the top view, CCW, (y, x) in mm with the waterfall drop as z."""
-    from lib import parts as P
+def seat_outline(n=40):
+    """The seat frame's centre line in the top view, CCW, (x, y) in mm: a sculpted rounded outline, widest just
+    behind the front corners, narrowing to the back (side.jpg and three-quarter-front.jpg)."""
     pts = []
-    r = 60.0
-    # a trapezoid with rounded corners: build straight then round by rrect per corner is awkward; approximate with
-    # an explicit polygon: front edge, right side, back edge, left side
-    def corner(cx, cy, a0, a1, n):
-        return [(cx + r * math.cos(a0 + (a1 - a0) * i / n), cy + r * math.sin(a0 + (a1 - a0) * i / n)) for i in range(n + 1)]
-    yf, yb = SEAT_FRONT + SEAT_RAIL[0] / 2 + 4, SEAT_BACK - SEAT_RAIL[0] / 2
-    hwf, hwb = SEAT_HW_FRONT - SEAT_RAIL[0] / 2, SEAT_HW_BACK - SEAT_RAIL[0] / 2
-    pts += corner(hwf - r, yf + r, -math.pi / 2, 0, n_corner)       # front right
-    pts += corner(hwb - r, yb - r, 0, math.pi / 2, n_corner)        # back right
-    pts += corner(-hwb + r, yb - r, math.pi / 2, math.pi, n_corner)  # back left
-    pts += corner(-hwf + r, yf + r, math.pi, 1.5 * math.pi, n_corner)  # front left
+    yf = SEAT_FRONT + SEAT_RAIL[0] / 2 + 2
+    yb = SEAT_BACK - SEAT_RAIL[0] / 2
+    L = yb - yf
+    for i in range(n):
+        t = i / n                              # 0 at the front centre, round the right side, back, left side
+        a = 2 * math.pi * t
+        # a superellipse-ish outline: y from a cosine, x from a sine shaped by the local half-width
+        y = yf + L * (1 - math.cos(a)) / 2
+        v = (y - yf) / L
+        hw = SEAT_HW_FRONT - 10 + 24 * math.sin(math.pi * min(v / 0.55, 1.0)) * (v < 0.55) \
+            - (SEAT_HW_FRONT - SEAT_HW_BACK + 2) * max(v - 0.35, 0) / 0.65
+        hw -= SEAT_RAIL[0] / 2
+        x = hw * math.sin(a) / max(abs(math.sin(a)), 1e-6) * abs(math.sin(a)) ** 0.55
+        pts.append((x, y))
     return pts
 
 
@@ -423,12 +434,30 @@ def waterfall_z(y):
     return -drop * (1 - math.sqrt(max(1 - t * t, 0.0)))
 
 
+def bolster_z(x, y, hw):
+    """The frame's sides rise at the back into the hip bolsters (28 mm at the rear corners)."""
+    v = max((y - 20) / (SEAT_BACK - 20), 0.0)
+    return SEAT_BOLSTER * (v ** 1.5) * min(abs(x) / max(hw, 1), 1.0) ** 2
+
+
 def build_seat(coll, mp, parent, rough=False, lite=False, sfx=""):
     names = []
     S = A()
-    ol = seat_outline(3 if lite else 6)
-    path = [V(x, y, waterfall_z(y) - SEAT_RAIL[1] / 2) for x, y in ol]
-    S.sweep(path, rprof(SEAT_RAIL[0], SEAT_RAIL[1], 8, 2 if lite else 4), "mineral", closed=True, ref=Vector((0, 0, 1)))
+    ol = seat_outline(24 if lite else 48)
+    path, refs = [], []
+    for x, y in ol:
+        hw = SEAT_HW_FRONT - 16 if y < 0 else SEAT_HW_BACK
+        path.append(V(x, y, waterfall_z(y) - SEAT_RAIL[1] / 2 + bolster_z(x, y, hw)))
+        refs.append(Vector((0, 0, 1)))
+    # the rail: a rounded section, taller and rounder across the front (the thick waterfall lip)
+    prof = rprof(SEAT_RAIL[0], SEAT_RAIL[1], 7, 2 if lite else 4)
+    rings = S.sweep(path, prof, "mineral", closed=True, ref=Vector((0, 0, 1)))
+    for ring, (x, y) in zip(rings, ol):
+        if y < WATERFALL[0] + 40:
+            f = min((WATERFALL[0] + 40 - y) / 60, 1.0)
+            c = sum((v.co for v in ring), Vector()) / len(ring)
+            for v in ring:
+                v.co = c + (v.co - c) * (1 + 0.9 * f)      # the front lip swells to about 1.9 x the rail
     # the seat pan under the frame: a shallow rounded box the mechanism bolts to
     n0 = len(S.m.bm.verts)
     S.P._rbox(S.m, 330 * MM, 300 * MM, 24 * MM, 40 * MM, 6 * MM, 6 * MM, 1 if lite else 3, "mineral",
@@ -436,26 +465,30 @@ def build_seat(coll, mp, parent, rough=False, lite=False, sfx=""):
     S.m.bm.verts.ensure_lookup_table()
     bmesh.ops.translate(S.m.bm, verts=S.m.bm.verts[n0:], vec=(0, 40 * MM, 0))
     obj = S.finish("chair_seat" + sfx, mp, coll, parent)
+    obj.rotation_euler.x = math.radians(-SEAT_TILT)
     names.append(obj.name)
-    # the seat mesh: a dished grid with the waterfall front (kept in rough: filled silhouettes)
+    # the seat mesh: dished into the frame, following the waterfall and the bolsters (kept in rough: filled silhouettes)
     Mh = A()
-    ny, nx = (12, 10) if lite else (26, 20)
+    ny, nx = (12, 10) if lite else (28, 20)
     rows = []
-    yf, yb = SEAT_FRONT + 6, SEAT_BACK - SEAT_RAIL[0] / 2 - 2
+    yf, yb = SEAT_FRONT + 4, SEAT_BACK - SEAT_RAIL[0] / 2 - 2
+    L = yb - yf
     for i in range(ny + 1):
         t = i / ny
-        y = yf + (yb - yf) * t
-        hw = (SEAT_HW_FRONT + (SEAT_HW_BACK - SEAT_HW_FRONT) * t) - SEAT_RAIL[0] * 0.6
-        if y < yf + 60:
-            hw -= 60 * (1 - math.sqrt(1 - ((yf + 60 - y) / 60) ** 2))
+        y = yf + L * t
+        hw = SEAT_HW_FRONT - 10 + 24 * math.sin(math.pi * min(t / 0.55, 1.0)) * (t < 0.55) \
+            - (SEAT_HW_FRONT - SEAT_HW_BACK + 2) * max(t - 0.35, 0) / 0.65 - SEAT_RAIL[0] * 0.75
+        if y < yf + 70:
+            hw -= 70 * (1 - math.sqrt(max(1 - ((yf + 70 - y) / 70) ** 2, 0)))
         row = []
         for j in range(nx + 1):
             u = -1 + 2 * j / nx
-            dish = SEAT_DISH * (1 - u * u) * math.sin(math.pi * min(max((y - yf - 30) / (yb - yf - 30), 0), 1))
-            row.append(V(u * hw, y, waterfall_z(y) - dish + 4))
+            dish = SEAT_DISH * (1 - u * u) * math.sin(math.pi * min(max((y - yf - 30) / (L - 30), 0), 1))
+            row.append(V(u * hw, y, waterfall_z(y) - 5 - dish + bolster_z(u * hw, y, hw) * 0.8))
         rows.append(row)
     Mh.grid(rows, "weave")
     mesh = Mh.finish("chair_seat_mesh" + sfx, mp, coll, parent, smooth=80)
+    mesh.rotation_euler.x = math.radians(-SEAT_TILT)
     mesh.data.materials.clear()
     mesh.data.materials.append(mesh_material(lite))
     uv = mesh.data.uv_layers.new(name="UVMap")
@@ -470,22 +503,25 @@ def build_seat(coll, mp, parent, rough=False, lite=False, sfx=""):
 def build_arm(side, coll, mp, parent, rough=False, lite=False, sfx=""):
     s = 1 if side == "r" else -1
     R = A()
-    seg = 2 if lite else 4
-    # the polished post, from the back link up
-    post = [V(s * ARM_X, ARM_POST_Y, -60), V(s * ARM_X, ARM_POST_Y, ARM_H - PAD[2] - 40)]
-    R.sweep(post, rprof(ARM_POST[0], ARM_POST[1], 8, seg), "polished", ref=Vector((0, -1, 0)))
-    # the pale support: forward and up from the post's top to under the pad
-    zs = ARM_H - PAD[2] - 40
-    sup = [V(s * ARM_X, ARM_POST_Y + 10, zs), V(s * (ARM_X + 25), ARM_POST_Y - 30, zs + 14),
-           V(s * (PAD_X - 10), 40, zs + 30), V(s * (PAD_X - 10), -60, zs + 34)]
-    R.sweep(sup, rprof(44, 22, 8, seg), "mineral", ref=Vector((0, 0, 1)))
+    seg = 2 if lite else 5
+    zt = ARM_H - PAD[2]
+    # the polished support: from the pivot on the back frame's side, down a little, then sweeping up and forward
+    # in one curve to under the pad's front half (side.jpg, detail-arms-1.jpg)
+    path = [V(s * (ARM_X - 15), ARM_POST_Y + 8, -30), V(s * (ARM_X - 2), ARM_POST_Y + 2, 20),
+            V(s * (ARM_X + 12), ARM_POST_Y - 18, 70), V(s * (ARM_X + 32), ARM_POST_Y - 60, zt - 42),
+            V(s * (PAD_X - 4), ARM_POST_Y - 130, zt - 16), V(s * (PAD_X - 2), ARM_POST_Y - 200, zt - 8),
+            V(s * (PAD_X - 2), PAD_Y[0] + 70, zt - 8)]
+    refs = [Vector((s, 0, 0)) for _ in path]
+    R.sweep(path, rprof(ARM_POST[0], ARM_POST[1], 9, seg), "polished", refs=refs)
     # the pad: a rounded slab, slightly pivoted inward at the front
     pad = [V(s * (PAD_X + 6), PAD_Y[1], ARM_H - PAD[2] / 2), V(s * (PAD_X - 6), PAD_Y[0], ARM_H - PAD[2] / 2)]
     R.sweep(pad, rprof(PAD[1], PAD[2], 11, 3 if lite else 6), "pad", ref=Vector((0, 0, 1)))
-    # the height knob on the post's inner face and the pivot cap
     if not rough:
-        R.lathe([(0, 0), (12, 0), (12, 9), (9, 12), (0, 12)], 8 if lite else 24, "polished",
-                Matrix.Translation(V(s * (ARM_X - ARM_POST[0] / 2), ARM_POST_Y, 30)) @ Matrix.Rotation(-s * math.pi / 2, 4, "Y"))
+        # the height-adjustment knob on the pivot's outer face, and the pivot boss on the back frame's side
+        R.lathe([(0, 0), (16, 0), (16, 8), (13, 11), (0, 11)], 8 if lite else 24, "polished",
+                Matrix.Translation(V(s * (ARM_X - 15 + ARM_POST[0] / 2), ARM_POST_Y + 8, -30)) @ Matrix.Rotation(s * math.pi / 2, 4, "Y"))
+        R.lathe([(0, 0), (14, 0), (14, 14), (0, 14)], 8 if lite else 20, "mineral",
+                Matrix.Translation(V(s * (ARM_X - 15 - ARM_POST[0] / 2 - 14), ARM_POST_Y + 8, -30)) @ Matrix.Rotation(s * math.pi / 2, 4, "Y"))
     obj = R.finish(f"chair_arm_{side}" + sfx, mp, coll, parent)
     return [obj.name]
 
@@ -494,24 +530,28 @@ def build_mech(coll, mp, parent, rough=False, lite=False, sfx=""):
     Mc = A()
     seg = 1 if lite else 3
     w, d, h = MECH
-    Mc.P._rbox(Mc.m, w * MM, d * MM, h * MM, 50 * MM, 24 * MM, 36 * MM, seg, "mineral", z0=MECH_Z * MM)
+    # the cast tilt housing: dark metal, rounded, with a polished cross link under the back's spine bars
+    Mc.P._rbox(Mc.m, w * MM, d * MM, h * MM, 45 * MM, 20 * MM, 30 * MM, seg, "cast", z0=MECH_Z * MM)
     bmesh.ops.translate(Mc.m.bm, verts=Mc.m.bm.verts, vec=(0, MECH_Y * MM, 0))
-    base_n = len(Mc.m.bm.verts)
-    # the polished cross link under the back's spine bars
-    Mc.sweep([V(-SPINE_X - 8, 150, MECH_Z + 40), V(SPINE_X + 8, 150, MECH_Z + 40)], rprof(30, 30, 8, 2 if lite else 4),
+    Mc.sweep([V(-SPINE_X - 8, 150, MECH_Z + 36), V(SPINE_X + 8, 150, MECH_Z + 36)], rprof(28, 28, 8, 2 if lite else 4),
              "polished", ref=Vector((0, 0, 1)))
+    # the two pivot ears the back's spine bars hinge on, and a polished front yoke
+    for sg in (-1, 1):
+        Mc.lathe([(0, -14), (22, -14), (22, 14), (0, 14)], 8 if lite else 20, "cast",
+                 Matrix.Translation(V(sg * (SPINE_X - 20), 150, MECH_Z + 36)) @ Matrix.Rotation(math.pi / 2, 4, "Y"))
+    Mc.sweep([V(-w / 2 + 10, MECH_Y - d / 2 + 12, MECH_Z + h - 10), V(w / 2 - 10, MECH_Y - d / 2 + 12, MECH_Z + h - 10)],
+             rprof(20, 20, 6, 2 if lite else 4), "polished", ref=Vector((0, 0, 1)))
     if not rough:
-        # levers: the sitter's right: seat height (front) and the tension knob (back); left: tilt limiter and forward tilt
-        zl = MECH_Z + 30
-        for s, y, length in ((1, -20, LEVER[0]), (-1, -10, LEVER[0]), (-1, 60, LEVER[0] * 0.8)):
-            x0 = s * (w / 2 - 20)
-            Mc.sweep([V(x0, y, zl), V(s * (w / 2 + 45), y, zl), V(s * (w / 2 + 45), y - length, zl + 4)],
-                     rprof(18, 14, 6, 2 if lite else 4), "polished", ref=Vector((0, 0, 1)))
-            Mc.sweep([V(s * (w / 2 + 45), y - length + 10, zl + 4), V(s * (w / 2 + 45), y - length - 40, zl + 8)],
-                     rprof(LEVER[1], 16, 7, 2 if lite else 4), "mineral", ref=Vector((0, 0, 1)))
-        # the tilt tension knob (the sitter's right, back), a ribbed drum on a polished axle
-        Mc.lathe([(0, 0), (9, 0), (9, 40), (20, 40), (22, 44), (22, 72), (19, 76), (0, 76)], 12 if lite else 36, "dark",
-                 Matrix.Translation(V(w / 2 - 10, MECH_Y + 80, MECH_Z + 55)) @ Matrix.Rotation(math.pi / 2, 4, "Y"))
+        # the two paddle levers on the sitter's right (seat height, tilt limiter), polished arms with pale paddles
+        zl = MECH_Z + 28
+        for y, length in ((-10, LEVER[0]), (50, LEVER[0] * 0.8)):
+            Mc.sweep([V(w / 2 - 20, y, zl), V(w / 2 + 40, y, zl), V(w / 2 + 40, y - length, zl + 4)],
+                     rprof(16, 12, 5, 2 if lite else 4), "polished", ref=Vector((0, 0, 1)))
+            Mc.sweep([V(w / 2 + 40, y - length + 10, zl + 4), V(w / 2 + 40, y - length - 40, zl + 8)],
+                     rprof(LEVER[1], 14, 6, 2 if lite else 4), "mineral", ref=Vector((0, 0, 1)))
+        # the tilt tension knob on the sitter's left, a ribbed dark drum on a polished axle
+        Mc.lathe([(0, 0), (8, 0), (8, 36), (19, 36), (21, 40), (21, 68), (18, 72), (0, 72)], 12 if lite else 36, "dark",
+                 Matrix.Translation(V(-(w / 2 - 10), MECH_Y + 50, MECH_Z + 50)) @ Matrix.Rotation(-math.pi / 2, 4, "Y"))
     obj = Mc.finish("chair_mech" + sfx, mp, coll, parent)
     return [obj.name]
 
@@ -619,7 +659,7 @@ def build(rough=False, lite=False, collection=None, seat_h=None, parent=None):
         zcrown = BACK_TOP - BACK_RAIL[0] / 2
         at = (0, (interp(BACK_YC, zcrown) + 13.2 + 1.0) * MM, (zcrown - 4.8 - 7.0) * MM)
         d = brands.decal("chair", at=at, normal=(0, 0.94, -0.34), up=(0, 0.34, 0.94), height=LOGO[1] * MM,
-                         max_width=LOGO[0] * MM, finish="printed", colour="#b4b8b8", parent=back, collection=coll,
+                         max_width=LOGO[0] * MM, finish="embossed", colour="#a2a6a6", parent=back, collection=coll,
                          lite=lite, name="chair_brand" + sfx)
         names["brand"] = [d.name] if d else []
     names["all"] = [n for k, v in names.items() if k not in ("swivel", "upper") for n in v]
