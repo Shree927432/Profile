@@ -878,3 +878,8 @@ site or the room. Keep each entry short. No polishing; the post does that.
   we'll start later". The brief is saved as handover/chair-brief.md so it resumes without re-planning.
 - 23:06: the Claude session restarted and the chair builder was lost with it, 10 minutes in, before any file
   was written (only PROGRESS.md's first line). Restarted on Fable at 23:07 with the same brief.
+- 23:48: the Aeron's first pass landed in 41 minutes (Fable). Reads as an Aeron in silhouette, but my review
+  sent six things back in one round: the seat was a flat square tray, the back nearly straight, the arms
+  straight bars, the mechanism a white plastic box, the weave coarse, the kalder mark too faint. Went wrong
+  in the build: a Cycles crash from setting the Metal device under --factory-startup (removed); the compare
+  masks swallowed the see-through mesh, so the IoU numbers are low even where the overlay fits.
