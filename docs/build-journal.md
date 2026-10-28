@@ -907,3 +907,6 @@ site or the room. Keep each entry short. No polishing; the post does that.
   docs/drafts/world-models-essay.md for the owner to edit; not in content/posts until they approve.
 - Owner: "Publish as is". The essay went live as content/posts/the-chair-that-wouldnt-come-out-right.md;
   build passed, main pushed (which also backs up tonight's chair, keyboard and wall work).
+- Owner: "Can you add images to this essay as well?" Four images from our own renders (no product photos, to
+  keep the post clear of other people's copyright): the final chair, first pass vs final, the CC BY scan vs
+  our mouse, the room. 224 KB in total, under public/images/posts/the-chair/. Pushed.
