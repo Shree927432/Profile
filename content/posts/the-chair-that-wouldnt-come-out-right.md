@@ -9,6 +9,10 @@ I spent a week watching one of the best language models available fail to build 
 
 Not a chair in general. A specific one: the Herman Miller Aeron, in the pale grey called Mineral, for the 3D room that is slowly becoming this website. The model had the official dimensions. It had Herman Miller's product photos from five angles. It had a brief listing every feature that makes an Aeron an Aeron: the wedge-shaped back that is wider at the top, the Y-shaped support behind the lumbar, the seat frame with the rolled front edge, the polished five-star base. It had ninety minutes, then two more rounds of fixes.
 
+![Our Aeron after three rounds, rendered on its own](/images/posts/the-chair/chair-final.jpg)
+
+*The chair after three rounds. From here it is an Aeron.*
+
 It produced something that, from across the room, is an Aeron. From up close it is a chair-shaped argument about what language models are and are not. The seat is a tray with a rim. The arms are the right idea in the wrong thickness. The mesh is a grid. Every one of those misses has a cause I can name, and the causes are the subject of this essay, because they turn out to be the same ones that a few thousand researchers and a few billion dollars are currently arguing about under the heading *world models*.
 
 ## Two kinds of model
@@ -73,11 +77,23 @@ I did not expect a furniture project to be an experiment in this question, but i
 
 Everything in my room that is made of boxes, cylinders and extrusions came out close to the real thing: a PC case, an audio interface, a keyboard with 81 separate keys, a Stream Deck. The model knows what those objects are, and it can describe them in code, and code is enough for shapes like that. Everything free-form failed on the first try: a mouse, then the chair. The model knows what a mouse is just as well. The knowledge was never the problem.
 
+![The chair after the first ninety minutes, left, and after two fix rounds, right](/images/posts/the-chair/chair-first-vs-final.jpg)
+
+*Left: the first ninety minutes. Right: after two rounds of fixes. The base, the back and the Y came right; the seat and the arms are still the model guessing at surfaces it cannot see.*
+
 What fixed the mouse was not more intelligence. It was a 3D scan of the real mouse, free under a Creative Commons licence, three million triangles of actual surface. The model wrapped its own light shell onto it, built the wheels and buttons by code on top, and the result matched the real thing from every angle in one pass. It borrowed a piece of the world because it could not imagine one. That is the whole argument in one object.
+
+![The 3D scan of the real mouse, left, and our model built on it, right](/images/posts/the-chair/mouse-scan-vs-ours.jpg)
+
+*Left: the scan of a real MX Master 3S (by Sircher on Sketchfab, CC BY). Right: our mouse, a light shell fitted to that scan with the wheels, buttons and port built on top. The scan never ships; only the shell does.*
 
 So here is what I think the bottleneck is, stated plainly. A language model building in 3D is working blind, by numbers, from photographs taken by a camera it cannot see, with a handful of low-resolution looks at its own output, in a time box a professional would laugh at. It fails on exactly the things that need a model of space: a surface that curves in two directions, a part that has to sit *inside* another, a thickness that has to feel right. It succeeds on exactly the things that can be written down. Give it a surface to fit, more and faster looks at what it made, and a measurement that rewards the right things, and it gets to the level of the mouse. Give it a human for the two sculpted pieces and it gets to the level of the chair I wanted.
 
 That is not a story about a tool falling short. It is the precise shape of the hole that world models are supposed to fill, drawn in pale grey plastic, sitting in front of my desk.
+
+![The room as it stands, with the chair in front of the desk](/images/posts/the-chair/room-with-chair.jpg)
+
+*The room as it stands tonight. Everything on the desk was built by a language model writing Blender code; the grey boxes are the parts still to come.*
 
 ---
 
