@@ -10,7 +10,7 @@ Always headless:
         --python blender/components/desktop.py -- [stages] [--cycles]
 
 stages: outline | build,stills,compare,closeups,export (default) | any comma list.
-Plain Python (Pillow): python3 desktop.py --cutouts | --pairs <pairs.json> <dir>
+Plain Python (Pillow): python3 desktop.py --cutouts | --pairs <pairs.json> <dir> | --legends <size> <png>
 
 Each part is built in its own frame: origin on the desk under the part's centre, front (the user's side) -Y.
 The room turns them by plan v3's yaw (90: front to +X). Brand names from content/room-brands.json via
@@ -98,6 +98,232 @@ KB_ROWS = [     # (row y in u, [(id, x in u, width in u, colour)]) MEASURED from
 ]
 KB_DROPPED = {"up", "left", "down", "right"}
 KB_KNOB = (15.25, 0.0, 8.5, 9.0)              # MEASURED top photo: the knob in the nav column, row 0 (u, u, r mm, h above the frame EST)
+# Printed legends (decision 2026-10-26: key labels are not branding). MEASURED banner-q1max-white (straight-down top
+# view): every legend centred on the cap, dark grey on white, grey and mint caps alike; letters are capitals, the
+# modifiers lowercase words; the number row stacks the shifted symbol over the digit; the F row stacks a small media
+# icon over "F<n>"; the arrows are chevrons. The real OSA lettering is a rounded geometric sans: Montserrat SemiBold
+# (OFL, blender/assets/fonts/) is the closest we have. Symbols the font lacks are drawn as simple shapes: "[name]".
+KB_LEGEND_FONT = "Montserrat-SemiBold.ttf"
+KB_LEGEND_INK = "#2a2d30"                     # MEASURED banner: the legend near-black (the same on every cap colour)
+KB_LEGEND_SIZE = {"letter": 0.205, "stack": 0.16, "word": 0.175, "icon": 0.18}   # cap heights in u, MEASURED banner
+KB_LEGEND_MAXW = 0.80                         # a legend never wider than this share of the cap top (1u top = 0.69u)
+KB_LEGENDS = {    # key id -> one centred line ("[icon]" tokens are drawn shapes) or (top, bottom) stacked
+    "esc": "esc", "del": "del", "pgup": "pgup", "pgdn": "pgdn", "home": "home", "fn": "fn", "rctrl": "ctrl",
+    "lctrl": "control", "lopt": "option", "lcmd": "[cmd]", "rcmd": "[cmd]", "space": "",
+    "tab": "tab [tab]", "caps": "caps lock", "lshift": "[shift] shift", "rshift": "[shift] shift",
+    "backspace": "[larrow] backspace", "enter": "[enter] enter",
+    "up": "[chev_up]", "down": "[chev_down]", "left": "[chev_left]", "right": "[chev_right]",
+    "f1": ("[sun_s]", "F1"), "f2": ("[sun]", "F2"), "f3": ("[mission]", "F3"), "f4": ("[launchpad]", "F4"),
+    "f5": ("[backlight_down]", "F5"), "f6": ("[backlight_up]", "F6"), "f7": ("[rewind]", "F7"),
+    "f8": ("[playpause]", "F8"), "f9": ("[forward]", "F9"), "f10": ("[mute]", "F10"), "f11": ("[vol_down]", "F11"),
+    "f12": ("[vol_up]", "F12"),
+    "grave": ("~", "`"), "n1": ("!", "1"), "n2": ("@", "2"), "n3": ("#", "3"), "n4": ("$", "4"), "n5": ("%", "5"),
+    "n6": ("^", "6"), "n7": ("&", "7"), "n8": ("*", "8"), "n9": ("(", "9"), "n0": (")", "0"),
+    "minus": ("_", "-"), "equal": ("+", "="), "lbracket": ("{", "["), "rbracket": ("}", "]"), "backslash": ("|", "\\"),
+    "semicolon": (":", ";"), "quote": ('"', "'"), "comma": ("<", ","), "period": (">", "."), "slash": ("?", "/"),
+}
+KB_LEGENDS.update({c: c.upper() for c in "qwertyuiopasdfghjklzxcvbnm"})
+KB_CAP_RGB = {WHITE: "#efede6", GREY: "#868b85", GREEN: "#62a58f"}   # the cap materials' base colours (mats())
+
+
+def kb_legend_cells(size):
+    """The legend atlas layout for a square `size` texture: one cell per key, shelf-packed in row order at the
+    largest whole pixels-per-u that fits. Returns (cells {id: (x0, y0, x1, y1, colour)}, ppu). Plain Python."""
+    for ppu in range(size // 4, 8, -1):
+        cells, x, y = {}, 0, 0
+        for ry, row in KB_ROWS:
+            for kid, ux, wu, col in row:
+                w = int(round(wu * ppu))
+                if x + w > size:
+                    x, y = 0, y + ppu
+                cells[kid] = (x, y, x + w, y + ppu, col)
+                x += w
+        if y + ppu <= size:
+            return cells, ppu
+    raise ValueError("legend atlas too small")
+
+
+def _legend_icon(d, name, cx, cy, h, ink):
+    """One symbol the font lacks, as plain Pillow shapes, `h` high, centred at (cx, cy)."""
+    import math as _m
+    lw = max(1, int(round(h * 0.11)))
+    L = lambda pts: d.line(pts, fill=ink, width=lw, joint="curve")
+    if name == "cmd":
+        a, r = h * 0.42, h * 0.2
+        for sx in (-1, 1):
+            for sy in (-1, 1):
+                ox, oy = cx + sx * (a / 2 + r * 0.72), cy + sy * (a / 2 + r * 0.72)
+                d.ellipse((ox - r, oy - r, ox + r, oy + r), outline=ink, width=lw)
+        d.rectangle((cx - a / 2, cy - a / 2, cx + a / 2, cy + a / 2), outline=ink, width=lw)
+    elif name == "shift":
+        pts = [(cx, cy - h / 2), (cx + h * 0.48, cy + h * 0.02), (cx + h * 0.22, cy + h * 0.02), (cx + h * 0.22, cy + h / 2),
+               (cx - h * 0.22, cy + h / 2), (cx - h * 0.22, cy + h * 0.02), (cx - h * 0.48, cy + h * 0.02)]
+        L(pts + [pts[0], pts[1]])
+    elif name == "larrow":
+        w = h * 1.2
+        L([(cx + w / 2, cy), (cx - w / 2, cy)])
+        L([(cx - w / 2 + h * 0.4, cy - h * 0.4), (cx - w / 2, cy), (cx - w / 2 + h * 0.4, cy + h * 0.4)])
+    elif name == "enter":
+        w = h * 1.2
+        L([(cx + w * 0.4, cy - h * 0.45), (cx + w * 0.4, cy + h * 0.12), (cx - w / 2, cy + h * 0.12)])
+        L([(cx - w / 2 + h * 0.35, cy - h * 0.25), (cx - w / 2, cy + h * 0.12), (cx - w / 2 + h * 0.35, cy + h * 0.48)])
+    elif name == "tab":
+        w = h * 1.1
+        for sgn, yy in ((1, cy - h * 0.25), (-1, cy + h * 0.25)):
+            L([(cx - sgn * w / 2, yy), (cx + sgn * w / 2, yy)])
+            L([(cx + sgn * (w / 2 - h * 0.25), yy - h * 0.22), (cx + sgn * w / 2, yy), (cx + sgn * (w / 2 - h * 0.25), yy + h * 0.22)])
+            L([(cx + sgn * w / 2, yy - h * 0.3), (cx + sgn * w / 2, yy + h * 0.3)])
+    elif name.startswith("chev_"):
+        a = h * 0.32
+        if name == "chev_up":
+            L([(cx - a, cy + a / 2), (cx, cy - a / 2), (cx + a, cy + a / 2)])
+        elif name == "chev_down":
+            L([(cx - a, cy - a / 2), (cx, cy + a / 2), (cx + a, cy - a / 2)])
+        elif name == "chev_left":
+            L([(cx + a / 2, cy - a), (cx - a / 2, cy), (cx + a / 2, cy + a)])
+        else:
+            L([(cx - a / 2, cy - a), (cx + a / 2, cy), (cx - a / 2, cy + a)])
+    elif name in ("sun_s", "sun"):
+        r = h * (0.16 if name == "sun_s" else 0.2)
+        d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=ink)
+        for i in range(8):
+            t = i * _m.pi / 4
+            L([(cx + _m.cos(t) * r * 1.6, cy + _m.sin(t) * r * 1.6), (cx + _m.cos(t) * h * 0.5, cy + _m.sin(t) * h * 0.5)])
+    elif name == "mission":
+        d.rectangle((cx - h * 0.5, cy - h * 0.45, cx - h * 0.05, cy + h * 0.05), outline=ink, width=lw)
+        d.rectangle((cx + h * 0.08, cy - h * 0.2, cx + h * 0.5, cy + h * 0.45), outline=ink, width=lw)
+    elif name == "launchpad":
+        q = h * 0.26
+        for i in range(3):
+            for j in range(2):
+                x0, y0 = cx - 1.5 * q + i * q + q * 0.12, cy - q + j * q + q * 0.12
+                d.rectangle((x0, y0, x0 + q * 0.76, y0 + q * 0.76), fill=ink)
+    elif name.startswith("backlight"):
+        n = 3 if name.endswith("down") else 5
+        L([(cx - h * 0.5, cy + h * 0.45), (cx + h * 0.5, cy + h * 0.45)])
+        for i in range(n):
+            t = _m.pi * (0.2 + 0.6 * i / (n - 1))
+            L([(cx - _m.cos(t) * h * 0.18, cy + h * 0.25 - _m.sin(t) * h * 0.18),
+               (cx - _m.cos(t) * h * 0.5, cy + h * 0.25 - _m.sin(t) * h * 0.5)])
+    elif name in ("rewind", "forward"):
+        sgn = -1 if name == "rewind" else 1
+        for k in (-1, 0):
+            x0 = cx + sgn * (k * h * 0.45 + h * 0.1)
+            d.polygon([(x0 - sgn * h * 0.45, cy - h * 0.35), (x0, cy), (x0 - sgn * h * 0.45, cy + h * 0.35)], fill=ink)
+    elif name == "playpause":
+        d.polygon([(cx - h * 0.55, cy - h * 0.38), (cx - h * 0.05, cy), (cx - h * 0.55, cy + h * 0.38)], fill=ink)
+        for x0 in (cx + h * 0.12, cx + h * 0.38):
+            d.rectangle((x0, cy - h * 0.38, x0 + h * 0.16, cy + h * 0.38), fill=ink)
+    elif name in ("mute", "vol_down", "vol_up"):
+        x0 = cx - h * (0.45 if name == "mute" else 0.6)
+        pts = [(x0, cy - h * 0.18), (x0 + h * 0.25, cy - h * 0.18), (x0 + h * 0.55, cy - h * 0.45),
+               (x0 + h * 0.55, cy + h * 0.45), (x0 + h * 0.25, cy + h * 0.18), (x0, cy + h * 0.18)]
+        L(pts + [pts[0], pts[1]])
+        for i in range(0 if name == "mute" else (1 if name == "vol_down" else 2)):
+            r = h * (0.3 + 0.22 * i)
+            ax = x0 + h * 0.45
+            d.arc((ax - r, cy - r, ax + r, cy + r), -45, 45, fill=ink, width=lw)
+
+
+def make_legend_atlas(size, path):
+    """Plain Python (Pillow): the keycap legend atlas, every key's cell filled with its cap colour and its legend
+    centred in it; the keycap's footprint maps onto the cell (kb_legend_uv). Written to `path` (PNG)."""
+    import re as _re
+    from PIL import Image, ImageDraw, ImageFont
+    cells, ppu = kb_legend_cells(size)
+    font_path = os.path.join(BLENDER_DIR, "assets", "fonts", KB_LEGEND_FONT)
+    CAPH = 0.70            # Montserrat's cap height per em
+    im = Image.new("RGB", (size, size), KB_CAP_RGB[WHITE])
+    d = ImageDraw.Draw(im)
+    ink = KB_LEGEND_INK
+    fonts = {}
+
+    def font(cap_h):
+        px = max(4, int(round(cap_h / CAPH)))
+        if px not in fonts:
+            fonts[px] = ImageFont.truetype(font_path, px)
+        return fonts[px]
+
+    def line(text, cx, cy, cap_h, icon_h=None, maxw=None):
+        """One centred line: text segments and [icon] tokens side by side; the glyph box is centred on (cx, cy).
+        Wider than `maxw` (the cap top), the whole line shrinks to fit."""
+        f = font(cap_h)
+        icon_h = icon_h or cap_h * 1.15
+        segs, w = [], 0.0
+        for tok in _re.split(r"(\[\w+\])", text):
+            if not tok:
+                continue
+            if tok.startswith("["):
+                segs.append(("icon", tok[1:-1], icon_h * 1.15))
+            else:
+                b = d.textbbox((0, 0), tok, font=f)
+                segs.append(("text", tok, b))
+            w += segs[-1][2] if segs[-1][0] == "icon" else (segs[-1][2][2] - segs[-1][2][0])
+        if maxw and w > maxw:
+            k = maxw / w
+            return line(text, cx, cy, cap_h * k, icon_h * k, None)
+        x = cx - w / 2
+        for kind, val, b in segs:
+            if kind == "icon":
+                _legend_icon(d, val, x + b / 2, cy, icon_h, ink)
+                x += b
+            else:
+                d.text((x - b[0], cy - (b[1] + b[3]) / 2), val, font=f, fill=ink)
+                x += b[2] - b[0]
+    for kid, (x0, y0, x1, y1, col) in cells.items():
+        d.rectangle((x0, y0, x1 - 1, y1 - 1), fill=KB_CAP_RGB[col])
+        spec = KB_LEGENDS.get(kid, "")
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+        maxw = (x1 - x0 - 6.0 / KB_U * ppu) * KB_LEGEND_MAXW
+        if isinstance(spec, tuple):
+            top, bot = spec
+            ch = KB_LEGEND_SIZE["stack"] * ppu
+            line(top, cx, cy - 0.13 * ppu, ch, icon_h=KB_LEGEND_SIZE["icon"] * ppu)
+            line(bot, cx, cy + 0.13 * ppu, ch)
+        elif spec:
+            kind = "letter" if len(spec) == 1 else ("icon" if spec.startswith("[") and spec.endswith("]") and " " not in spec else "word")
+            line(spec, cx, cy, KB_LEGEND_SIZE[kind] * ppu, icon_h=KB_LEGEND_SIZE["icon"] * ppu * (1.35 if kind == "icon" else 1.0),
+                 maxw=maxw)
+    im.save(path, optimize=True)
+    print("LEGENDS", path, size, ppu)
+
+
+def kb_apply_legends(keys, lite):
+    """Blender: one legend atlas material on every key (its own mesh now), the cap's footprint UV-mapped onto its
+    cell with a 5% inset. Rich 2048, lite 512 (its own small texture, kept out of the baked desktop atlas)."""
+    import subprocess
+    from lib import materials as M
+    size = 512 if lite else 2048
+    path = os.path.join(BLENDER_DIR, "out", "components", f"desktop_kb_legends-{'lite' if lite else 'rich'}.png")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    subprocess.run(["/opt/anaconda3/bin/python3", os.path.abspath(__file__), "--legends", str(size), path], check=True)
+    cells, ppu = kb_legend_cells(size)
+    name = "mat_desktop_kb_legend" + ("_lite" if lite else "")
+    m, nt, b = M._new(name)
+    for im in [i for i in bpy.data.images if i.filepath == path]:
+        bpy.data.images.remove(im)
+    im = bpy.data.images.load(path)
+    im.name = os.path.basename(path)
+    t = nt.nodes.new("ShaderNodeTexImage")
+    t.image = im
+    t.location = (-400, 0)
+    nt.links.new(t.outputs["Color"], b.inputs["Base Color"])
+    b.inputs["Roughness"].default_value = 0.62
+    b.inputs["Specular IOR Level"].default_value = 0.3
+    for kid, wu, o in keys:
+        x0, y0, x1, y1, col = cells[kid]
+        me = o.data.copy() if o.data.users > 1 else o.data
+        me.name = f"{o.name}_mesh"
+        o.data = me
+        me.materials.clear()
+        me.materials.append(m)
+        uv = me.uv_layers.new(name="UVMap")
+        w, dd = wu * KB_U * MM, KB_U * MM
+        cx, cy, cw, chh = (x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) * 0.9, (y1 - y0) * 0.9
+        for lp in me.loops:
+            v = me.vertices[lp.vertex_index].co
+            uv.data[lp.index].uv = ((cx + v.x / w * cw) / size, 1.0 - (cy - v.y / dd * chh) / size)
+    return m
 
 # MX Master 3S (23-mouse/SOURCES.md): 124.9 long, 84.3 wide, 51 high OFFICIAL. Rebuilt on a 3D scan (decision
 # 2026-10-26): "Logitech MX Master 3S - Revopoint Mini 3D Scan" by Sircher, CC BY. Our own quad shell is wrapped
@@ -587,6 +813,7 @@ def build_keyboard(coll, mp, rough=False, lite=False):
     plate.matrix_basis = kb_plate_frame()
     names["plate"] = [plate.name]
     meshes = {}
+    legend_keys = []
     U = KB_U
     for ry, row in KB_ROWS:
         for kid, ux, wu, col in row:
@@ -600,6 +827,8 @@ def build_keyboard(coll, mp, rough=False, lite=False):
             dy = KB_ARROW_DROP if kid in KB_DROPPED else 0.0
             o.location = ((ux + wu / 2) * U * MM, -(ry + dy + 0.5) * U * MM, KB_SWITCH * MM)
             names.setdefault("keys", []).append(o.name)
+            legend_keys.append((kid, wu, o))
+    kb_apply_legends(legend_keys, lite)
     # stems under the space bar and the switch housings are hidden by the caps; the knob in the nav column
     kux, kuy, kr, kh = KB_KNOB
     kn = P.knob("kb_knob" + sfx, kr * MM, (KB_WELL + kh) * MM, knurl=not lite, flutes=40, depth=0.35 * MM,
@@ -1269,6 +1498,18 @@ def closeup_specs():
              (os.path.join(R_KB, "variant-barebone-white.jpg"), (0, 2000, 400, 1600)),
              W("keyboard", (0, -40, -260)), W("keyboard", (0, -10, 2)), 50),
         ]
+    if "keyboard" in o:      # legends (2026-10-29): straight-down pairs against the banner top view
+        BN = os.path.join(R_KB, "banner-q1max-white.jpg")
+        out += [
+            ("kb-legends-top", "Q1 Max legends: the whole board from above", (BN, (1075, 2765, 797, 1540)),
+             W("keyboard", (0, -1, 480)), W("keyboard", (0, 0, 35)), 50),
+            ("kb-legends-left", "Q1 Max legends: the left modifier cluster", (BN, (1075, 1900, 840, 1536)),
+             W("keyboard", (-85, -6, 270)), W("keyboard", (-85, -5, 35)), 50),
+            ("kb-legends-frow", "Q1 Max legends: the F row and the knob", (BN, (1650, 2770, 830, 1010)),
+             W("keyboard", (45, 49, 300)), W("keyboard", (45, 50, 38)), 50),
+            ("kb-legends-nav", "Q1 Max legends: the right nav column and arrows", (BN, (2300, 2770, 840, 1540)),
+             W("keyboard", (122, -6, 270)), W("keyboard", (122, -5, 35)), 50),
+        ]
     if "mouse" in o:
         SR = os.path.join(R_MS, "sketchfab-ref")
         lx, ly = MS_LOGO[:2]
@@ -1492,7 +1733,8 @@ def bake_lite(objs, out, size=1024, orm_size=512):
     scene = bpy.context.scene
 
     def emissive(o):
-        return any(m and (m.name.startswith(EMISSIVE_PREFIX) or "brand" in m.name) for m in o.data.materials)
+        return any(m and (m.name.startswith(EMISSIVE_PREFIX) or "brand" in m.name
+                          or m.name.startswith("mat_desktop_kb_legend")) for m in o.data.materials)
     baked = [o for o in objs if o.type == "MESH" and not emissive(o) and "brand" not in o.name]
     for o in baked:
         if o.data.users > 1:
@@ -1661,6 +1903,9 @@ if __name__ == "__main__":
         bpy.ops.wm.quit_blender()
     elif "--cutouts" in sys.argv:
         make_cutouts()
+    elif "--legends" in sys.argv:
+        i = sys.argv.index("--legends")
+        make_legend_atlas(int(sys.argv[i + 1]), sys.argv[i + 2])
     elif "--pairs" in sys.argv:
         i = sys.argv.index("--pairs")
         pairs_sheet(sys.argv[i + 1], sys.argv[i + 2])
