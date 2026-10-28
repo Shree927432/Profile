@@ -65,6 +65,9 @@ the component's reference folder, an approved component as a pattern, and a time
 
 ## Next steps, in order
 
+0. The Aeron chair, started 2026-10-28 on Fable at the owner's request and stopped the same day before any
+   file was written ("stop for now we'll start later"). Resume it first: the full brief is in
+   `handover/chair-brief.md`; name "kalder" proposed in content/room-brands.json.
 1. Keyboard legends on the Keychron (letters, numbers, F-keys, Mac symbols), stopped on 2026-10-26 when the
    owner put the mouse first; brief: print them as on the white Q1 Max photos, fonts from blender/assets/fonts.
 2. Mouse leftovers, only if the owner asks: the thumb pocket reads dark from directly above, the wheel slot

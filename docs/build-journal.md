@@ -870,3 +870,9 @@ site or the room. Keep each entry short. No polishing; the post does that.
   within 1.3 %. Our own quad shell is wrapped onto it (blender/assets/mouse/), the scan stays local. Scan
   silhouettes pass at 0.983 (thumb, right side). The first pass still had the USB-C missing, the thumb wheel
   sticking out and a white nose; one more round fixed them. The owner watched it live and asked to be chimed.
+
+## 2026-10-28
+
+- Owner asked for the mesh chair next, then to use Fable as the designer agent. The Aeron build was
+  started twice (Opus, then Fable) and stopped by the owner before any file was written: "stop for now
+  we'll start later". The brief is saved as handover/chair-brief.md so it resumes without re-planning.
