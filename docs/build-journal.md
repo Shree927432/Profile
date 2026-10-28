@@ -897,3 +897,11 @@ site or the room. Keep each entry short. No polishing; the post does that.
   overwrote the desk-top group's atlas copies in the 2026-10-26 footage folder (same pipeline, no harm).
 - 00:20: the session restarted a second time tonight and the wall-group builder was lost with it, 7 minutes
   in, nothing written. Restarted at 00:22 with the same brief, told to save its script within 10 minutes.
+- 00:44: a third session restart killed the wall builder mid-review. This time its script survived
+  (blender/components/wall.py, all five parts built, stills and 7 close-up pairs rendered); export, the
+  compare and the room placement did not run. Weekly usage reached 93%, over the 92% line the plan set,
+  so it is not restarted tonight; the script is committed as work in progress. Resume: run wall.py's
+  review, export and room stages (see handover/phase-4-brief.md next steps).
+- The owner asked why AI can't model an exact replica of a complex object and what the bottlenecks are,
+  then for a researched essay on language models versus world models. Draft written to
+  docs/drafts/world-models-essay.md for the owner to edit; not in content/posts until they approve.
