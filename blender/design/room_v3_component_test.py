@@ -90,6 +90,26 @@ def build_desktop(lite=False):
     return DT.build_set(collection=col, lite=lite)
 
 
+# 2026-10-28: the Aeron (blender/components/chair.py) built live at plan v3's SEAT, facing the desk, at its room seat
+# height (CHAIR=0 keeps the blockout's stand-in).
+CHAIR = os.environ.get("CHAIR", "plan")
+
+
+def build_chair(lite=False):
+    """The chair in its own collection 'chair', its swivel empty at plan v3's SEAT, front to the desk (yaw -90)."""
+    sys.path.insert(0, os.path.join(BL, "components"))
+    import chair as CH
+    col = bpy.data.collections.get("chair") or bpy.data.collections.new("chair")
+    if col.name not in bpy.context.scene.collection.children:
+        bpy.context.scene.collection.children.link(col)
+    ch = P.CP["chair"]
+    names = CH.build(collection=col, lite=lite, seat_h=CH.ROOM_SEAT_H)
+    sw = bpy.data.objects[names["swivel"][0]]
+    sw.matrix_world = M_at(ch["at"][0], ch["at"][1], 0, ch["yaw"])
+    bpy.context.view_layer.update()
+    return names
+
+
 def M_at(x, y, z=0.0, yaw=0.0):
     return Matrix.Translation((x, y, z)) @ Matrix.Rotation(math.radians(yaw), 4, "Z")
 
@@ -381,6 +401,11 @@ def main():
         print("ARMS", ARMS, arms_names.get("mic_pose"), arms_names.get("flex_reach"))
     if DESKTOP != "0":
         build_desktop()
+    if CHAIR != "0":
+        for o in list(bpy.data.objects):             # the blockout's Aeron-ish stand-in
+            if o.name.startswith("chair_"):
+                bpy.data.objects.remove(o, do_unlink=True)
+        build_chair()
     BO.lights()
     append_rich()
     music = music_side()
@@ -446,6 +471,11 @@ def main():
         for o in list(col.all_objects):
             bpy.data.objects.remove(o, do_unlink=True)
         build_desktop(lite=True)
+    if CHAIR != "0":                                 # the chair: rich out, lite in
+        col = bpy.data.collections.get("chair")
+        for o in list(col.all_objects):
+            bpy.data.objects.remove(o, do_unlink=True)
+        build_chair(lite=True)
     drop = {"sky", "ground", "ceiling"}
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:
