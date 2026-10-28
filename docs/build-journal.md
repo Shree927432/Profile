@@ -895,3 +895,5 @@ site or the room. Keep each entry short. No polishing; the post does that.
   SemiBold, symbols drawn as shapes; all 81 keys still separate. My check: layout and glyphs all right; the
   ink reads a shade light in EEVEE, fine in Cycles. Accepted without a fix round. Went wrong: the export
   overwrote the desk-top group's atlas copies in the 2026-10-26 footage folder (same pipeline, no harm).
+- 00:20: the session restarted a second time tonight and the wall-group builder was lost with it, 7 minutes
+  in, nothing written. Restarted at 00:22 with the same brief, told to save its script within 10 minutes.
