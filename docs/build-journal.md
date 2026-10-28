@@ -876,3 +876,5 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Owner asked for the mesh chair next, then to use Fable as the designer agent. The Aeron build was
   started twice (Opus, then Fable) and stopped by the owner before any file was written: "stop for now
   we'll start later". The brief is saved as handover/chair-brief.md so it resumes without re-planning.
+- 23:06: the Claude session restarted and the chair builder was lost with it, 10 minutes in, before any file
+  was written (only PROGRESS.md's first line). Restarted on Fable at 23:07 with the same brief.
