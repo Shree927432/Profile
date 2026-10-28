@@ -84,6 +84,13 @@
       "font": "Saira-ExtraBoldItalic.ttf",
       "letter_spacing_em": 0.01,
       "note": "same maker as the key lights"
+    },
+    "chair": {
+      "real_maker": "Herman Miller",
+      "name": "kalder",
+      "font": "Montserrat-SemiBold.ttf",
+      "letter_spacing_em": 0.02,
+      "status": "proposed 2026-10-28, lowercase like the real mark; owner to confirm at review"
     }
   },
   "_fonts": "Fonts in blender/assets/fonts/ (Google Fonts, SIL Open Font License; owner picked column C on 2026-10-26). Letter spacing in em, as on the comparison page."
