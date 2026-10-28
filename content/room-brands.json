@@ -90,7 +90,26 @@
       "name": "kalder",
       "font": "Montserrat-SemiBold.ttf",
       "letter_spacing_em": 0.02
+    },
+    "headphones": {
+      "real_maker": "Audio-Technica",
+      "name": "ARVELL",
+      "font": "Montserrat-SemiBold.ttf",
+      "letter_spacing_em": 0.08,
+      "status": "proposed 2026-10-29, owner to confirm"
+    },
+    "nanoleaf": {
+      "real_maker": "Nanoleaf",
+      "name": "LUMARA",
+      "font": "Comfortaa-Bold.ttf",
+      "letter_spacing_em": 0.04,
+      "status": "proposed 2026-10-29, owner to confirm; the real panels carry no visible logo on the front, so likely not placed"
     }
   },
-  "_fonts": "Fonts in blender/assets/fonts/ (Google Fonts, SIL Open Font License; owner picked column C on 2026-10-26). Letter spacing in em, as on the comparison page."
+  "_fonts": "Fonts in blender/assets/fonts/ (Google Fonts, SIL Open Font License; owner picked column C on 2026-10-26). Letter spacing in em, as on the comparison page.",
+  "neon": {
+    "text": "shrikant",
+    "note": "PLACEHOLDER 2026-10-29: the neon sign's words. The owner picks the final words (the decision rows say 'our words from content'); the builder reads this field and never types text into code.",
+    "status": "placeholder, owner to replace"
+  }
 }
