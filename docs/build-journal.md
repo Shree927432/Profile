@@ -891,3 +891,7 @@ site or the room. Keep each entry short. No polishing; the post does that.
   Both rounds used, so the chair stops here for the owner's judgement: the seat still reads tray-like in
   close-up and the arms slimmer than the real castings. Committed and placed in the room.
 
+- Keyboard legends (Fable, 25 min, one review round): every cap printed from a legend atlas, Montserrat
+  SemiBold, symbols drawn as shapes; all 81 keys still separate. My check: layout and glyphs all right; the
+  ink reads a shade light in EEVEE, fine in Cycles. Accepted without a fix round. Went wrong: the export
+  overwrote the desk-top group's atlas copies in the 2026-10-26 footage folder (same pipeline, no harm).
