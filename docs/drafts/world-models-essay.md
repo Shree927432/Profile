@@ -3,7 +3,7 @@ title: The Chair That Wouldn't Come Out Right
 date: 2026-10-29
 summary: What a week of making a language model build 3D furniture taught me about the gap between language models and world models, and where that argument actually stands.
 tags: [essays, ai]
-status: DRAFT for the owner to edit. Move to content/posts/ when approved. First person, the owner's voice.
+status: PUBLISHED 2026-10-29 as content/posts/the-chair-that-wouldnt-come-out-right.md (owner: "Publish as is"). This copy is the working draft; edit the post itself.
 ---
 
 <!-- Owner: this is a draft in your voice. Facts and dates were checked against sources on 2026-10-29
