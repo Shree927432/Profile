@@ -54,7 +54,7 @@ ROOM_SEAT_H = 480.0        # EST: a mid setting in the room (OFFICIAL range 406 
 SEAT_FRONT = -277.0        # MEASURED side: front lip (y, mm behind the cylinder axis negative = forward)
 SEAT_BACK = SEAT_FRONT + SEAT_D   # 155
 SEAT_HW_FRONT, SEAT_HW_BACK = 250.0, 222.0   # MEASURED front: 500 across the front corners, 444 at the back
-SEAT_RAIL = (26.0, 20.0)   # EST: the seat frame rail (wide, tall); the front lip swells to about 1.9 x
+SEAT_RAIL = (24.0, 22.0)   # EST: the seat frame rail, a slim rounded tube; the front lip rolls out to about 1.8 x
 WATERFALL = (-215.0, 42.0)  # MEASURED side: the front edge starts curving at y -215 and drops about 40 (the thick lip)
 SEAT_BOLSTER = 28.0        # EST side/3q: the frame sides rise at the rear corners (hip bolsters)
 SEAT_TILT = 2.5            # EST: the seat pan tilts back 2 to 3 degrees
@@ -450,21 +450,22 @@ def build_seat(coll, mp, parent, rough=False, lite=False, sfx=""):
         path.append(V(x, y, waterfall_z(y) - SEAT_RAIL[1] / 2 + bolster_z(x, y, hw)))
         refs.append(Vector((0, 0, 1)))
     # the rail: a rounded section, taller and rounder across the front (the thick waterfall lip)
-    prof = rprof(SEAT_RAIL[0], SEAT_RAIL[1], 7, 2 if lite else 4)
+    prof = rprof(SEAT_RAIL[0], SEAT_RAIL[1], 10, 3 if lite else 6)       # near-round tube
     rings = S.sweep(path, prof, "mineral", closed=True, ref=Vector((0, 0, 1)))
     for ring, (x, y) in zip(rings, ol):
-        if y < WATERFALL[0] + 40:
-            f = min((WATERFALL[0] + 40 - y) / 60, 1.0)
+        if y < WATERFALL[0] + 60:
+            f = smooth(min((WATERFALL[0] + 60 - y) / 90, 1.0))
             c = sum((v.co for v in ring), Vector()) / len(ring)
             for v in ring:
-                v.co = c + (v.co - c) * (1 + 0.9 * f)      # the front lip swells to about 1.9 x the rail
-    # the seat pan under the frame: a shallow rounded box the mechanism bolts to
+                v.co = c + (v.co - c) * (1 + 0.8 * f) - Vector((0, 0, 4 * f * MM))   # the front lip rolls out, 1.8 x
+    # the shallow pan under the frame, inset from the rail so the frame reads at the edges; dark cast like the
+    # mechanism (it shows through the weave from above)
     n0 = len(S.m.bm.verts)
-    S.P._rbox(S.m, 330 * MM, 300 * MM, 24 * MM, 40 * MM, 6 * MM, 6 * MM, 1 if lite else 3, "mineral",
-              z0=-(SEAT_RAIL[1] + 26) * MM)
+    S.P._rbox(S.m, 300 * MM, 270 * MM, 22 * MM, 60 * MM, 4 * MM, 10 * MM, 1 if lite else 3, "cast",
+              z0=-(SEAT_RAIL[1] + 34) * MM)
     S.m.bm.verts.ensure_lookup_table()
-    bmesh.ops.translate(S.m.bm, verts=S.m.bm.verts[n0:], vec=(0, 40 * MM, 0))
-    obj = S.finish("chair_seat" + sfx, mp, coll, parent)
+    bmesh.ops.translate(S.m.bm, verts=S.m.bm.verts[n0:], vec=(0, 30 * MM, 0))
+    obj = S.finish("chair_seat" + sfx, mp, coll, parent, smooth=50)
     obj.rotation_euler.x = math.radians(-SEAT_TILT)
     names.append(obj.name)
     # the seat mesh: dished into the frame, following the waterfall and the bolsters (kept in rough: filled silhouettes)
@@ -484,7 +485,7 @@ def build_seat(coll, mp, parent, rough=False, lite=False, sfx=""):
         for j in range(nx + 1):
             u = -1 + 2 * j / nx
             dish = SEAT_DISH * (1 - u * u) * math.sin(math.pi * min(max((y - yf - 30) / (L - 30), 0), 1))
-            row.append(V(u * hw, y, waterfall_z(y) - 5 - dish + bolster_z(u * hw, y, hw) * 0.8))
+            row.append(V(u * hw, y, waterfall_z(y) - 14 - dish + bolster_z(u * hw, y, hw) * 0.8))   # meets the tube from below
         rows.append(row)
     Mh.grid(rows, "weave")
     mesh = Mh.finish("chair_seat_mesh" + sfx, mp, coll, parent, smooth=80)
@@ -500,29 +501,56 @@ def build_seat(coll, mp, parent, rough=False, lite=False, sfx=""):
     return names
 
 
+def catmull(pts, n):
+    """A Catmull-Rom curve through pts (Vectors), n points along it."""
+    out = []
+    P = [pts[0]] + list(pts) + [pts[-1]]
+    segs = len(pts) - 1
+    for k in range(n + 1):
+        t = k / n * segs
+        i = min(int(t), segs - 1)
+        u = t - i
+        p0, p1, p2, p3 = P[i], P[i + 1], P[i + 2], P[i + 3]
+        out.append(0.5 * ((2 * p1) + (-p0 + p2) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u * u
+                          + (-p0 + 3 * p1 - 3 * p2 + p3) * u * u * u))
+    return out
+
+
 def build_arm(side, coll, mp, parent, rough=False, lite=False, sfx=""):
     s = 1 if side == "r" else -1
     R = A()
-    seg = 2 if lite else 5
     zt = ARM_H - PAD[2]
-    # the polished support: from the pivot on the back frame's side, down a little, then sweeping up and forward
-    # in one curve to under the pad's front half (side.jpg, detail-arms-1.jpg)
-    path = [V(s * (ARM_X - 15), ARM_POST_Y + 8, -30), V(s * (ARM_X - 2), ARM_POST_Y + 2, 20),
-            V(s * (ARM_X + 12), ARM_POST_Y - 18, 70), V(s * (ARM_X + 32), ARM_POST_Y - 60, zt - 42),
-            V(s * (PAD_X - 4), ARM_POST_Y - 130, zt - 16), V(s * (PAD_X - 2), ARM_POST_Y - 200, zt - 8),
-            V(s * (PAD_X - 2), PAD_Y[0] + 70, zt - 8)]
-    refs = [Vector((s, 0, 0)) for _ in path]
-    R.sweep(path, rprof(ARM_POST[0], ARM_POST[1], 9, seg), "polished", refs=refs)
-    # the pad: a rounded slab, slightly pivoted inward at the front
-    pad = [V(s * (PAD_X + 6), PAD_Y[1], ARM_H - PAD[2] / 2), V(s * (PAD_X - 6), PAD_Y[0], ARM_H - PAD[2] / 2)]
+    yc = (PAD_Y[0] + PAD_Y[1]) / 2
+    # the cast polished support: from the pivot on the back frame's side, sweeping forward and up in one smooth
+    # curve to the pad's underside, the pad centred over its tip (side.jpg, detail-arms-1.jpg)
+    ctrl = [V(s * (ARM_X - 12), ARM_POST_Y + 6, -30), V(s * (ARM_X - 4), ARM_POST_Y - 2, 30),
+            V(s * (ARM_X + 16), ARM_POST_Y - 40, 95), V(s * (ARM_X + 36), ARM_POST_Y - 95, zt - 30),
+            V(s * (PAD_X - 4), ARM_POST_Y - 160, zt - 12), V(s * PAD_X, yc + 20, zt - 6), V(s * PAD_X, yc - 30, zt - 6)]
+    path = catmull(ctrl, 12 if lite else 30)
+    n = len(path)
+    rings = []
+    for k, p in enumerate(path):
+        t = k / (n - 1)
+        w, h = 34 - 10 * t, 18 - 4 * t                  # 34 x 18 at the pivot, 24 x 14 at the pad: a cast blade
+        tng = (path[min(k + 1, n - 1)] - path[max(k - 1, 0)]).normalized()
+        n1 = tng.cross(Vector((s, 0, 0))).normalized()   # in the arm's plane (the blade's width)
+        n2 = n1.cross(tng).normalized()                  # sideways (its thickness)
+        prof = rprof(w, h, 6, 3 if lite else 6)
+        rings.append(R.m.verts([p + u * n1 + v * n2 for u, v in prof]))
+    for a_, b_ in zip(rings, rings[1:]):
+        R.m.strip(a_, b_, "polished")
+    R.m.face(list(reversed(rings[0])), "polished")
+    R.m.face(rings[-1], "polished")
+    # the pad: a rounded slab, slightly pivoted inward at the front, centred over the support's tip
+    pad = [V(s * (PAD_X + 5), PAD_Y[1], ARM_H - PAD[2] / 2), V(s * (PAD_X - 5), PAD_Y[0], ARM_H - PAD[2] / 2)]
     R.sweep(pad, rprof(PAD[1], PAD[2], 11, 3 if lite else 6), "pad", ref=Vector((0, 0, 1)))
     if not rough:
-        # the height-adjustment knob on the pivot's outer face, and the pivot boss on the back frame's side
+        # the polished height-adjustment knob on the pivot's outer face, and the pivot boss on the back frame's side
         R.lathe([(0, 0), (16, 0), (16, 8), (13, 11), (0, 11)], 8 if lite else 24, "polished",
-                Matrix.Translation(V(s * (ARM_X - 15 + ARM_POST[0] / 2), ARM_POST_Y + 8, -30)) @ Matrix.Rotation(s * math.pi / 2, 4, "Y"))
+                Matrix.Translation(V(s * (ARM_X - 12 + 9), ARM_POST_Y + 6, -30)) @ Matrix.Rotation(s * math.pi / 2, 4, "Y"))
         R.lathe([(0, 0), (14, 0), (14, 14), (0, 14)], 8 if lite else 20, "mineral",
-                Matrix.Translation(V(s * (ARM_X - 15 - ARM_POST[0] / 2 - 14), ARM_POST_Y + 8, -30)) @ Matrix.Rotation(s * math.pi / 2, 4, "Y"))
-    obj = R.finish(f"chair_arm_{side}" + sfx, mp, coll, parent)
+                Matrix.Translation(V(s * (ARM_X - 12 - 9 - 14), ARM_POST_Y + 6, -30)) @ Matrix.Rotation(s * math.pi / 2, 4, "Y"))
+    obj = R.finish(f"chair_arm_{side}" + sfx, mp, coll, parent, smooth=60)
     return [obj.name]
 
 
