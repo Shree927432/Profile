@@ -883,3 +883,11 @@ site or the room. Keep each entry short. No polishing; the post does that.
   straight bars, the mechanism a white plastic box, the weave coarse, the kalder mark too faint. Went wrong
   in the build: a Cycles crash from setting the Metal device under --factory-startup (removed); the compare
   masks swallowed the see-through mesh, so the IoU numbers are low even where the overlay fits.
+
+## 2026-10-29 (night, unattended; the owner pre-approved the plan)
+
+- The Aeron: fix round 1 (8 min) fixed the back curve, the mechanism, the weave and the mark; round 2
+  (4 min) gave the seat a slim rail and uniform see-through mesh over a dark pan, and thicker arm supports.
+  Both rounds used, so the chair stops here for the owner's judgement: the seat still reads tray-like in
+  close-up and the arms slimmer than the real castings. Committed and placed in the room.
+

@@ -514,4 +514,7 @@ Not final until the room rebuild adopts them; the component reports in
   `deck_icon_01`..`_15`, `deck_brand`. Lite copies add `_lite`.
 - **Brand decals (all components):** `<part>_brand` (e.g. `g8_brand`, `sd_brand`, `a7v_1_brand`); the GPU's lit name
   keeps `rig_gpu_light`. New PC glow: `rig_glow_strips`.
+- **Chair (2026-10-29):** `chair_swivel` (empty at the cylinder axis, the site turns it), `chair_upper` (empty, seat
+  height), `chair_seat`, `chair_seat_mesh`, `chair_back`, `chair_back_mesh`, `chair_back_posturefit`, `chair_arm_l`,
+  `chair_arm_r`, `chair_mech`, `chair_base`, `chair_cylinder`, `chair_caster_01`..`_05`, `chair_brand`. Lite adds `_lite`.
 
