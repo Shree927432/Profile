@@ -950,3 +950,5 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Owner: "Yes, push". Pushed (15 commits); Cloudflare deployed room v3 within a couple of minutes. Checked live:
   https://shrikantpawade.pages.dev/?room&glb loads the new room with the posts on the Studio Display, no console
   errors; the Draco decoder is served.
+- Owner: "stop for now". The laptop-posts builder was stopped before changing any file; the task is written
+  into the brief's next steps.

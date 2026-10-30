@@ -65,6 +65,11 @@ the component's reference folder, an approved component as a pattern, and a time
 
 ## Next steps, in order
 
+00. Posts on the laptop (owner, 2026-10-31: "I want post on laptop screen", chose "Move to the laptop"; decision row
+    recorded). A builder started and was stopped by the owner ("stop for now") before changing any file. Resume: in
+    scene/desktop.js's GLB path, use `laptop_screen` / `laptop_lid` instead of `monitor_screen` / `monitor_body`,
+    check the screen's real facing (don't assume local +Z) for the glide and halo, match the canvas aspect (about
+    16:10.35), and verify the glide at 1440 and 375 px. The placeholder room keeps its monitor.
 0. The Aeron chair, started 2026-10-28 on Fable at the owner's request and stopped the same day before any
    file was written ("stop for now we'll start later"). Resume it first: the full brief is in
    `handover/chair-brief.md`; name "kalder" proposed in content/room-brands.json.
