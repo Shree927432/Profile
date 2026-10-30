@@ -104,6 +104,25 @@
       "font": "Comfortaa-Bold.ttf",
       "letter_spacing_em": 0.04,
       "status": "proposed 2026-10-29, owner to confirm; the real panels carry no visible logo on the front, so likely not placed"
+    },
+    "laptop": {
+      "real_maker": "Apple",
+      "name": "",
+      "mark": "round",
+      "note": "same round mark as the Studio Display, on the lid's back"
+    },
+    "mstand": {
+      "real_maker": "Rain Design",
+      "name": "",
+      "placed": false,
+      "why": "no visible logo on the stand in the reference photos (check at build)"
+    },
+    "dj": {
+      "real_maker": "Pioneer DJ",
+      "name": "KORVA",
+      "font": "RobotoCondensed-Bold.ttf",
+      "letter_spacing_em": 0.06,
+      "status": "proposed 2026-10-31, owner to confirm"
     }
   },
   "_fonts": "Fonts in blender/assets/fonts/ (Google Fonts, SIL Open Font License; owner picked column C on 2026-10-26). Letter spacing in em, as on the comparison page.",
