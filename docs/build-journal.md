@@ -940,4 +940,10 @@ site or the room. Keep each entry short. No polishing; the post does that.
   stand-ins cleared their material before reading it; the room test hides the piano's camera anchors, so the first GLB
   lacked them; the site's decoder wasn't served until scene-files.mjs was fixed. In the browser the metal parts render
   near-black with no environment map: that's the lighting pass, next.
+- Draw calls (builder on Sonnet, 15 minutes): 334 to 102 at the hero by palette materials in the build and batching at load,
+  with the screenshots matching to under 1/255. Two bugs on the way: the swatch V coordinate was flipped, and clearing
+  material slots reset every face to material 0. Owner asked what a draw call is; explained as the painter waiting on the
+  assistant's instructions.
+- Checked the live site: everything healthy, but Cloudflare serves .glb uncompressed, so the new room is about 3.25 s on
+  4G, just over target.
 
