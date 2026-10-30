@@ -57,7 +57,7 @@ Full commands: `blender/README.md`, section "Component pipeline". In short:
    review before the owner sees it.
 6. Export rich and lite. Report: table of angles, sizes, proposed mesh names, credits, what went wrong.
 
-Rules the owner set: Blender runs headless (`-b`) always; one heavy Cycles render at a time
+Rules the owner set: every saved .blend packs its images (`lib/blendfile.pack_and_save`, never a bare `save_as_mainfile`), so copies keep their textures; Blender runs headless (`-b`) always; one heavy Cycles render at a time
 (`blender/lib/renderqueue.py`); every build has a time box and re-renders only the stills a fix
 touches; no logos, brand names or printed text on any model; exact replicas in shape and finish.
 The builder brief that agents read is kept in this file's spirit; give each builder this section,

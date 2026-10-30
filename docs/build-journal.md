@@ -932,3 +932,6 @@ site or the room. Keep each entry short. No polishing; the post does that.
   the legend atlases are linked by relative path (//returndesk_legends-rich.png), so the copy lost them and
   Blender showed its missing-texture magenta. The models are fine; the opener now repoints relative texture
   paths at the original folder. Builders should pack images into the .blend at save time so copies work.
+- Owner: "Yes, pack them". New lib/blendfile.pack_and_save packs every external image before saving; all 12
+  scripts that save a .blend use it, and the 17 existing .blend files were packed in place (5 had linked
+  textures). Checked: copies in another folder show no missing textures.
