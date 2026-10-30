@@ -517,4 +517,9 @@ Not final until the room rebuild adopts them; the component reports in
 - **Chair (2026-10-29):** `chair_swivel` (empty at the cylinder axis, the site turns it), `chair_upper` (empty, seat
   height), `chair_seat`, `chair_seat_mesh`, `chair_back`, `chair_back_mesh`, `chair_back_posturefit`, `chair_arm_l`,
   `chair_arm_r`, `chair_mech`, `chair_base`, `chair_cylinder`, `chair_caster_01`..`_05`, `chair_brand`. Lite adds `_lite`.
+- **Wall group (2026-10-30):** `shelf`, `frame_1`..`_3` with `frame_N_picture` (UV 0..1, top-left at (0,1), for GitHub,
+  LinkedIn, X), `vine_pot_1`..`_2`, `vine_1`..`_2`, `pegboard`, `pegboard_glow`, `pegboard_hook`, `headphones`
+  (`headphones_band`, `_cup_l`, `_cup_r`, `_brand_l`/`_r`), `neon`, `neon_glow`, `neon_halo`, `nanoleaf`,
+  `nanoleaf_panel_01`..`_07`; root empties `shelf_root`, `vine_pot_N_root`, `pegboard_root`, `headphones_root`,
+  `neon_root`, `nanoleaf_root`. Lite adds `_lite`.
 

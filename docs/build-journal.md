@@ -910,3 +910,13 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Owner: "Can you add images to this essay as well?" Four images from our own renders (no product photos, to
   keep the post clear of other people's copyright): the final chair, first pass vs final, the CC BY scan vs
   our mouse, the room. 224 KB in total, under public/images/posts/the-chair/. Pushed.
+
+## 2026-10-30
+
+- Owner: "finish wall group", then "now don't use fable". Finished on Opus in 26 minutes: all four review fixes in one
+  round (brand to the cup centre, Nanoleaf cluster, neon rebuilt as single-stroke tubes from the glyphs' centre lines,
+  pegboard halo, whose first pale-blue try was invisible on the white wall), then compare, export and room placement.
+  The room test caught two real clashes: pot 1's vines hanging through key light 1, and the frames' easel legs 3.9 cm
+  into the wall. Cycles had to run on the CPU and drained the battery about 1 % a minute, so only the group stills and
+  fix close-ups were rendered that way.
+
