@@ -783,7 +783,8 @@ def stage_build(out):
     names = build(collection=col)
     blend = os.path.join(BLENDER_DIR, "out", "components", f"{NAME}.blend")
     os.makedirs(os.path.dirname(blend), exist_ok=True)
-    bpy.ops.wm.save_as_mainfile(filepath=blend, compress=True)
+    from lib.blendfile import pack_and_save
+    pack_and_save(blend, compress=True)
     with open(os.path.join(out, f"{NAME}-names.json"), "w") as f:
         json.dump(names, f, indent=1)
     tris = sum(sum(len(p.vertices) - 2 for p in bpy.data.objects[n].data.polygons) for n in names["all"]

@@ -493,7 +493,8 @@ def main():
         json.dump(report, f, indent=1)
     print("FIT", json.dumps(report))
     if not OPTION and ARMS in ("plan", "0"):
-        bpy.ops.wm.save_as_mainfile(filepath=BLEND)
+        from lib.blendfile import pack_and_save
+        pack_and_save(BLEND)
         print("saved", BLEND)
 
     only = os.environ.get("ONLY", "")

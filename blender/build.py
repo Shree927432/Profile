@@ -140,7 +140,8 @@ def stage_build():
     REPORT["build_s"] = round(time.time() - t, 1)
     REPORT["names"] = check_names()
     os.makedirs(C.OUT, exist_ok=True)
-    bpy.ops.wm.save_as_mainfile(filepath=BLEND, compress=True)
+    from lib.blendfile import pack_and_save
+    pack_and_save(BLEND, compress=True)
     run.log(f"built in {REPORT['build_s']} s, names checked, saved {BLEND}")
     yield
 

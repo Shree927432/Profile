@@ -148,7 +148,8 @@ def stage_build():
             o.hide_render = True
             o.hide_viewport = True
     os.makedirs(OUT, exist_ok=True)
-    bpy.ops.wm.save_as_mainfile(filepath=BLEND, compress=True)
+    from lib.blendfile import pack_and_save
+    pack_and_save(BLEND, compress=True)
     log(f"built in {time.time() - t:.1f} s: {len(n['all'])} meshes, saved {BLEND}")
 
 

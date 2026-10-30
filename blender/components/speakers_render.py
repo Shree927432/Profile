@@ -227,7 +227,8 @@ def stage_build():
     REPORT["build_s"] = round(time.time() - t, 1)
     REPORT["check"] = S.check(r)
     os.makedirs(OUT, exist_ok=True)
-    bpy.ops.wm.save_as_mainfile(filepath=BLEND, compress=True)
+    from lib.blendfile import pack_and_save
+    pack_and_save(BLEND, compress=True)
     log(f"built in {REPORT['build_s']} s: {REPORT['check']['triangles_before_bevels']} triangles; "
         f"cabinet bbox {REPORT['check']['cabinet_bbox_mm_xyz']} mm; saved {BLEND}")
     yield

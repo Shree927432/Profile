@@ -196,7 +196,8 @@ def stage_build():
     REPORT["layout"] = {"g8_bottom_z": S.G8_Z0, "sd_bottom_z": S.sd_z0(), "pole_y": S.POLE_Y,
                         "g8_sag_mm": round(S.G8_SAG / S.MM, 2), "g8_half_arc_mm": round(S.G8_S / S.MM, 2)}
     os.makedirs(OUT, exist_ok=True)
-    bpy.ops.wm.save_as_mainfile(filepath=BLEND, compress=True)
+    from lib.blendfile import pack_and_save
+    pack_and_save(BLEND, compress=True)
     log(f"built in {REPORT['build_s']} s: {REPORT['check']['triangles_before_bevels']} triangles before bevels; "
         f"saved {BLEND}")
     yield

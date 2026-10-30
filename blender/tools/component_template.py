@@ -159,7 +159,8 @@ def stage_build(out):
     names = build()
     blend = os.path.join(BLENDER_DIR, "out", "components", f"{NAME}.blend")
     os.makedirs(os.path.dirname(blend), exist_ok=True)
-    bpy.ops.wm.save_as_mainfile(filepath=blend, compress=True)
+    from lib.blendfile import pack_and_save
+    pack_and_save(blend, compress=True)
     log(f"built in {time.time() - t:.1f} s, saved {blend}")
     return names
 
