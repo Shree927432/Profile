@@ -928,3 +928,7 @@ site or the room. Keep each entry short. No polishing; the post does that.
   the lightstick head is pale. Accepted for the owner's judgement without a second round.
 - Owner: "make sound when the tasks are done": the chime now also marks finished tasks.
 
+- The owner saw pink keycaps on both keyboards in Blender. Cause: my viewing copies live in the scratchpad, and
+  the legend atlases are linked by relative path (//returndesk_legends-rich.png), so the copy lost them and
+  Blender showed its missing-texture magenta. The models are fine; the opener now repoints relative texture
+  paths at the original folder. Builders should pack images into the .blend at save time so copies work.
