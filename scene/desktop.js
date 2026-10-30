@@ -7,7 +7,7 @@
 //     renderer               plain renderer.render(); setPixelRatio() is the one place pixel ratio changes
 //     quality                quality.js decides the pixel ratio; applyQuality() applies it
 //     scene                  lights + buildPlaceholderRoom(), or with ?room&glb the Blender room
-//                            (/scene/assets/room.glb through GLTFLoader; &uvtest keeps its TOP texture)
+//                            (/scene/assets/room.glb through GLTFLoader + DRACOLoader; &uvtest keeps its TOP texture)
 //     screen + glow          monitor-posts.js on an offscreen canvas -> CanvasTexture; a soft
 //                            halo plane behind it (made here so it survives the GLB)
 //     camera + controls      resize() fits the monitor to the aspect; zoom is ours, not OrbitControls'
@@ -76,10 +76,12 @@ const NARROW_BELOW = 480;
 const TAP_MAX_MOVE = 6;
 const TAP_MAX_MS = 500;
 const WHEEL_LINE_PX = 16; // deltaMode "lines" -> px, as in screen-host.js
-// The GLB room (?room&glb). Field of view from HERO in blender/lib/constants.py (vfov, phone_vfov).
+// The GLB room (?room&glb), built by blender/build_v3.py: Draco geometry, WebP textures. Field of view
+// from HERO_V3 in blender/lib/plan_v3.py (vfov, portrait_vfov).
 const ROOM_GLB = "/scene/assets/room.glb";
-const ROOM_FOV = 50;
-const ROOM_FOV_PORTRAIT = 70;
+const DRACO_DECODER = "/scene/vendor/three/addons/libs/draco/gltf/";
+const ROOM_FOV = 54;
+const ROOM_FOV_PORTRAIT = 66;
 
 export async function start({ canvas, content, overlay, params, reduce }) {
   const text = content.site.room;
@@ -120,8 +122,13 @@ export async function start({ canvas, content, overlay, params, reduce }) {
 
   let room;
   if (useGlb) {
-    const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
-    room = (await new GLTFLoader().loadAsync(ROOM_GLB)).scene;
+    const [{ GLTFLoader }, { DRACOLoader }] = await Promise.all([
+      import("three/addons/loaders/GLTFLoader.js"),
+      import("three/addons/loaders/DRACOLoader.js"),
+    ]);
+    const draco = new DRACOLoader().setDecoderPath(DRACO_DECODER);
+    room = (await new GLTFLoader().setDRACOLoader(draco).loadAsync(ROOM_GLB)).scene;
+    draco.dispose(); // frees the decoder worker; the geometry is decoded
   } else {
     room = buildPlaceholderRoom(THREE);
   }
@@ -233,7 +240,11 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   if (useGlb && (!viewNode || !viewTargetNode)) throw new Error("room.glb has no room_view / room_view_target");
   const viewPos = viewNode ? viewNode.getWorldPosition(new THREE.Vector3()) : null;
   const viewTarget = viewTargetNode ? viewTargetNode.getWorldPosition(new THREE.Vector3()) : null;
-  const startPolar = viewPos ? new THREE.Spherical().setFromVector3(viewPos.clone().sub(lookAt)).phi : START_POLAR;
+  const startSph = viewPos ? new THREE.Spherical().setFromVector3(viewPos.clone().sub(lookAt)) : null;
+  const startPolar = startSph ? startSph.phi : START_POLAR;
+  // The azimuth band centres on the start view: 0 (straight on) in the placeholder room, room_view's
+  // azimuth in the GLB (plan v3's screen faces +X, room_view sees it from about 57 degrees off its axis).
+  const startAzimuth = startSph ? startSph.theta : 0;
   const zoomFar = useGlb ? 1 : ZOOM_FAR;
 
   const controls = new OrbitControls(camera, canvas);
@@ -243,8 +254,8 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   controls.enableDamping = !reduce;
   controls.dampingFactor = 0.08;
   controls.rotateSpeed = 0.6;
-  controls.minAzimuthAngle = -AZIMUTH_LIMIT;
-  controls.maxAzimuthAngle = AZIMUTH_LIMIT;
+  controls.minAzimuthAngle = startAzimuth - AZIMUTH_LIMIT;
+  controls.maxAzimuthAngle = startAzimuth + AZIMUTH_LIMIT;
   controls.minPolarAngle = startPolar - POLAR_BAND;
   controls.maxPolarAngle = startPolar + POLAR_BAND;
 
@@ -585,6 +596,8 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     });
     panel.append(fpsEl, ratioEl, ...buttons.map(([, b]) => b));
     overlay.append(panel);
+    // For measuring from the console or a test script: draw calls and triangles of the last frame.
+    window.roomDebug = { info: renderer.info };
 
     function refreshDebug() {
       // quality.fps keeps the last value measured during motion; 0 until there has been motion.

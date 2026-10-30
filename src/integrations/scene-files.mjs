@@ -23,6 +23,7 @@ const MIME = {
   '.jpg': 'image/jpeg',
   '.webp': 'image/webp',
   '.ktx2': 'image/ktx2',
+  '.wasm': 'application/wasm',
   '.mp3': 'audio/mpeg',
   '.ogg': 'audio/ogg',
   '.wav': 'audio/wav',
@@ -34,8 +35,10 @@ const BUILD_FILES = ['three.module.js', 'three.core.js'];
 // Addon folders the room needs: orbit controls, EffectComposer + passes (bloom, output), their shaders.
 const ADDON_DIRS = ['controls', 'postprocessing', 'shaders'];
 // Single addon files: the GLB loader for ?room&glb and the two utils it imports (not the whole
-// 2 MB loaders/ folder).
-const ADDON_FILES = ['loaders/GLTFLoader.js', 'utils/BufferGeometryUtils.js', 'utils/SkeletonUtils.js'];
+// 2 MB loaders/ folder), and the Draco loader with its glTF-only WebAssembly decoder (room.glb is
+// Draco-compressed; desktop.js points DRACOLoader at libs/draco/gltf/).
+const ADDON_FILES = ['loaders/GLTFLoader.js', 'utils/BufferGeometryUtils.js', 'utils/SkeletonUtils.js',
+  'loaders/DRACOLoader.js', 'libs/draco/gltf/draco_wasm_wrapper.js', 'libs/draco/gltf/draco_decoder.wasm'];
 
 // Maps a /scene/vendor/three/... URL to a file inside node_modules/three, or null.
 function vendorFile(threeDir, rel) {

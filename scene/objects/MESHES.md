@@ -9,6 +9,52 @@ The code may rely on a name only if it is in this file. Anything not listed is f
 for the Blender scripts to rename, join or delete. Change a listed name only with a
 decision row, because room code finds meshes by name (CONTRACT.md).
 
+## 0. The room as built from plan v3 (2026-10-31, blender/build_v3.py)
+
+This section is the list the GLB carries now. Where sections 2 to 6 (written for the v1
+room) differ, this one wins; they stay for the rules and the pivots they describe.
+Names marked (Blender) exist in the .blend and the component scripts only: the export
+joins them into their root's `<word>_static`, so code must not look for them.
+
+Roots: `set_room`, `set_city`, `obj_window`, `obj_light`, `obj_plant`, `set_rug`,
+`set_desk`, `set_chair`, `set_camera`, `set_keylights`, `set_wall`, `set_laptop`,
+`set_plants`, `obj_monitor`, `obj_rig`, `obj_mic`, `obj_frames`, `obj_studio`,
+`obj_piano`, `obj_guitars`. Each root's other meshes are one `<word>_static`
+(`room_static`, `city_static`, `window_static`, `light_static`, `plant_static`,
+`rug_static`, `desk_static`, `cam_static`, `keylights_static`, `wall_static`,
+`laptop_static`, `plants_static`, `monitor_static`, `rig_static`, `mic_static`,
+`studio_static`, `piano_static`, `guitars_static`; the chair's is `chair_static`,
+under `chair_swivel`).
+
+| Root | Code-facing names in the GLB |
+|---|---|
+| `set_room` | camera anchors (empties, position and look-at): `room_view`, `room_view_target` (HERO_V3, the AI lab as the owner's photo, vfov 54, portrait 66); `camera_intro`, `camera_intro_target` (INTRO, out of the window, vfov 50); `camera_about`, `camera_about_target` (ABOUT, the music side, vfov 50); `camera_phone`, `camera_phone_target` (PHONE_V3, vfov 60). Field of view is not in the GLB; plan v3 and the code hold it |
+| `obj_monitor` | `monitor_body`, `monitor_screen` (the Studio Display 27, 16:10, 53.8 x 33.6 cm, screen rules), `monitor_static` (arm, collar, brand) |
+| `obj_rig` | `rig_display` (the G8 34 body), `rig_screen` (on the 1800R arc, screen rules), `rig_case`, `rig_case_glass`, `rig_fans` (all case-fan light rings, one emissive mesh, for the pulse), `rig_fan_01`..`_08` (rotors: 01-03 side, 04-05 rear, 06-08 bottom; origin at the hub, +Z is the air's direction), `rig_glow_strips`, `rig_gpu_root` (empty) with `rig_gpu`, `rig_gpu_fan_01`..`_02`, `rig_gpu_light`; `rig_static` (G8 stand, case frame parts, brands) |
+| `obj_studio` | `studio_speaker_01`, `_02` (cabinets, front local -Y in Blender, origin bottom centre), `studio_speaker_0N_woofer` (+Z out of the cone, for the pulse); `apollo` (empty) with `apollo_knob` (the one big knob: volume) and `apollo_leds`; `dj_stand_root` > `dj_root` (empties) with `dj_jog_l`/`_r` (spin about local Z), `dj_pad_l_01`..`_08`, `dj_pad_r_01`..`_08` (back row 01-04), `dj_cue_l`/`_r`, `dj_play_l`/`_r`, `dj_tempo_l`/`_r` and `dj_fader_l`/`_r` (slide along Y), `dj_xfader` (slides along X), `dj_knob_hi`/`mid`/`low`/`trim`/`cfx` `_l`/`_r`, `dj_knob_master`, `dj_knob_browse`, `dj_knob_fx_depth`, `dj_knob_hp_level`, `dj_knob_hp_mix`, `dj_knob_mic`; `lightstick_root` (empty) with `lightstick_head` (own emissive material, for recolouring), `lightstick_shell`, `lightstick_handle`. (Blender: speaker poles and `_iso`, `apollo_body`, `apollo_button_1`..`_8`, `apollo_meter_window`, `dj_body`, `dj_mixer`, `dj_brand_*`, `dj_stand`, `lightstick_cradle`, the brands) |
+| `obj_mic` | joint empties `mic_j_swivel`, `_shoulder`, `_elbow`, `_wrist`, `_wrist_yaw`, `_mount`, `_stem`, `_tilt` (the pose is baked; the arm meshes are in `mic_static`), `mic_body` (click target, under `mic_j_tilt`), `mic_led`. (Blender: `mic_arm_*`, `mic_stem`, `mic_yoke`, `mic_knobs`, the brands) |
+| `obj_frames` | `frame_1`..`_3` (empties; GitHub, LinkedIn, X by content), each with `frame_N_border` and `frame_N_picture` (UV 0..1, top-left at (0,1), screen rules). One digit, as the wall-group build names them |
+| `set_desk` | `desk_led`, `desk_drawers_01`..`_03` (empties) with `desk_drawers_NN_drawer_01`..`_05` (top to bottom; slide 0.40 m along local -Y); `keyboard` > `kb_plate` (empties) with one mesh per key `kb_key_<id>` (81 keys; move along the plate's local Z to type) and `kb_knob`; `mouse` (empty) with `mouse_wheel`; `deck` (empty, the Stream Deck, all static). (Blender: `desk_top`, `desk_pole`, `desk_screenbar`, `desk_screenbar_dial`, `desk_drawers_NN_carcass`, `_risers`, `kb_case`, the other mouse and deck parts, the felt mat, the brands) |
+| `set_chair` | `chair_swivel` (empty at the cylinder axis; the site turns it), `chair_upper` (empty, seat height), `chair_static`. (Blender: `chair_seat`, `chair_back`, `chair_arm_l`/`_r`, `chair_mech`, `chair_base`, `chair_caster_NN`, `chair_brand`) |
+| `set_camera`, `set_keylights` | `cam` (empty) with `cam_screen_lcd`; `keylight_1`, `_2` > `keylight_N_tilt` (empties) with `keylight_N_glow` |
+| `set_wall` | `shelf_root`, `vine_pot_1_root`, `_2_root`, `pegboard_root` > `headphones_root`, `neon_root`, `nanoleaf_root` > `nanoleaf_0N_root` (empties); `neon`, `neon_glow`, `neon_halo` (words from content/room-brands.json), `pegboard_glow`, `nanoleaf_panel_01`..`_07` |
+| `set_laptop` | `mstand_root` > `laptop_root` > `laptop_hinge` (empties; the lid is baked open at -110 about local X), `laptop_screen` (UV 0..1, top-left (0,1)) |
+| `obj_piano` | as section 3 (keys, `piano_fallboard`, `piano_lid`, `piano_interior`, `piano_strings`, `piano_hammers`, `piano_sheet`, `piano_static` with the bench, `piano_view`, `piano_inside_view` and their targets) |
+| `obj_guitars` | `guitar_01`..`_06` (empties) with `guitar_NN_body`; `guitar_02_strings`, `guitar_04_strings` (the two built guitars); 01, 03, 05, 06 are flat stand-in outlines without strings until they are built; `guitars_static` (stand-in hooks and rack) |
+| `obj_window`, `obj_light`, `obj_plant`, `set_city`, `set_plants`, `set_rug` | stand-ins: `window_static` (frame, grill, ledge), `light_shade`, `light_static`, `plant_static` (sill plant), `city_static` (sky, ground and blocks, scaled to sit inside 30 m), `plants_static` (snake plant, small desk plant), `rug_static`. `window_sky`, `window_glass`, `window_beam`, `plant_pot`, `plant_soil`, `plant_leaf_NN` do not exist yet |
+
+Replaced by the names above (the components' own names): `frame_NN` with two digits by
+`frame_N`; `studio_dj_N_*` by `dj_*` (`l`/`r` for decks 1/2, more knobs, `dj_xfader`
+for `studio_dj_crossfader`); `studio_lightstick_head`/`_handle` by `lightstick_head`/`_handle`;
+`studio_knob_volume` by `apollo_knob` (`studio_knob_pan` has no knob on the Apollo);
+`desk_keyboard`, `desk_mouse` by `keyboard`, `mouse`; `chair` by `chair_swivel`.
+Needs a decision row in docs/05-decisions.md (the rule at the top of this file).
+
+Not one material yet (they load in three.js as a group of meshes under the name):
+`apollo_leds`, `desk_led`, `mic_body`, `rig_case`, `rig_case_glass`, `rig_display`,
+`rig_fan_NN`, `rig_gpu`, `rig_gpu_fan_NN`, and the DJ's jogs, cues, plays, tempos, faders,
+crossfader and knobs. Fix in the component scripts before code drives them.
+
 ## 1. Conventions
 
 **Characters.** Lower-case ASCII, digits, underscore. Nothing else. Max 63 characters
@@ -95,8 +141,9 @@ Materials: `mat_<thing>`.
   with "TOP" and an arrow on the monitor, upright, before anything else is built.
 
 **Export settings that keep the names:** GLB, +Y Up, apply modifiers, no cameras,
-no punctual lights, no custom properties. Draco or meshopt compression need a
-decoder in the page, so that is a dependency question for the owner later.
+no punctual lights, no custom properties. Since 2026-10-31 (blender/build_v3.py): Draco
+geometry and WebP textures; the page decodes Draco with three.js's own DRACOLoader and its
+glTF decoder (from the installed three package, no new dependency).
 
 ## 2. Roots and build order
 
@@ -482,50 +529,7 @@ without any name changing.
    Stills of A and B from the Blender file before the rack is modelled. No name
    changes either way.
 
-## Proposed names from the component builds (2026-10-24, to adopt when the room is rebuilt from plan v3)
+## Proposed names from the component builds
 
-Not final until the room rebuild adopts them; the component reports in
-`video-local/footage/2026-10-24-components/<name>/NOTE.md` give origins and pivots.
-
-- **obj_monitor (the 27-inch Studio Display, the posts screen):** `monitor_body`, `monitor_screen`
-  (16:10, 53.8 x 33.6 cm, centred in the 16:9 glass, screen-UV rule), `monitor_static` (its arm and collar).
-- **obj_rig (the PC and the 34-inch dashboard):** `rig_display`, `rig_screen` (on the 1800R arc, same UV
-  rule), `rig_static`, `rig_case`, `rig_case_glass`, `rig_gpu`, `rig_gpu_fan_01`..`_02`, `rig_gpu_light`,
-  `rig_fans` (all case-fan light rings, one emissive mesh, for the pulse), `rig_fan_01`..`_08` (rotors:
-  01-03 side, 04-05 rear, 06-08 bottom; origin at the hub, +Z is the air's direction).
-- **obj_studio, speakers:** `studio_speaker_01`/`_02` (front local -Y, origin bottom centre),
-  `studio_speaker_0N_woofer` (+Z out of the cone, for the pulse), new `studio_speaker_0N_pole` and
-  `_iso` (mounts; merge the chosen one into `studio_static`).
-- **set_desk:** `desk_top`, `desk_led`, `desk_pole`, `desk_screenbar`, `desk_screenbar_dial`,
-  `desk_drawers_01`..`_03` (empties), `desk_drawers_NN_carcass`, `desk_drawers_NN_drawer_01`..`_05`
-  (top to bottom; slides 0.40 m along local -Y), `desk_drawers_NN_risers`.
-- **Arms group (2026-10-26):** `keylight_1`/`_2` (empties) with `_static`, `_mount`, `_tilt`, `_panel`, `_glow`,
-  `_brand`; the camera `cam` (`cam_body`, `cam_lens`, `cam_lens_glass`, `cam_screen`, `cam_screen_lcd`, `cam_brand`)
-  on `cam_arm` (the Flex Arm). **obj_mic:** `mic_static`, `mic_arm_knuckle`, `mic_arm_lower`, `mic_arm_elbow`,
-  `mic_arm_upper`, `mic_arm_tip`, `mic_stem`, `mic_yoke`, `mic_body` (click target), `mic_knobs`, `mic_led`,
-  `mic_body_brand`, `mic_rear_brand`, `boom_upper_brand`, `boom_lower_brand`, `boom_clamp_brand`; joints are
-  empties `mic_j_swivel`, `_shoulder`, `_elbow`, `_wrist`, `_wrist_yaw`, `_mount`, `_stem`, `_tilt` (posed by name).
-- **Desk-top group (2026-10-26):** roots `apollo`, `keyboard`, `mouse`, `deck`. Apollo: `apollo_body`, `apollo_knob`,
-  `apollo_meter_window`, `apollo_leds`, `apollo_button_1`..`_8`, `apollo_jack_1`..`_4`, `apollo_brand`. Keyboard:
-  `kb_case`, `kb_plate`, one mesh per key `kb_key_<id>` (81 keys; move along the plate's local Z to animate typing),
-  `kb_knob`, `kb_brand`. Mouse: `mouse_body`, `mouse_band`, `mouse_seams`, `mouse_wheel_slot`, `mouse_wheel`,
-  `mouse_mode_button`, `mouse_thumb_pocket`, `mouse_thumbwheel`, `mouse_side_buttons`, `mouse_led`, `mouse_usb`,
-  `mouse_feet`, `mouse_brand`. Stream Deck: `deck_stand`, `deck_body_frame`, `deck_body`, `deck_key_01`..`_15`,
-  `deck_icon_01`..`_15`, `deck_brand`. Lite copies add `_lite`.
-- **Brand decals (all components):** `<part>_brand` (e.g. `g8_brand`, `sd_brand`, `a7v_1_brand`); the GPU's lit name
-  keeps `rig_gpu_light`. New PC glow: `rig_glow_strips`.
-- **Chair (2026-10-29):** `chair_swivel` (empty at the cylinder axis, the site turns it), `chair_upper` (empty, seat
-  height), `chair_seat`, `chair_seat_mesh`, `chair_back`, `chair_back_mesh`, `chair_back_posturefit`, `chair_arm_l`,
-  `chair_arm_r`, `chair_mech`, `chair_base`, `chair_cylinder`, `chair_caster_01`..`_05`, `chair_brand`. Lite adds `_lite`.
-- **Wall group (2026-10-30):** `shelf`, `frame_1`..`_3` with `frame_N_picture` (UV 0..1, top-left at (0,1), for GitHub,
-  LinkedIn, X), `vine_pot_1`..`_2`, `vine_1`..`_2`, `pegboard`, `pegboard_glow`, `pegboard_hook`, `headphones`
-  (`headphones_band`, `_cup_l`, `_cup_r`, `_brand_l`/`_r`), `neon`, `neon_glow`, `neon_halo`, `nanoleaf`,
-  `nanoleaf_panel_01`..`_07`; root empties `shelf_root`, `vine_pot_N_root`, `pegboard_root`, `headphones_root`,
-  `neon_root`, `nanoleaf_root`. Lite adds `_lite`.
-- **Return desk (2026-10-31):** laptop (`laptop_base`, `laptop_lid`, `laptop_screen` UV 0..1 top-left (0,1), `laptop_keys`,
-  `laptop_trackpad`, `laptop_brand`, empty `laptop_hinge` rotating local X, open at -110), mStand (`mstand`, `_lip`,
-  `_pads`, `_feet`), DJ (`dj_body`, `dj_mixer`, `dj_jog_l`/`_r` spin Z, `dj_pad_l_01`..`08`/`dj_pad_r_01`..`08` back row
-  01-04, `dj_cue_*`, `dj_play_*`, `dj_tempo_*`/`dj_fader_*` slide Y, `dj_xfader` slides X, `dj_knob_*`, `dj_brand_top`,
-  `dj_brand_rear`, `dj_stand`), lightstick (`lightstick_head` own emissive material for recolouring, `_shell`, `_handle`,
-  `_cradle`). Roots `mstand_root`, `laptop_root`, `dj_stand_root`, `dj_root`, `lightstick_root`. Lite adds `_lite`.
-
+Adopted on 2026-10-31 by the plan v3 room rebuild: see section 0. The component reports in
+`video-local/footage/2026-10-24-components/<name>/NOTE.md` still give origins and pivots.
