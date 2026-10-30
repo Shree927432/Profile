@@ -129,6 +129,23 @@ def build_wall(lite=False):
     return WA.build_room(collection=col, lite=lite)
 
 
+# 2026-10-31: the return-desk group (blender/components/returndesk.py: MacBook Pro 16 on the mStand, the DJ controller on
+# its steel stand, the lightstick in its cradle) built live at plan v3's numbers (RETURNDESK=0 keeps the stand-ins).
+RETURNDESK = os.environ.get("RETURNDESK", "plan")
+if RETURNDESK != "0":
+    REPLACED = REPLACED | {"mstand", "laptop", "dj", "lightstick"}
+
+
+def build_returndesk(lite=False):
+    """The return-desk group in its own collection 'returndesk'."""
+    sys.path.insert(0, os.path.join(BL, "components"))
+    import returndesk as RD
+    col = bpy.data.collections.get("returndesk") or bpy.data.collections.new("returndesk")
+    if col.name not in bpy.context.scene.collection.children:
+        bpy.context.scene.collection.children.link(col)
+    return RD.build_room(collection=col, lite=lite)
+
+
 def M_at(x, y, z=0.0, yaw=0.0):
     return Matrix.Translation((x, y, z)) @ Matrix.Rotation(math.radians(yaw), 4, "Z")
 
@@ -282,7 +299,11 @@ def groups():
     g = {"desk": [], "screens_pole": [], "g8": [], "studio_display": [], "screenbar": [], "speaker_L": [],
          "speaker_R": [], "pc": [], "keylight_1": [], "keylight_2": [], "camera_arm": [], "mic": [],
          "interface": [], "streamdeck": [], "keyboard": [], "mouse": [],
-         "wall_shelf": [], "wall_plants": [], "wall_pegboard": [], "wall_neon": [], "wall_nanoleaf": []}
+         "wall_shelf": [], "wall_plants": [], "wall_pegboard": [], "wall_neon": [], "wall_nanoleaf": [],
+         "laptop": [], "dj": [], "lightstick": []}
+    rd_col = bpy.data.collections.get("returndesk")
+    rd_objs = set(rd_col.all_objects) if rd_col else set()
+    rd_root = {"mstand_root": "laptop", "dj_stand_root": "dj", "lightstick_root": "lightstick"}
     wall_col = bpy.data.collections.get("wall")
     wall_objs = set(wall_col.all_objects) if wall_col else set()
     wall_root = {"shelf_root": "wall_shelf", "vine_pot_1_root": "wall_plants", "vine_pot_2_root": "wall_plants",
@@ -295,6 +316,12 @@ def groups():
         if o.type != "MESH" or o.hide_render:
             continue
         n = o.name
+        if o in rd_objs:
+            r = o
+            while r.parent is not None:
+                r = r.parent
+            g[rd_root.get(r.name.replace("_lite", ""), "dj")].append(o)
+            continue
         if o in wall_objs:
             r = o
             while r.parent is not None:
@@ -441,6 +468,11 @@ def main():
             if o.name.startswith(("neon_stroke", "nanoleaf_t", "peg_shelf", "vine_leaf")):
                 bpy.data.objects.remove(o, do_unlink=True)
         build_wall()
+    if RETURNDESK != "0":
+        for o in list(bpy.data.objects):             # the blockout's DJ stand, drawn outside build_parts
+            if o.name.startswith(("dj_top", "dj_leg", "dj_rail")):
+                bpy.data.objects.remove(o, do_unlink=True)
+        build_returndesk()
     BO.lights()
     append_rich()
     music = music_side()
@@ -516,6 +548,11 @@ def main():
         for o in list(col.all_objects):
             bpy.data.objects.remove(o, do_unlink=True)
         build_wall(lite=True)
+    if RETURNDESK != "0":                            # the return-desk group: rich out, lite in
+        col = bpy.data.collections.get("returndesk")
+        for o in list(col.all_objects):
+            bpy.data.objects.remove(o, do_unlink=True)
+        build_returndesk(lite=True)
     drop = {"sky", "ground", "ceiling"}
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:
