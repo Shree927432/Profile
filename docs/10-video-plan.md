@@ -229,3 +229,10 @@ next to the clips it renders.
   in `.../desktop/mouse-scan/r4/threeway/`. The scan-to-model step reads well as a wipe.
 - No change to the music or the shot plan.
 
+## Update 2026-10-31: the room exists
+
+- The first full room (v3) loads in the browser at `?room&glb`. The browser screenshots in
+  video-local/footage/2026-10-31-room-v3/ (desktop and phone) are the first "it's real" shot; the before is the v1 room
+  in git history. A screen recording of the first load and the glide into the posts screen is worth capturing once the
+  lighting pass lands.
+

@@ -935,3 +935,9 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Owner: "Yes, pack them". New lib/blendfile.pack_and_save packs every external image before saving; all 12
   scripts that save a .blend use it, and the 17 existing .blend files were packed in place (5 had linked
   textures). Checked: copies in another folder show no missing textures.
+- Room rebuild (Opus, 25 minutes): every finished component assembled from plan v3 into the site's room.glb, 8.8 MB raw to
+  1.95 MB with Draco and WebP; the posts paint on the Studio Display and the click still glides in. Went wrong: the guitar
+  stand-ins cleared their material before reading it; the room test hides the piano's camera anchors, so the first GLB
+  lacked them; the site's decoder wasn't served until scene-files.mjs was fixed. In the browser the metal parts render
+  near-black with no environment map: that's the lighting pass, next.
+
