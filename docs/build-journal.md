@@ -947,3 +947,6 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Checked the live site: everything healthy, but Cloudflare serves .glb uncompressed, so the new room is about 3.25 s on
   4G, just over target.
 
+- Owner: "Yes, push". Pushed (15 commits); Cloudflare deployed room v3 within a couple of minutes. Checked live:
+  https://shrikantpawade.pages.dev/?room&glb loads the new room with the posts on the Studio Display, no console
+  errors; the Draco decoder is served.
