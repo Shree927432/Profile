@@ -5,7 +5,15 @@
         --python blender/components/wall.py -- [stages] [--cycles] [--nobake]
 
 stages: outline | build,stills,compare,closeups,export (default) | any comma list.
+Cycles: WALL_CYCLES=1 (the `--cycles` flag after `--` is taken by Blender's own parser in 5.2 and stops the run).
+WALL_OUT=<dir> renders somewhere else; WALL_CU=key,key limits the close-ups; WALL_STILLS=key,key the stills.
 Plain Python (Pillow): python3 wall.py --pairs <pairs.json> <dir>
+Room: build_room(collection, lite) places every part at plan v3's numbers (blender/design/room_v3_component_test.py).
+
+Round 2 (2026-10-30, coordinator review): ARVELL embossed in the centre of each cup's disc; the Nanoleaf an
+edge-to-edge cluster in plan v3's 0.58 x 0.52 (NANO_CELLS); the neon as single-stroke 8 mm tubes swept along the
+words' skeleton (neon_strokes.json) with round ends and a soft halo card; the pegboard's halo a rounded-rectangle
+falloff in saturated blue-white; the frames' easel legs cut; pot 1's vines over the shelf's end (clear of key light 1).
 
 Parts (plan v3 names, blender/lib/plan_v3.py):
   shelf     the white floating shelf 180 x 25 x 4 with three black 30 x 40 portrait frames (frame_1..3) standing on
@@ -56,7 +64,8 @@ MM = 0.001
 PART = os.environ.get("WALL_PART", "all")
 PARTS = ["shelf", "plants", "pegboard", "neon", "nanoleaf"] if PART == "all" else PART.split(",")
 REF = os.path.join(REPO, "docs", "moodboard", "local", "ai-lab")
-FOOT = os.path.join(REPO, "video-local", "footage", "2026-10-29-components", "wall")
+FOOT = os.path.join(REPO, "video-local", "footage", "2026-10-30-components", "wall")
+FOOT_BEFORE = os.path.join(REPO, "video-local", "footage", "2026-10-29-components", "wall")   # round 1, kept
 FONTS = os.path.join(BLENDER_DIR, "assets", "fonts")
 CONTENT = os.path.join(REPO, "content", "room-brands.json")
 
@@ -96,7 +105,8 @@ HP_PAD_RING = (26.0, 24.0)                             # EST: pad thickness, pad
 HP_DISC = 56.0                                         # EST: the logo disc 40 across with a thin silver ring
 HP_YOKE = (13.0, 9.0)                                  # EST: the yoke's section (width, depth)
 HP_CUP_Z = -205.0                                      # EST: the cup centre below the band's top (hanging)
-HP_LOGO = (22.0, 4.0)                                  # EST: the small wordmark on the cup's disc: 22 wide, cap 4
+HP_LOGO = (30.0, 7.0)                                  # EST: the wordmark in the disc's centre, inside the silver ring,
+#                                                        about the real audio-technica mark's size (30 wide in a 56 disc)
 CUP_CX = HP_BAND_HW - 18.0                             # EST: the cup centres, 148 apart (the pads about 90 apart when hanging)
 NEON_W, NEON_H = 700.0, 260.0                          # plan v3: 0.70 x 0.26
 NEON_PLATE_T = 4.0                                     # EST: clear acrylic 3 to 5
@@ -110,26 +120,37 @@ NANO_FRAME = 4.0                                       # EST: the thin white fra
 NANO_GAP = 3.0                                         # EST: the seam between joined panels
 NANO_TINT = "#86a8ff"
 NANO_GLOW = dict(rich=4.0, lite=1.5)
-PEG_GLOW_TINT = "#9fc8ff"
-# The owner's photo (docs/moodboard/local/ai-desk-reference-1.jpg): seven triangles in one tall vertical zigzag
-# column near the corner, each pointing left or right in turn and sharing a slanted edge with the next; the column
-# is one triangle height wide (200) and (n + 1) half-sides tall (8 x 115 = 920).
-NANO_LAYOUT = ["left", "right", "left", "right", "left", "right", "left"]
+NEON_GLOW = dict(rich=6.0, lite=1.5)                   # the tubes; GLB 1.5 like the PC glow (no bloom on the site)
+PEG_GLOW = dict(rich=3.0, lite=1.5)                    # the halo on the wall around the pegboard
+PEG_HALO = 170.0                                       # EST: the halo reaches about 17 cm past the board's edge
+PEG_GLOW_TINT = "#9fc8ff"                              # the slots in the lite tile
+PEG_HALO_TINT = "#4f8fff"                              # the halo: a saturated blue-white so it reads on a white wall
+# The owner's photo (docs/moodboard/local/ai-desk-reference-1.jpg): seven triangles in an irregular cluster, edge to
+# edge, pointing sideways (vertical bases), a zigzag spine with panels branching off it. Round 2 (coordinator): the
+# round-1 straight column (920 tall) broke plan v3's footprint (0.58 x 0.52). The cells sit on a sideways triangle
+# lattice: column c (0..2, each one triangle height h = 200 wide), row k (0..2, half-sides of 115 up); a cell points
+# right when c + k is even. Seven of the nine cells: about 582 x 430 outside, inside the footprint.
+NANO_CELLS = [(0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 2)]
 NEON_PX_PER_MM = 2048 / 700.0                          # the neon raster: 2048 px across the plate's width
-HOOK_COL, HOOK_ROW = 13, 1                             # the hook's slot (column from the left, row from the top): the
-#                                                        board's upper right, as the owner's photo and plan v3's +0.20
+HOOK_COL, HOOK_ROW = 14, 1                             # the hook's slot (column from the left, row from the top): the
+#                                                        board's upper right: x +0.202 for plan v3's headphones at +0.20
 
 CUT = os.path.join(FOOT, "cutouts")
 HP_REF = os.path.join(REF, "13-headphones")
+HP_EXPLAIN = ("pose, not shape: the Thomann shots show the band slid out and the cups swivelled flat for display; ours "
+              "hangs on the SKADIS hook with the sliders in and the cups facing each other, so the arch is shorter and the "
+              "cups sit higher and closer; white on white also leaves a ragged photo mask")
 PHOTOS = {
     "headphones-front": dict(photo=os.path.join(HP_REF, "front-1.jpg"), part="headphones",
                              title="ATH-M50x: front (Thomann photo) vs our model",
-                             camera={"mode": "fit", "view": "front", "tilts": [0.0, 4.0, 8.0]}, mask=0.93,
-                             explain="a perspective product shot: the camera is searched"),
+                             camera={"mode": "fit", "view": "front", "tilts": [0.0, 6.0, 12.0],
+                                     "distances": [0.45, 0.65, 0.9, 1.3]}, mask=0.97, fill=False,
+                             explain=HP_EXPLAIN),
     "headphones-three-quarter": dict(photo=os.path.join(HP_REF, "three-quarter-1.jpg"), part="headphones",
                                      title="ATH-M50x: three-quarter (Thomann photo) vs our model",
-                                     camera={"mode": "fit", "view": "front", "yaws": [20.0, 32.0, 44.0], "tilts": [0.0, 8.0]},
-                                     mask=0.93, explain="a turned perspective shot: distance, turn and tilt are searched"),
+                                     camera={"mode": "fit", "view": "front", "yaws": [20.0, 32.0, 44.0], "tilts": [0.0, 8.0],
+                                             "distances": [0.45, 0.65, 0.9, 1.3]},
+                                     mask=0.97, fill=True, explain=HP_EXPLAIN),
     "pegboard-front": dict(photo=os.path.join(REF, "05-pegboard", "pegboard-76x56-front.jpg"), part="pegboard",
                            title="SKADIS 76 x 56: front (IKEA packshot) vs our model",
                            camera={"mode": "ortho", "view": "front"}, mask=0.985, fill=True,
@@ -165,9 +186,10 @@ def mats(lite=False):
     n = f"mat_wall_nano_glow{sfx}"
     out["nano_glow"] = g(n) or M.principled(n, base="#dfe8ff", rough=0.8, emit=NANO_TINT, emit_strength=glow)
     n = f"mat_wall_neon_glow{sfx}"
-    out["neon_glow"] = g(n) or M.principled(n, base="#ffffff", rough=0.6, emit=NEON_TINT, emit_strength=glow * 1.4)
+    out["neon_glow"] = g(n) or M.principled(n, base="#ffffff", rough=0.35, emit=NEON_TINT,
+                                            emit_strength=NEON_GLOW["lite" if lite else "rich"])
     n = f"mat_wall_peg_glow{sfx}"
-    out["peg_glow"] = g(n) or _glow_card_material(n, PEG_GLOW_TINT, glow * 0.8)
+    out["peg_glow"] = g(n) or _glow_card_material(n, PEG_HALO_TINT, PEG_GLOW["lite" if lite else "rich"])
     n = f"mat_wall_acrylic{sfx}"
     if g(n) is None:
         m = M.principled(n, base="#ffffff", rough=0.05)
@@ -213,9 +235,16 @@ def _glow_card_material(name, tint, strength):
     """An emissive card that fades to nothing at its edges (a radial alpha); for the pegboard's backlight."""
     import numpy as np
     from lib import materials as M
-    im = _image_from(name + "_img", 128, lambda u, v: (
-        np.ones_like(u), np.ones_like(u), np.ones_like(u),
-        np.clip(1.0 - np.sqrt(((u - 0.5) * 2) ** 2 + ((v - 0.5) * 2) ** 2) ** 1.4, 0, 1)))
+    gw, gh = PEG_W + 2 * PEG_HALO, PEG_H + 2 * PEG_HALO
+
+    def fn(u, v):
+        # distance (mm) outside the board's rounded rectangle, inset 30 mm (the LED strip runs behind the edge)
+        x, z = np.abs(u - 0.5) * gw, np.abs(v - 0.5) * gh
+        qx, qz = x - (PEG_W / 2 - 30 - 40), z - (PEG_H / 2 - 30 - 40)
+        d = np.sqrt(np.maximum(qx, 0) ** 2 + np.maximum(qz, 0) ** 2) - 40
+        a = np.exp(-np.maximum(d, 0) / (PEG_HALO * 0.45)) * np.clip((gw / 2 - x) / 25, 0, 1) * np.clip((gh / 2 - z) / 25, 0, 1)
+        return np.ones_like(u), np.ones_like(u), np.ones_like(u), np.clip(a, 0, 1)
+    im = _image_from(name + "_img", 256, fn)
     m, nt, b = M._new(name)
     t = nt.nodes.new("ShaderNodeTexImage")
     t.image = im
@@ -268,7 +297,11 @@ def _leaf_card_material(name):
     t = nt.nodes.new("ShaderNodeTexImage")
     t.image = im
     nt.links.new(t.outputs["Color"], b.inputs["Base Color"])
-    nt.links.new(t.outputs["Alpha"], b.inputs["Alpha"])
+    gt = nt.nodes.new("ShaderNodeMath")          # alpha > 0.5: the glTF exporter writes alphaMode MASK (not BLEND)
+    gt.operation = "GREATER_THAN"
+    gt.inputs[1].default_value = 0.5
+    nt.links.new(t.outputs["Alpha"], gt.inputs[0])
+    nt.links.new(gt.outputs[0], b.inputs["Alpha"])
     b.inputs["Roughness"].default_value = 0.5
     m.blend_method = "CLIP"
     m.alpha_threshold = 0.5
@@ -457,6 +490,13 @@ def boolean_cut(target, cutter, apply=True):
         with bpy.context.temp_override(object=target, active_object=target, selected_objects=[target]):
             bpy.ops.object.modifier_apply(modifier=mod.name)
         bpy.data.objects.remove(cutter, do_unlink=True)
+        me = target.data                  # the cutter's empty material slot comes along: fold its faces into slot 0
+        if any(m is None for m in me.materials) and len(me.materials) > 1:
+            for p in me.polygons:
+                p.material_index = 0
+            for i in reversed(range(len(me.materials))):
+                if me.materials[i] is None:
+                    me.materials.pop(index=i)
 
 
 def set_uv_rect(ob, u0=0.0, v0=0.0, u1=1.0, v1=1.0, axes=("x", "z")):
@@ -476,6 +516,7 @@ def set_uv_rect(ob, u0=0.0, v0=0.0, u1=1.0, v1=1.0, axes=("x", "z")):
 
 
 def tri_count(obs):
+    obs = {o.name: o for o in obs}.values()          # a part's name lists repeat some objects (headphones)
     return sum(sum(len(p.vertices) - 2 for p in o.data.polygons) for o in obs if o.type == "MESH")
 
 
@@ -539,25 +580,24 @@ def build_frame(coll, mp, parent, k, lite, rough, sfx):
         gl = obj_from_bm(f"frame_{k}_glass{sfx}", bm, mp["glass"], coll, parent)
         gl.matrix_basis = lean
         out.append(gl.name)
-        # a back board and a hanger are hidden behind; the stand (an easel leg) keeps it standing
-        bm = bmesh.new()
-        box_bm(bm, 40, 6, FRAME_H * 0.62, (0, 3, 0), 0)
-        leg = obj_from_bm(f"frame_{k}_leg{sfx}", bm, mp["black"], coll, parent)
-        leg.matrix_basis = Matrix.Rotation(math.radians(-FRAME_LEAN - 12), 4, "X")
-        leg.location = (0, 0, 0)
-        out.append(leg.name)
+        # round 2: the easel leg is cut; the frame leans on the wall, and the leg went 4 cm into it in the room test
     return out
 
 
-def vine_path(rng, end_side, i, n, lite):
+VINE_END_ONLY = {1}          # round 2: pot 1 (the corner end, beside key light 1 in plan v3) sends every vine over the
+#                              shelf's end, close to the wall, so none hangs through the key light's panel
+
+
+def vine_path(rng, end_side, i, n, lite, end_only=False):
     """One vine's centre line (metres): from the pot rim, over the shelf's front edge or end, then hanging."""
-    # which way: most over the front (-Y), a few over the end
-    over_end = i % 3 == 2
+    # which way: most over the front (-Y), a few over the end (all of them for an `end_only` pot)
+    over_end = end_only or i % 3 == 2
     ang = rng.uniform(-0.6, 0.6) + (math.pi / 2 * end_side if over_end else -math.pi / 2)
     r0 = POT_D / 2 - 8
     p0 = Vector((r0 * math.cos(ang), r0 * math.sin(ang), POT_H - 6))
     if over_end:
-        edge = Vector((end_side * (POT_END_X + rng.uniform(5, 25)), rng.uniform(-40, 40), -2))
+        edge = Vector((end_side * (POT_END_X + rng.uniform(5, 25)),
+                       rng.uniform(-10, 35) if end_only else rng.uniform(-40, 40), -2))
     else:
         edge = Vector((rng.uniform(-70, 70), SHELF_FRONT_Y - rng.uniform(5, 25), -2))
     length = VINE_LEN * rng.uniform(0.55, 1.0)
@@ -649,7 +689,7 @@ def build_plants(coll, mp, lite=False, rough=False, sfx=""):
         bm_s = bmesh.new()
         bm_l = bmesh.new()
         for i in range(n_v):
-            path = vine_path(rng, end_side, i, n_v, lite)
+            path = vine_path(rng, end_side, i, n_v, lite, end_only=k in VINE_END_ONLY)
             sweep(bm_s, path, circle(2.2 if not lite else 2.5, 4 if lite else 7), up=(0, 0, 1), cap=True)
             # leaves every few points after the rim, alternating sides, bigger near the top
             start = 3 if lite else 5
@@ -735,7 +775,7 @@ def build_pegboard(coll, mp, lite=False, rough=False, sfx=""):
                 extra.append(obj_from_bm(f"pegboard_cap_{sx}{sz}{sfx}".replace("-", "m"), bm, mp["white"], coll, root, smooth=True).name)
     # the glow card on the wall behind the board
     bm = bmesh.new()
-    gw, gh = PEG_W + 160, PEG_H + 160
+    gw, gh = PEG_W + 2 * PEG_HALO, PEG_H + 2 * PEG_HALO
     vs = [bm.verts.new(V(x, PEG_OFF - 1.5, z)) for x, z in ((-gw / 2, -gh / 2), (gw / 2, -gh / 2), (gw / 2, gh / 2), (-gw / 2, gh / 2))]
     bm.faces.new(vs)
     glow = obj_from_bm("pegboard_glow" + sfx, bm, mp["peg_glow"], coll, root)
@@ -851,9 +891,11 @@ def build_headphones(coll, mp, root, lite, sfx):
     if not lite or True:
         from lib import brands
         for side, key in ((-1, "l"), (1, "r")):
-            at = (side * (CUP_CX + HP_CUP[2] + 1.5) * MM, 0.0, (HP_CUP_Z - HP_DISC / 2 - 4) * MM)
-            d = brands.decal("headphones", at, (side, 0, 0), (0, 0, 1), height=HP_LOGO[1] * MM, finish="printed",
-                             colour="#c9cbd0", parent=root, collection=coll, lite=lite,
+            # round 2: in the centre of the cup's outer disc, inside the silver ring, embossed tone-on-tone (the real
+            # audio-technica mark sits there, a slightly glossier white on the matte white disc)
+            at = (side * (CUP_CX + HP_CUP[2] + 1.2) * MM, 0.0, HP_CUP_Z * MM)
+            d = brands.decal("headphones", at, (side, 0, 0), (0, 0, 1), height=HP_LOGO[1] * MM, finish="embossed",
+                             colour="#d0d0ce", parent=root, collection=coll, lite=lite,
                              name=f"headphones_brand_{key}{sfx}", max_width=HP_LOGO[0] * MM)
             if d is not None:
                 names["headphones_brand"].append(d.name)
@@ -942,72 +984,225 @@ def neon_text():
         return json.load(f)["neon"]["text"]
 
 
+def _trace_skeleton(sk):
+    """Plain Python: a one-pixel skeleton (bool array) to polylines of (row, col): the runs between end points and
+    junctions, then the pure loops. Returns [(points, closed)]."""
+    import numpy as np
+    pts = set(zip(*[a.tolist() for a in np.nonzero(sk)]))
+    off = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+
+    def nb(p):
+        return [(p[0] + dr, p[1] + dc) for dr, dc in off if (p[0] + dr, p[1] + dc) in pts]
+    deg = {p: len(nb(p)) for p in pts}
+    nodes = {p for p in pts if deg[p] != 2}
+    used = set()
+    out = []
+    for n in nodes:
+        for q in nb(n):
+            if (n, q) in used:
+                continue
+            path = [n, q]
+            used.update({(n, q), (q, n)})
+            prev, cur = n, q
+            while cur not in nodes:
+                nx = [x for x in nb(cur) if x != prev and (cur, x) not in used]
+                if not nx:
+                    break
+                nxt = nx[0]
+                used.update({(cur, nxt), (nxt, cur)})
+                path.append(nxt)
+                prev, cur = cur, nxt
+            out.append((path, False))
+    for p in pts:                                  # a lone pixel (a small dot's skeleton): a 2-pixel stroke
+        if deg[p] == 0:
+            out.append(([(p[0] + 1, p[1]), (p[0] - 1, p[1])], False))
+    seen = {p for e in used for p in e}
+    for p0 in pts:
+        if p0 in seen or deg[p0] != 2:
+            continue
+        path = [p0]
+        seen.add(p0)
+        cur = p0
+        while True:
+            nx = [x for x in nb(cur) if x not in seen]
+            if not nx:
+                break
+            cur = nx[0]
+            seen.add(cur)
+            path.append(cur)
+        if len(path) > 8:
+            out.append((path, True))
+    return out
+
+
 def neon_raster(spec_path, out_dir):
-    """Plain Python (PIL, numpy, scipy, skimage): draw the words in the rounded font, thin every stroke to the
-    tube's width on a distance transform, and write (a) neon_contours.json, the closed centre-ish outlines in mm
-    about the plate's centre (x right, z up) for the rich tubes, and (b) neon_glyphs.png, an RGBA card of the
-    tubes with a rounded shading, for the lite. Blender's own curve offset leaves loops at the stroke ends."""
+    """Plain Python (PIL, numpy, scipy, skimage). Round 2: real LED neon is ONE round tube per stroke, so the words
+    (from content, in the rounded font) are drawn, skeletonised to their centre lines (the medial axis), traced into
+    single-stroke polylines (short spurs pruned, smoothed, resampled) and written as neon_strokes.json in mm about
+    the plate's centre (x right, z up); the rich and lite tubes are swept along them in Blender. neon_halo.png is
+    the soft glow around the tubes (white, alpha) for a card on the plate; neon_glyphs.png a preview of the tubes.
+    Any words work: nothing here knows the letters."""
     import numpy as np
     from PIL import Image, ImageDraw, ImageFont
     from scipy import ndimage
-    from skimage import measure
+    from skimage.morphology import skeletonize
     spec = json.load(open(spec_path))
     text, w_mm, h_mm, tube_mm, ppm = spec["text"], spec["w_mm"], spec["h_mm"], spec["tube_mm"], spec["ppm"]
     W, H = int(round(w_mm * ppm)), int(round(h_mm * ppm))
-    target_w = 0.82 * W
+    target_w = 0.80 * W
     size = 200
     font = ImageFont.truetype(spec["font"], size)
     bb = font.getbbox(text)
     size = int(size * target_w / max(bb[2] - bb[0], 1))
     font = ImageFont.truetype(spec["font"], size)
     bb = font.getbbox(text)
-    if (bb[3] - bb[1]) > 0.70 * H:
-        size = int(size * 0.70 * H / (bb[3] - bb[1]))
+    if (bb[3] - bb[1]) > 0.66 * H:
+        size = int(size * 0.66 * H / (bb[3] - bb[1]))
         font = ImageFont.truetype(spec["font"], size)
         bb = font.getbbox(text)
     im = Image.new("L", (W, H), 0)
-    dr = ImageDraw.Draw(im)
-    dr.text(((W - (bb[2] - bb[0])) / 2 - bb[0], (H - (bb[3] - bb[1])) / 2 - bb[1]), text, font=font, fill=255)
-    ink = np.array(im) > 127
+    ImageDraw.Draw(im).text(((W - (bb[2] - bb[0])) / 2 - bb[0], (H - (bb[3] - bb[1])) / 2 - bb[1]), text, font=font, fill=255)
+    ink = ndimage.gaussian_filter(np.array(im).astype(np.float32), 1.5) > 127
     edt = ndimage.distance_transform_edt(ink)
     half = float(np.percentile(edt[ink], 96))                  # the stroke's half-width in px (a monoline font)
+    sk = skeletonize(ink)
+    polys = _trace_skeleton(sk)
+    # prune spurs: a run from a free end shorter than 1.6 half-widths is a corner whisker, not a stroke
+    deg_end = {}
+    for pts, closed in polys:
+        if not closed:
+            for e in (pts[0], pts[-1]):
+                deg_end[e] = deg_end.get(e, 0) + 1
+    keep = []
+    for pts, closed in polys:
+        free = (deg_end[pts[0]] == 1) + (deg_end[pts[-1]] == 1) if not closed else 0
+        if free == 1 and len(pts) < 1.6 * half:     # a whisker off a stroke (an isolated short run is a dot: kept)
+            continue
+        if len(pts) < 2:
+            continue
+        keep.append((pts, closed))
+    strokes = []
+    for pts, closed in keep:
+        a = np.array(pts, np.float32)
+        k = 7                                                  # smooth the pixel staircase (ends held)
+        if len(a) > k:
+            ker = np.ones(k) / k
+            if closed:
+                pad = np.concatenate([a[-k:], a, a[:k]])
+                sm = np.stack([np.convolve(pad[:, i], ker, "same") for i in range(2)], 1)[k:-k]
+            else:
+                pad = np.concatenate([np.repeat(a[:1], k, 0), a, np.repeat(a[-1:], k, 0)])
+                sm = np.stack([np.convolve(pad[:, i], ker, "same") for i in range(2)], 1)[k:-k]
+                sm[0], sm[-1] = a[0], a[-1]
+            a = sm
+        xy = [(float((c - W / 2) / ppm), float((H / 2 - r) / ppm)) for r, c in a]
+        strokes.append(dict(pts=xy, closed=bool(closed)))
+    with open(os.path.join(out_dir, "neon_strokes.json"), "w") as f:
+        json.dump({"stroke_mm": half * 2 / ppm, "ppm": ppm, "tube_mm": tube_mm, "text": text, "strokes": strokes}, f)
+    # the tubes as a mask (preview) and the halo around them
     r = tube_mm / 2 * ppm
-    level = max(0.78 * half, 0.5)       # the thin core the tube is swept around (about 0.44 of the stroke stays)
-    contours = measure.find_contours(edt, level)
-    step = 3.0 * ppm
-    out = []
-    for c in contours:
-        pts = []
-        acc = step
-        last = None
-        for row, col in c:
-            p = (float((col - W / 2) / ppm), float((H / 2 - row) / ppm))
-            if last is None:
-                pts.append(p)
-                last = p
-                continue
-            d = math.hypot(p[0] - last[0], p[1] - last[1])
-            acc += d
-            if acc >= step:
-                pts.append(p)
-                acc = 0.0
-            last = p
-        if len(pts) >= 4:
-            if math.hypot(pts[0][0] - pts[-1][0], pts[0][1] - pts[-1][1]) < step * 0.6:
-                pts.pop()
-            out.append(pts)
-    with open(os.path.join(out_dir, "neon_contours.json"), "w") as f:
-        json.dump({"stroke_px": half * 2, "ppm": ppm, "tube_mm": tube_mm, "contours": out}, f)
-    core = edt >= level
-    dist = ndimage.distance_transform_edt(~core)
-    mask = dist <= r
+    line = Image.new("L", (W, H), 0)
+    dr = ImageDraw.Draw(line)
+    for st in strokes:
+        q = [(x * ppm + W / 2, H / 2 - z * ppm) for x, z in st["pts"]]
+        if st["closed"]:
+            q.append(q[0])
+        dr.line(q, fill=255, width=1)
+    dist = ndimage.distance_transform_edt(np.array(line) < 128)
+    tube = dist <= r
     shade = np.sqrt(np.clip(1 - (dist / r) ** 2, 0, 1)) * 0.45 + 0.55
     rgba = np.zeros((H, W, 4), np.uint8)
     rgba[..., :3] = (255 * shade)[..., None].astype(np.uint8)
-    rgba[..., 3] = (mask * 255).astype(np.uint8)
-    card = Image.fromarray(rgba, "RGBA").resize((1024, int(1024 * H / W)), Image.LANCZOS)
-    card.save(os.path.join(out_dir, "neon_glyphs.png"))
-    print("NEON", len(out), "contours; stroke", round(half * 2 / ppm, 1), "mm; font px", size, flush=True)
+    rgba[..., 3] = (tube * 255).astype(np.uint8)
+    Image.fromarray(rgba, "RGBA").resize((1024, int(1024 * H / W)), Image.LANCZOS).save(os.path.join(out_dir, "neon_glyphs.png"))
+    halo = np.exp(-np.maximum(dist - r, 0) / (7.0 * ppm)) * 0.55
+    hr = np.zeros((H, W, 4), np.uint8)
+    hr[..., :3] = 255
+    hr[..., 3] = (np.clip(halo, 0, 1) * 255).astype(np.uint8)
+    Image.fromarray(hr, "RGBA").resize((512, int(512 * H / W)), Image.LANCZOS).save(os.path.join(out_dir, "neon_halo.png"))
+    print("NEON", len(strokes), "strokes; stroke", round(half * 2 / ppm, 1), "mm; font px", size, flush=True)
+
+
+def tube(bm, path, r, seg, closed=False, caps=True, up=(0, 1, 0)):
+    """A round tube (radius r mm, seg sides) along `path` (Vectors, metres) that lies in a plane with normal `up`,
+    with rounded (half-sphere) ends when open."""
+    upv = Vector(up)
+    n = len(path)
+    pts = [(p, r) for p in path]
+    if caps and not closed and n >= 2:
+        t0 = (path[0] - path[1]).normalized()
+        t1 = (path[-1] - path[-2]).normalized()
+        nc = 2 if seg <= 6 else 4
+        pre = [(path[0] + t0 * (r * MM * math.sin(math.radians(80) * k / nc)), r * math.cos(math.radians(80) * k / nc))
+               for k in range(nc, 0, -1)]
+        post = [(path[-1] + t1 * (r * MM * math.sin(math.radians(80) * k / nc)), r * math.cos(math.radians(80) * k / nc))
+                for k in range(1, nc + 1)]
+        pts = pre + pts + post
+    n = len(pts)
+    rings = []
+    for i, (p, rr) in enumerate(pts):
+        if closed:
+            t = pts[(i + 1) % n][0] - pts[i - 1][0]
+        else:
+            t = pts[min(i + 1, n - 1)][0] - pts[max(i - 1, 0)][0]
+        if t.length < 1e-9:
+            t = Vector((1, 0, 0))
+        t.normalize()
+        u = t.cross(upv)
+        if u.length < 1e-6:
+            u = t.cross(Vector((0, 0, 1)))
+        u.normalize()
+        v = u.cross(t).normalized()
+        rings.append([bm.verts.new(p + (u * math.cos(2 * math.pi * j / seg) + v * math.sin(2 * math.pi * j / seg)) * (rr * MM))
+                      for j in range(seg)])
+    for i in range(n if closed else n - 1):
+        r0, r1 = rings[i], rings[(i + 1) % n]
+        for j in range(seg):
+            bm.faces.new((r0[j], r1[j], r1[(j + 1) % seg], r0[(j + 1) % seg]))
+    if not closed:
+        bm.faces.new(list(reversed(rings[0])))
+        bm.faces.new(rings[-1])
+
+
+def resample(pts, step, closed=False):
+    """A polyline (list of (x, z) mm) resampled every `step` mm (the ends kept)."""
+    if closed:
+        pts = pts + [pts[0]]
+    out = [pts[0]]
+    acc = 0.0
+    for a, b in zip(pts, pts[1:]):
+        d = math.hypot(b[0] - a[0], b[1] - a[1])
+        acc += d
+        if acc >= step:
+            out.append(b)
+            acc = 0.0
+    if closed:
+        if math.hypot(out[-1][0] - out[0][0], out[-1][1] - out[0][1]) < step * 0.5:
+            out.pop()
+    elif out[-1] != pts[-1]:
+        if len(out) > 1 and math.hypot(out[-1][0] - pts[-1][0], out[-1][1] - pts[-1][1]) < step * 0.5:
+            out[-1] = pts[-1]
+        else:
+            out.append(pts[-1])
+    return out
+
+
+def _halo_material(name, image_path, strength):
+    from lib import materials as M
+    im = bpy.data.images.load(image_path, check_existing=False)
+    im.name = name + "_img"
+    im.pack()
+    m, nt, b = M._new(name)
+    t = nt.nodes.new("ShaderNodeTexImage")
+    t.image = im
+    b.inputs["Base Color"].default_value = M.rgba(NEON_TINT)
+    b.inputs["Emission Color"].default_value = M.rgba(NEON_TINT)
+    b.inputs["Emission Strength"].default_value = strength
+    b.inputs["Roughness"].default_value = 1.0
+    nt.links.new(t.outputs["Alpha"], b.inputs["Alpha"])
+    m.blend_method = "BLEND"
+    m.show_transparent_back = False
+    return m
 
 
 def _neon_card_material(name, image_path, strength):
@@ -1040,31 +1235,34 @@ def build_neon(coll, mp, lite=False, rough=False, sfx=""):
     with open(spec, "w") as f:
         json.dump(dict(text=neon_text(), w_mm=NEON_W, h_mm=NEON_H, tube_mm=NEON_TUBE, ppm=NEON_PX_PER_MM,
                        font=os.path.join(FONTS, "Comfortaa-Bold.ttf")), f)
-    cj = os.path.join(FOOT, "neon_contours.json")
+    cj = os.path.join(FOOT, "neon_strokes.json")
+    if os.path.exists(cj):
+        os.remove(cj)
     pr = subprocess.run(["/opt/anaconda3/bin/python3", os.path.abspath(__file__), "--neon-raster", spec, FOOT],
                         capture_output=True, text=True)
     if not os.path.exists(cj):
         raise RuntimeError("neon raster failed: " + pr.stdout + pr.stderr)
     data = json.load(open(cj))
     y_front = -NEON_PLATE_T / 2 * MM
-    if lite or rough:
-        bm = bmesh.new()
-        y = y_front - NEON_TUBE * MM / 2
-        vs = [bm.verts.new(V(x, y, z)) for x, z in ((-NEON_W / 2, -NEON_H / 2), (NEON_W / 2, -NEON_H / 2),
-                                                   (NEON_W / 2, NEON_H / 2), (-NEON_W / 2, NEON_H / 2))]
-        bm.faces.new(vs)
-        m = bpy.data.materials.get("mat_wall_neon_card" + sfx) or _neon_card_material(
-            "mat_wall_neon_card" + sfx, os.path.join(FOOT, "neon_glyphs.png"), NANO_GLOW["lite"] * 1.4)
-        glow = obj_from_bm("neon_glow" + sfx, bm, m, coll, root)
-        set_uv_rect(glow)
-    else:
-        bm = bmesh.new()
-        r = NEON_TUBE / 2
-        for c in data["contours"]:
-            path = [V(x, y_front - r - 0.3, z) for x, z in c]
-            sweep(bm, path, circle(r, 10), up=(0, 1, 0), closed_path=True)
-        fix_normals(bm)
-        glow = obj_from_bm("neon_glow" + sfx, bm, mp["neon_glow"], coll, root, smooth=True)
+    r = NEON_TUBE / 2
+    bm = bmesh.new()
+    step, seg = (9.0, 6) if (lite or rough) else (2.5, 12)
+    for st in data["strokes"]:
+        pts = resample(st["pts"], step, st["closed"])
+        if len(pts) < 2:
+            continue
+        tube(bm, [V(x, -NEON_PLATE_T / 2 - r - 0.3, z) for x, z in pts], r, seg, closed=st["closed"] and len(pts) > 2)
+    glow = obj_from_bm("neon_glow" + sfx, bm, mp["neon_glow"], coll, root, smooth=True)
+    # the soft glow on the acrylic around the tubes (an emissive alpha card just in front of the plate)
+    bm = bmesh.new()
+    vs = [bm.verts.new(V(x, -NEON_PLATE_T / 2 - 0.4, z)) for x, z in ((-NEON_W / 2, -NEON_H / 2), (NEON_W / 2, -NEON_H / 2),
+                                                                    (NEON_W / 2, NEON_H / 2), (-NEON_W / 2, NEON_H / 2))]
+    bm.faces.new(vs)
+    hm = bpy.data.materials.get("mat_wall_neon_halo" + sfx) or _halo_material(
+        "mat_wall_neon_halo" + sfx, os.path.join(FOOT, "neon_halo.png"), 1.0 if lite else 2.0)
+    halo = obj_from_bm("neon_halo" + sfx, bm, hm, coll, root)
+    set_uv_rect(halo)
+    names["neon_halo"] = [halo.name]
     names["neon_glow"] = [glow.name]
     # the acrylic plate and four standoffs
     bm = bmesh.new()
@@ -1082,7 +1280,7 @@ def build_neon(coll, mp, lite=False, rough=False, sfx=""):
                 sweep(bm, [V(x, NEON_PLATE_T / 2, z), V(x, 10.0, z)], circle(4, seg), up=(0, 0, 1))
                 sweep(bm, [V(x, -NEON_PLATE_T / 2 - 3, z), V(x, NEON_PLATE_T / 2 + 0.5, z)], circle(NEON_STANDOFF[0] / 2, seg), up=(0, 0, 1))
                 names["neon"].append(obj_from_bm(f"neon_standoff_{sx}{sz}{sfx}".replace("-", "m"), bm, mp["chrome"], coll, root, smooth=True, auto=40).name)
-    names["all"] = names["neon"] + names["neon_glow"]
+    names["all"] = names["neon"] + names["neon_glow"] + names["neon_halo"]
     return names
 
 
@@ -1125,14 +1323,15 @@ def build_nanoleaf(coll, mp, lite=False, rough=False, sfx=""):
     names["roots"] = [root.name]
     h = NANO_H
     s = NANO_SIDE
-    # the vertical zigzag column: panel k's centroid at z = s/2 + k s/2; a left-pointer's centroid at x = 2h/3 (its
-    # vertical base on the right), a right-pointer's at h/3; the column spans x 0..h and z 0..(n + 1) s/2
+    # the sideways lattice (NANO_CELLS): a right-pointing cell in column c has its vertical base at x = c h and its
+    # centroid at c h + h/3; a left-pointer's centroid at c h + 2h/3; row k's centroid at z = k s/2 + s/2
     cells = []
-    for k, orient in enumerate(NANO_LAYOUT):
-        x = 2 * h / 3 if orient == "left" else h / 3
-        cells.append((x, s / 2 + k * s / 2, orient))
-    cx = h / 2
-    cz = (len(NANO_LAYOUT) + 1) * s / 4
+    for c, k in NANO_CELLS:
+        orient = "right" if (c + k) % 2 == 0 else "left"
+        cells.append((c * h + (h / 3 if orient == "right" else 2 * h / 3), k * s / 2 + s / 2, orient))
+    xs = [c * h for c, k in NANO_CELLS] + [(c + 1) * h for c, k in NANO_CELLS]
+    zs = [k * s / 2 for c, k in NANO_CELLS] + [k * s / 2 + s for c, k in NANO_CELLS]
+    cx, cz = (min(xs) + max(xs)) / 2, (min(zs) + max(zs)) / 2
     for i, (x, z, up) in enumerate(cells):
         sub = empty(f"nanoleaf_{i + 1:02d}_root{sfx}", coll, root, ((x - cx) * MM, 0, (z - cz) * MM))
         inset = NANO_GAP / 2
@@ -1168,7 +1367,7 @@ BUILDERS = {"shelf": build_shelf, "plants": build_plants, "pegboard": build_pegb
 # where the parts sit when built together in the studio (metres): spread out on one plane, for the stills
 STUDIO_WALL_Y = 0.125                 # the studio wall: the shelf's wall; the other parts move up to it
 STUDIO_AT = {"shelf": (0.0, 0.0, 1.95 - 0.04), "plants": (0.0, 0.0, 1.95), "pegboard": (1.35, STUDIO_WALL_Y - 0.04, 1.28),
-             "neon": (1.35, STUDIO_WALL_Y - 0.01, 1.28 + 0.28 + 0.11), "nanoleaf": (2.0, STUDIO_WALL_Y - 0.005, 1.50)}
+             "neon": (1.35, STUDIO_WALL_Y - 0.01, 1.28 + 0.28 + 0.11 + 0.13), "nanoleaf": (2.12, STUDIO_WALL_Y - 0.005, 1.50)}
 PLANT_STUDIO = [(-0.9 + 0.07, 0.0), (0.9 - 0.07, 0.0)]
 
 
@@ -1200,6 +1399,43 @@ def build(parts=None, rough=False, lite=False, collection=None, studio=True):
                     r.location = (at[0] + PLANT_STUDIO[j][0], STUDIO_WALL_Y - 0.11, at[2])
                 else:
                     r.location = at
+    bpy.context.view_layer.update()
+    return names
+
+
+ROOM_ROOTS = {"shelf": ["shelf_root"], "plants": ["vine_pot_1_root", "vine_pot_2_root"], "pegboard": ["pegboard_root"],
+              "neon": ["neon_root"], "nanoleaf": ["nanoleaf_root"]}
+
+
+def build_room(collection=None, lite=False):
+    """The wall group at plan v3's numbers (blender/lib/plan_v3.py) for the room test. plan v3's `at` z is a part's
+    bottom; x and y its centre. The shelf and pots turn 90 (the left wall); the rest sit on the back wall at yaw 0.
+      shelf      root at plan "shelf" (centre, underside), yaw 90; frame_N moved along the shelf to plan's y
+      vine_pot_N root at plan "vine_pot_N" (base centre on the shelf top), yaw 90
+      pegboard   board centre at plan x, z bottom + h/2; y so the spacers touch the wall (RY - 0.04)
+      neon       plate centre at plan x, y (RY - 0.01), z bottom + 0.13
+      nanoleaf   cluster centre at plan x, y (RY - 0.005), z bottom + 0.26 (the footprint's middle)"""
+    from lib import plan_v3 as P
+    names = build(lite=lite, collection=collection, studio=False)
+    sfx = "_lite" if lite else ""
+    CP = P.CP
+
+    def put(root, x, y, z, yaw):
+        o = bpy.data.objects[root + sfx]
+        o.matrix_world = Matrix.Translation((x, y, z)) @ Matrix.Rotation(math.radians(yaw), 4, "Z")
+    sh = CP["shelf"]["at"]
+    put("shelf_root", sh[0], sh[1], sh[2], 90)
+    for i in range(3):
+        fr = bpy.data.objects[f"frame_{i + 1}_root{sfx}"]
+        fr.location.x = CP[f"frame_{i + 1}"]["at"][1] - sh[1]           # local x is world +y after the 90 turn
+    for i in range(2):
+        a = CP[f"vine_pot_{i + 1}"]["at"]
+        put(f"vine_pot_{i + 1}_root", a[0], a[1], a[2], 90)
+    put("pegboard_root", P.PEG["x"], P.RY - PEG_OFF * MM, P.PEG["z"] + P.PEG["h"] / 2, 0)
+    a = CP["neon"]["at"]
+    put("neon_root", a[0], a[1], a[2] + CP["neon"]["size"][2] / 2, 0)
+    a = CP["nanoleaf"]["at"]
+    put("nanoleaf_root", a[0], a[1], a[2] + CP["nanoleaf"]["size"][2] / 2, 0)
     bpy.context.view_layer.update()
     return names
 
@@ -1359,6 +1595,9 @@ def stage_stills(out, names, cycles=False):
         c, size = (lo + hi) / 2, hi - lo
         shots.append(("all-front", backdrops.view_camera("front", c, max(size.x, size.z * 16 / 9) * 1.1, name="still_all_front")))
         shots.append(("all-hero", backdrops.three_quarter_camera(c, max(size) * 0.9, az=-28, el=8, name="still_all_hero")))
+    keep = os.environ.get("WALL_STILLS")          # e.g. all-front,all-hero (the Cycles finals on battery)
+    if keep:
+        shots = [(k, c) for k, c in shots if k in keep.split(",")]
     for k, cam in shots:
         p = os.path.join(out, f"{NAME}-{k}.png")
         _shoot(sc, cam, p, cycles, k)
@@ -1384,13 +1623,21 @@ def closeup_specs(names):
             ("peg-holes", "SKADIS: the slots and the hook", os.path.join(REF, "05-pegboard", "detail-edge-hole-screw.jpg"),
              hpw + Vector((-0.10, -0.20, 0.12)), hpw + Vector((0.0, 0, 0.0)), 70),
         ]
+        c = Vector(S["pegboard"])
+        specs.append(("peg-glow", "SKADIS: the backlight's halo on the wall around the board (owner's photo)",
+                      os.path.join(FOOT, "ref-owner-photo-wall.png"),
+                      c + Vector((-0.75, -1.05, -0.05)), c + Vector((-0.22, 0, -0.08)), 50))
     if "neon" in names["parts"]:
         c = Vector(S["neon"])
+        specs.append(("neon-front", "Neon: the single-stroke tubes from the front (owner's photo: Spudd Gaming sign)",
+                      os.path.join(FOOT, "ref-owner-photo-wall.png"), c + Vector((0, -1.25, 0)), c, 50))
         specs.append(("neon-tube", "Neon: the tubing and a standoff (ours: the words from content)",
                       os.path.join(REF, "27-neon-and-ledge", "neon-1-feeling-good-led-neon-on-acrylic.jpg"),
                       c + Vector((0.22, -0.26, 0.08)), c + Vector((0.14, 0, 0.02)), 60))
     if "nanoleaf" in names["parts"]:
         c = Vector(S["nanoleaf"])
+        specs.append(("nano-cluster", "Nanoleaf: the seven-panel cluster from the front (owner's photo)",
+                      os.path.join(FOOT, "ref-owner-photo-wall.png"), c + Vector((0, -1.6, 0)), c, 50))
         specs.append(("nano-edge", "Nanoleaf: a panel's edge and the glow",
                       os.path.join(REF, "20-light-panels", "detail-panel-white-unlit-closeup-crop.jpg"),
                       c + Vector((-0.30, -0.30, 0.12)), c + Vector((-0.08, 0, 0.0)), 60))
@@ -1507,7 +1754,7 @@ def _ctx(obj, objs=None):
     return ctx()
 
 
-OWN_MATERIAL = ("glow", "leaf_card", "peg_tile", "acrylic", "glass", "brand")
+OWN_MATERIAL = ("glow", "halo", "leaf_card", "peg_tile", "acrylic", "glass", "brand")
 
 
 def bake_lite(objs, out, size=1024, orm_size=512):
@@ -1521,6 +1768,10 @@ def bake_lite(objs, out, size=1024, orm_size=512):
     scene = bpy.context.scene
     baked = [o for o in objs if o.type == "MESH" and "brand" not in o.name
              and not any(m and any(k in m.name for k in OWN_MATERIAL) for m in o.data.materials)]
+    odd = [o.name for o in baked if not o.data.materials or any(m is None for m in o.data.materials)]
+    if odd:
+        log(f"bake: no material on {odd}; skipped")
+    baked = [o for o in baked if o.name not in odd]
     for o in baked:
         if o.data.users > 1:
             o.data = o.data.copy()
@@ -1539,12 +1790,7 @@ def bake_lite(objs, out, size=1024, orm_size=512):
         bpy.ops.object.mode_set(mode="OBJECT")
     prev = scene.render.engine
     scene.render.engine = "CYCLES"
-    try:
-        prefs = bpy.context.preferences.addons["cycles"].preferences
-        prefs.compute_device_type = "METAL"
-        prefs.get_devices()
-        for d in prefs.devices:
-            d.use = d.type == "METAL"
+    try:                      # never set the Metal device in preferences under --factory-startup (chair.py's fix)
         scene.cycles.device = "GPU"
     except Exception as e:
         log(f"bake on CPU ({e})")

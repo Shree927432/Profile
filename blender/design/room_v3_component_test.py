@@ -110,6 +110,25 @@ def build_chair(lite=False):
     return names
 
 
+# 2026-10-30: the wall group (blender/components/wall.py: shelf and frames, two pothos, SKADIS + ATH-M50x, neon,
+# Nanoleaf) built live at plan v3's numbers (WALL=0 keeps the blockout's stand-ins).
+WALL = os.environ.get("WALL", "plan")
+WALL_KEYS = {"shelf", "pegboard", "headphones", "neon", "nanoleaf"} | {f"frame_{i}" for i in (1, 2, 3)} | \
+    {f"vine_pot_{i}" for i in (1, 2)} | {f"vine_{i}" for i in (1, 2)}
+if WALL != "0":
+    REPLACED = REPLACED | WALL_KEYS
+
+
+def build_wall(lite=False):
+    """The wall group in its own collection 'wall'."""
+    sys.path.insert(0, os.path.join(BL, "components"))
+    import wall as WA
+    col = bpy.data.collections.get("wall") or bpy.data.collections.new("wall")
+    if col.name not in bpy.context.scene.collection.children:
+        bpy.context.scene.collection.children.link(col)
+    return WA.build_room(collection=col, lite=lite)
+
+
 def M_at(x, y, z=0.0, yaw=0.0):
     return Matrix.Translation((x, y, z)) @ Matrix.Rotation(math.radians(yaw), 4, "Z")
 
@@ -262,7 +281,12 @@ def music_side():
 def groups():
     g = {"desk": [], "screens_pole": [], "g8": [], "studio_display": [], "screenbar": [], "speaker_L": [],
          "speaker_R": [], "pc": [], "keylight_1": [], "keylight_2": [], "camera_arm": [], "mic": [],
-         "interface": [], "streamdeck": [], "keyboard": [], "mouse": []}
+         "interface": [], "streamdeck": [], "keyboard": [], "mouse": [],
+         "wall_shelf": [], "wall_plants": [], "wall_pegboard": [], "wall_neon": [], "wall_nanoleaf": []}
+    wall_col = bpy.data.collections.get("wall")
+    wall_objs = set(wall_col.all_objects) if wall_col else set()
+    wall_root = {"shelf_root": "wall_shelf", "vine_pot_1_root": "wall_plants", "vine_pot_2_root": "wall_plants",
+                 "pegboard_root": "wall_pegboard", "neon_root": "wall_neon", "nanoleaf_root": "wall_nanoleaf"}
     arms_col = bpy.data.collections.get("arms")
     arms_objs = set(arms_col.all_objects) if arms_col else set()
     dt_col = bpy.data.collections.get("desktop")
@@ -271,6 +295,12 @@ def groups():
         if o.type != "MESH" or o.hide_render:
             continue
         n = o.name
+        if o in wall_objs:
+            r = o
+            while r.parent is not None:
+                r = r.parent
+            g[wall_root.get(r.name.replace("_lite", ""), "wall_shelf")].append(o)
+            continue
         if dt_col and o.name in dt_col.all_objects:
             r = o
             while r.parent is not None:
@@ -406,6 +436,11 @@ def main():
             if o.name.startswith("chair_"):
                 bpy.data.objects.remove(o, do_unlink=True)
         build_chair()
+    if WALL != "0":
+        for o in list(bpy.data.objects):             # the blockout's wall stand-ins drawn outside build_parts
+            if o.name.startswith(("neon_stroke", "nanoleaf_t", "peg_shelf", "vine_leaf")):
+                bpy.data.objects.remove(o, do_unlink=True)
+        build_wall()
     BO.lights()
     append_rich()
     music = music_side()
@@ -476,6 +511,11 @@ def main():
         for o in list(col.all_objects):
             bpy.data.objects.remove(o, do_unlink=True)
         build_chair(lite=True)
+    if WALL != "0":                                  # the wall group: rich out, lite in
+        col = bpy.data.collections.get("wall")
+        for o in list(col.all_objects):
+            bpy.data.objects.remove(o, do_unlink=True)
+        build_wall(lite=True)
     drop = {"sky", "ground", "ceiling"}
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:
