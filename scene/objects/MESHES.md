@@ -522,4 +522,10 @@ Not final until the room rebuild adopts them; the component reports in
   (`headphones_band`, `_cup_l`, `_cup_r`, `_brand_l`/`_r`), `neon`, `neon_glow`, `neon_halo`, `nanoleaf`,
   `nanoleaf_panel_01`..`_07`; root empties `shelf_root`, `vine_pot_N_root`, `pegboard_root`, `headphones_root`,
   `neon_root`, `nanoleaf_root`. Lite adds `_lite`.
+- **Return desk (2026-10-31):** laptop (`laptop_base`, `laptop_lid`, `laptop_screen` UV 0..1 top-left (0,1), `laptop_keys`,
+  `laptop_trackpad`, `laptop_brand`, empty `laptop_hinge` rotating local X, open at -110), mStand (`mstand`, `_lip`,
+  `_pads`, `_feet`), DJ (`dj_body`, `dj_mixer`, `dj_jog_l`/`_r` spin Z, `dj_pad_l_01`..`08`/`dj_pad_r_01`..`08` back row
+  01-04, `dj_cue_*`, `dj_play_*`, `dj_tempo_*`/`dj_fader_*` slide Y, `dj_xfader` slides X, `dj_knob_*`, `dj_brand_top`,
+  `dj_brand_rear`, `dj_stand`), lightstick (`lightstick_head` own emissive material for recolouring, `_shell`, `_handle`,
+  `_cradle`). Roots `mstand_root`, `laptop_root`, `dj_stand_root`, `dj_root`, `lightstick_root`. Lite adds `_lite`.
 

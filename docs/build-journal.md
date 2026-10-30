@@ -920,3 +920,11 @@ site or the room. Keep each entry short. No polishing; the post does that.
   into the wall. Cycles had to run on the CPU and drained the battery about 1 % a minute, so only the group stills and
   fix close-ups were rendered that way.
 
+## 2026-10-31
+
+- Return desk in 35 minutes on Opus. Went wrong: a teardrop cutter whose outline crossed itself made the boolean delete
+  the whole mStand (caught by an IoU of 0.03 and an empty still); the laptop's key well was a slab hiding the keys. My
+  check: the laptop is the best match yet; the DJ knobs read a little tall and the buttons salmon rather than orange;
+  the lightstick head is pale. Accepted for the owner's judgement without a second round.
+- Owner: "make sound when the tasks are done": the chime now also marks finished tasks.
+
