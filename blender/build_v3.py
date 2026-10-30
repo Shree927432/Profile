@@ -290,9 +290,200 @@ def organise():
         j = geo.join(objs, target)
         made[target] = len(j.data.materials)
     RES["statics"] = made
+    RES["palettes"] = palettes()
+    log("palettes " + json.dumps(RES["palettes"]))
     for o in bpy.data.objects:
         if o.type == "MESH":
             o.data.name = o.name + "_mesh"
+
+
+
+# ---------------------------------------------------------------------------
+# palettes: fewer materials per root static (2026-10-31, draw calls)
+# ---------------------------------------------------------------------------
+# Every `<word>_static` draws one call per material. The flat materials (no image texture) of a static collapse
+# into palette materials: a small swatch texture (one 16 px cell per colour) with the faces' UVs pointed at their
+# cell. Flat materials share a palette when everything but colour, roughness, metallic and emission matches
+# (specular level, coat, sheen, IOR); roughness and metallic ride in a second texture (glTF G and B channels),
+# emission in a third, so the look is the same. Textured materials stay as they are. Nothing code-facing is touched.
+CELL = 16
+PER_ROW = 16
+SNAP_SPEC = float(os.environ.get("SNAP_SPEC", "0.15"))  # specular levels within one step share a palette (the palette gets their mean); 0 = exact
+
+
+def _srgb(c):
+    c = max(0.0, min(1.0, c))
+    return 12.92 * c if c <= 0.0031308 else 1.055 * c ** (1 / 2.4) - 0.055
+
+
+def _principled(m):
+    return next((n for n in m.node_tree.nodes if n.bl_idname == "ShaderNodeBsdfPrincipled"), None) if m and m.use_nodes else None
+
+
+def flat_info(m):
+    """None when the material needs its own draw call (an image feeds it, or no Principled); else its values.
+    A procedural bump on Normal does not count: the glTF export drops it, so it is flat in the GLB too."""
+    pb = _principled(m)
+    if pb is None or any(n.bl_idname in ("ShaderNodeTexImage", "ShaderNodeGroup", "ShaderNodeAttribute",
+                                         "ShaderNodeVertexColor") for n in m.node_tree.nodes):
+        return None
+    if any(i.is_linked and i.name != "Normal" for i in pb.inputs):
+        return None
+    g = lambda n: pb.inputs[n].default_value
+    rest = []
+    for i in pb.inputs:
+        if i.name in ("Base Color", "Metallic", "Roughness", "Emission Color", "Emission Strength", "Normal",
+                      "Tangent", "Weight") or not hasattr(i, "default_value"):
+            continue
+        v = i.default_value
+        v = tuple(round(x, 3) for x in v) if hasattr(v, "__len__") else round(v, 3)
+        if SNAP_SPEC and i.name == "Specular IOR Level":
+            v = round(round(v / SNAP_SPEC) * SNAP_SPEC, 3)
+        rest.append((i.name, v))
+    ec = tuple(g("Emission Color")[:3])
+    es = g("Emission Strength")
+    return dict(spec=g("Specular IOR Level"), base=tuple(g("Base Color")[:3]), metal=g("Metallic"), rough=g("Roughness"),
+                emit=tuple(c * es for c in ec) if es > 0 and max(ec) > 0 else (0.0, 0.0, 0.0), key=tuple(rest))
+
+
+def _image(name, w, h, rgb, srgb):
+    import numpy as np
+    im = bpy.data.images.new(name, w, h, alpha=False)
+    im.colorspace_settings.name = "sRGB" if srgb else "Non-Color"
+    px = np.ones((h, w, 4), dtype=np.float32)
+    for i, c in enumerate(rgb):
+        r, col = divmod(i, PER_ROW)
+        v = [_srgb(x) if srgb else min(1.0, max(0.0, x)) for x in c]
+        px[r * CELL:(r + 1) * CELL, col * CELL:(col + 1) * CELL, :3] = v
+    im.pixels.foreach_set(px.ravel())
+    im.pack()
+    return im
+
+
+def make_palette(word, k, cells, rep):
+    """cells: list of flat_info dicts. rep: a material of the group (its Principled values are copied)."""
+    rows = (len(cells) + PER_ROW - 1) // PER_ROW
+    w, h = PER_ROW * CELL, rows * CELL
+    m = rep.copy()
+    m.name = f"mat_{word}_palette_{k}"
+    nt = m.node_tree
+    pb = _principled(m)
+    pb.inputs["Specular IOR Level"].default_value = sum(c["spec"] for c in cells) / len(cells)
+    for n in list(nt.nodes):
+        if n.bl_idname not in ("ShaderNodeBsdfPrincipled", "ShaderNodeOutputMaterial"):
+            nt.nodes.remove(n)
+    for i in pb.inputs:
+        for l in list(i.links):
+            nt.links.remove(l)
+
+    def tex(imname, rgb, srgb, y):
+        im = _image(f"{m.name}_{imname}", w, h, rgb, srgb)
+        t = nt.nodes.new("ShaderNodeTexImage")
+        t.image, t.interpolation, t.extension = im, "Closest", "EXTEND"
+        t.location = (-600, y)
+        return t
+    t = tex("base", [c["base"] for c in cells], True, 300)
+    nt.links.new(t.outputs["Color"], pb.inputs["Base Color"])
+    if len({(round(c["metal"], 3), round(c["rough"], 3)) for c in cells}) > 1:
+        t = tex("mr", [(0.0, c["rough"], c["metal"]) for c in cells], False, 0)
+        sep = nt.nodes.new("ShaderNodeSeparateColor")
+        sep.location = (-300, 0)
+        nt.links.new(t.outputs["Color"], sep.inputs["Color"])
+        nt.links.new(sep.outputs["Green"], pb.inputs["Roughness"])
+        nt.links.new(sep.outputs["Blue"], pb.inputs["Metallic"])
+    else:
+        pb.inputs["Roughness"].default_value, pb.inputs["Metallic"].default_value = cells[0]["rough"], cells[0]["metal"]
+    emit = [c["emit"] for c in cells]
+    top = max((max(e) for e in emit), default=0.0)
+    if top > 0:
+        strength = max(1.0, top)           # <= 1: baked into the texture; above 1: the glTF strength extension
+        t = tex("emit", [tuple(x / strength for x in e) for e in emit], True, -300)
+        nt.links.new(t.outputs["Color"], pb.inputs["Emission Color"])
+        pb.inputs["Emission Strength"].default_value = strength
+    else:
+        pb.inputs["Emission Strength"].default_value = 0.0
+    return m
+
+
+# code-facing meshes whose materials nothing drives by colour: their flat materials collapse too, and meshes with
+# the same cells share one palette (the fans), so the load-time batching (scene/batch.js) can draw them together
+PALETTE_EXTRA = re.compile(r"^(rig_(case|gpu|fan_\d\d|gpu_fan_\d\d)|mic_body)$")
+
+
+def palettes():
+    """Collapse the flat materials of every `_static` mesh (and the PALETTE_EXTRA ones) into palette materials."""
+    import numpy as np
+    report = {}
+    cache = {}
+    for o in [o for o in bpy.data.objects if o.type == "MESH" and (o.name.endswith("_static") or PALETTE_EXTRA.match(o.name))]:
+        me = o.data
+        mats = list(me.materials)
+        infos = [flat_info(m) for m in mats]
+        flat = [i for i, f in enumerate(infos) if f]
+        if len(flat) < 2:
+            continue
+        word = o.name[:-7] if o.name.endswith("_static") else o.name
+        groups = {}
+        for i in flat:
+            groups.setdefault(infos[i]["key"], []).append(i)
+        n = len(me.polygons)
+        mi = np.zeros(n, dtype=np.int32)
+        me.polygons.foreach_get("material_index", mi)
+        ls = np.zeros(n, dtype=np.int32)
+        lt = np.zeros(n, dtype=np.int32)
+        me.polygons.foreach_get("loop_start", ls)
+        me.polygons.foreach_get("loop_total", lt)
+        poly_of_loop = np.repeat(np.arange(n), lt)
+        if not me.uv_layers:
+            me.uv_layers.new(name="UVMap")
+        out = np.zeros(n, dtype=np.int32)
+        keep = [i for i, m in enumerate(mats) if i not in flat]
+        new_mats = [mats[i] for i in keep]
+        new_index = {i: j for j, i in enumerate(keep)}
+        uvs = [np.zeros(len(me.loops) * 2, dtype=np.float32) for _ in me.uv_layers]
+        for u, layer in zip(uvs, me.uv_layers):
+            layer.data.foreach_get("uv", u)
+        uvs = [u.reshape(-1, 2) for u in uvs]
+        for k, (key, idx) in enumerate(sorted(groups.items(), key=lambda kv: kv[1][0]), 1):
+            cells, cell_of = [], {}
+            for i in idx:                       # deduplicate identical colour and surface values
+                f = infos[i]
+                sig = (tuple(round(x, 4) for x in f["base"]), round(f["metal"], 3), round(f["rough"], 3), round(f["spec"], 3),
+                       tuple(round(x, 4) for x in f["emit"]))
+                if sig not in cell_of:
+                    cell_of[sig] = len(cells)
+                    cells.append(f)
+                cell_of[i] = cell_of[sig]
+            ckey = (key, tuple(
+                (tuple(round(x, 4) for x in c["base"]), round(c["metal"], 3), round(c["rough"], 3), round(c["spec"], 3),
+                 tuple(round(x, 4) for x in c["emit"])) for c in cells))
+            if o.name.endswith("_static") or ckey not in cache:
+                pal = make_palette(word, k, cells, mats[idx[0]])
+                cache[ckey] = pal
+            pal = cache[ckey]
+            w, h = PER_ROW * CELL, ((len(cells) + PER_ROW - 1) // PER_ROW) * CELL
+            slot = len(new_mats)
+            new_mats.append(pal)
+            for i in idx:
+                c = cell_of[i]
+                r, col = divmod(c, PER_ROW)
+                uv = ((col + 0.5) * CELL / w, (r + 0.5) * CELL / h)
+                polys = mi == i
+                out[polys] = slot
+                sel = polys[poly_of_loop]
+                for u in uvs:
+                    u[sel] = uv
+        for i, j in new_index.items():
+            out[mi == i] = j
+        for u, layer in zip(uvs, me.uv_layers):
+            layer.data.foreach_set("uv", u.ravel())
+        me.materials.clear()
+        for m in new_mats:
+            me.materials.append(m)
+        me.polygons.foreach_set("material_index", out)      # after the slots exist: clearing them resets indices
+        me.update()
+        report[o.name] = (len(mats), len(new_mats))
+    return report
 
 
 def cameras():

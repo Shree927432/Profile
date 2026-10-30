@@ -38,6 +38,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { buildPlaceholderRoom } from "./placeholder-room.js";
 import monitorPosts from "./objects/monitor-posts.js";
 import { createPickMap } from "./pick.js";
+import { batchRoom } from "./batch.js";
 import { createQuality, MODES } from "./quality.js";
 import { createGlide } from "./glide.js";
 
@@ -134,6 +135,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   }
   scene.add(room);
   scene.updateMatrixWorld(true);
+  if (useGlb) batchRoom(room); // keys, pads, knobs, faders: one draw call per material (batch.js)
 
   // Phase 4: the screen and body come out of the GLB by name, never by held reference.
   const screenMesh = room.getObjectByName("monitor_screen");
@@ -597,7 +599,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     panel.append(fpsEl, ratioEl, ...buttons.map(([, b]) => b));
     overlay.append(panel);
     // For measuring from the console or a test script: draw calls and triangles of the last frame.
-    window.roomDebug = { info: renderer.info };
+    window.roomDebug = { info: renderer.info, THREE, scene, camera, renderer };
 
     function refreshDebug() {
       // quality.fps keeps the last value measured during motion; 0 until there has been motion.

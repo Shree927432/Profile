@@ -8,6 +8,7 @@
 // Only registered meshes are tested, so unregistered geometry never blocks a pick.
 // desktop.js decides what a pick means (dispatchTap): the screen gets a click with canvas
 // coordinates, any other owner gets owner.click(part, hit).
+// pick() also returns `part`: for a batched mesh (batch.js) the name of the part under the hit face.
 
 export function createPickMap(THREE, camera, canvas) {
   const map = new Map(); // mesh -> { kind, part, owner? }
@@ -31,7 +32,11 @@ export function createPickMap(THREE, camera, canvas) {
       camera.updateMatrixWorld();
       raycaster.setFromCamera(ndc, camera);
       const hit = raycaster.intersectObjects(targets, false)[0];
-      return hit ? { mesh: hit.object, info: map.get(hit.object), hit } : null;
+      if (!hit) return null;
+      // A batched mesh (batch.js) answers with the part under the hit face; otherwise the registered part.
+      const ud = hit.object.userData;
+      const part = ud.partAtFace ? ud.partAtFace(hit) : map.get(hit.object).part;
+      return { mesh: hit.object, info: map.get(hit.object), hit, part };
     },
   };
 }

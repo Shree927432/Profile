@@ -50,6 +50,21 @@ for `studio_dj_crossfader`); `studio_lightstick_head`/`_handle` by `lightstick_h
 `desk_keyboard`, `desk_mouse` by `keyboard`, `mouse`; `chair` by `chair_swivel`.
 Needs a decision row in docs/05-decisions.md (the rule at the top of this file).
 
+**Batched parts (2026-10-31, `scene/batch.js`).** At load (`?room&glb`) the code merges the keyboard's `kb_key_*`,
+the piano's `piano_key_*`, the DJ's pads and play/cue buttons, knobs and fader caps, the desk's 15 drawers, the
+three `frame_N_border`s, the `nanoleaf_panel_NN`s and the PC's case and GPU fans (`rig_fan_NN`, `rig_gpu_fan_NN`)
+into one mesh per group (one draw call per material). The names above do not change: the original nodes stay in
+the tree, hidden, so `getObjectByName` still finds them and gives each part's pivot. To move or light a part, use
+the batch: `ctx.root.userData.batches.<id>` (`kb_keys`, `piano_keys`, `dj_pads`, `dj_knobs`, `dj_faders`,
+`desk_drawers`, `frame_borders`, `nanoleaf_panels`, `rig_fans`; a group with fewer than two parts is not made).
+Its `.userData` has `setOffset(name, x, y, z)`, `setOffsetLocal(name, x, y, z)` (part axes, e.g. a drawer along
+-Y), `setAngle(name, rad)` (about the part's local +Z through its pivot: fans, knobs), `setGlow(name, r, g, b)`,
+`parts[name]` (index, pivot, axis) and `partAtFace(hit)`. pick.js returns `part` for a hit on a batch, so an object
+registers the batch mesh once (`interact.set(batch, {kind, owner})`) and gets the part name in `click`. Nothing
+moves yet. Details in the header of `scene/batch.js`. In Blender, `build_v3.py` collapses the flat materials of each
+`<root>_static` (and of `rig_case`, `rig_gpu`, the fans, `mic_body`) into palette materials: a swatch texture, UVs
+on the swatch, roughness and metallic in a second texture, emission in a third. Do not drive those meshes' colours.
+
 Not one material yet (they load in three.js as a group of meshes under the name):
 `apollo_leds`, `desk_led`, `mic_body`, `rig_case`, `rig_case_glass`, `rig_display`,
 `rig_fan_NN`, `rig_gpu`, `rig_gpu_fan_NN`, and the DJ's jogs, cues, plays, tempos, faders,
