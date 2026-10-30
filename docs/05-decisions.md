@@ -169,6 +169,8 @@ it before finishing. Re-opening a decision needs the owner's say-so.
 - Draw calls (2026-10-31): the v3 room draws 334 calls from the hero; a mid-range phone wants far fewer. Options: join the
   81 keyboard keys into one mesh (about -80, but undoes "separate keys for typing later"), batch in code at load, merge the
   desk-top group's 38 materials, hide the piano's keys and interior while its covers are closed. Owner to choose.
-- Hosting (2026-10-31): the 3 s target on 4G holds only if Cloudflare Pages gzips or brotli-compresses `model/gltf-binary`;
-  check on the live host after the next push.
+- Hosting (2026-10-31, checked live): Cloudflare Pages serves `model/gltf-binary` WITHOUT compression (no Content-Encoding
+  even when the browser asks for gzip or br). The v3 room is then 2.55 MB on the wire, about 3.25 s to ready on 4G, just
+  over the 3 s target. Options: meshopt compression instead of Draco (compresses better and gzips well, but needs
+  gltfpack, a new tool, so ask first), smaller textures, or accept 3.25 s.
 
