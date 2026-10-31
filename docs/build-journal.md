@@ -952,3 +952,11 @@ site or the room. Keep each entry short. No polishing; the post does that.
   errors; the Draco decoder is served.
 - Owner: "stop for now". The laptop-posts builder was stopped before changing any file; the task is written
   into the brief's next steps.
+
+## 2026-11-01
+
+- Owner: "why my room is not looking cinematic like felix reiseberg". Diagnosis: light and mood, not models. Felix picked
+  one sentence (night, rain) and baked Cycles lighting into textures, with the room's own lamps as the light, bloom and a
+  living city in the window; ours was flat daylight with live lights, no reflections and block buildings. The owner picked
+  the mood: "Dusk in Pune".
+

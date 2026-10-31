@@ -161,3 +161,7 @@ CC BY 3D scan of the real mouse; Claude wrapped its own light shell onto the sca
 buttons and port by hand. A paid-looking model I found first was view-only, so it became screenshots for
 reference instead. I asked for a chime whenever it needed me, and went to work on something else. -->
 
+<!-- NOTE 2026-11-01: with every part built, the room still looked like a catalogue. I asked why it wasn't cinematic like
+Felix's. The answer was light, not models: he picked one sentence, night and rain, and baked the light in. We had never
+picked a time of day. I chose dusk in Pune. -->
+
