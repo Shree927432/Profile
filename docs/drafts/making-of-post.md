@@ -93,6 +93,7 @@ object at a time. -->
 follows Pune's real time and weather. Link to the room. -->
 <!-- NOTE 2026-11-01: the owner spotted the Studio Display's fat side bezels in the browser: a 16:10 posts canvas I chose on day one, before the real display existed, sitting inside 16:9 glass. The model was exact; the old decision wasn't. -->
 <!-- NOTE 2026-11-01: I asked why Felix's camera looked so real. He didn't model it: a free CC0 model by a human artist, worn textures painted by hand. So the plants came from Poly Haven and Sketchfab, the originals kept whole for Blender, cut down only for the web. -->
+<!-- NOTE 2026-11-01: then the downloaded snake plant scan lost to one we made in code: the scan was real but jagged on the web and its pot clashed with the white desk. -->
 <!-- NOTE 2026-10-21: Phase 4 began with a list of names, not a model: 88 piano keys
 named by note so the code can play them, because names are the only thing the
 Blender file and the website share. -->

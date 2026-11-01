@@ -989,3 +989,9 @@ site or the room. Keep each entry short. No polishing; the post does that.
   (seam smear), kept because it is 90 px tall in the hero. The monstera has 25 leaves, a full plant, not a young one.
   Hero draw calls 102 -> 103, phone 86; the 25 leaves cost a call each in the intro (44 there), not batched yet. Room
   download 2.53 -> 2.99 MB, 6 KB under the 3.0 MB cap.
+- Owner, after seeing it in the room: "[snake] plant is not looking good, and it is really looking bad in rendered down
+  version. Also, it is not going with the theme as well." The scan's cream ribbed pot fought the white desk, and its
+  3,000-tri web version was jagged. Chose "Our own, white pot": the designer modelled it in code (12 leaves, a painted
+  Laurentii pattern, a matte white pot matched to the mic arm's white). First paint read as wood grain (band spacing
+  drifting with noise); fixed with one 19 mm period bent by smooth noise. Web version 1,824 tris, crisp. Room download
+  2.99 -> 2.91 MB, draw calls unchanged. A downloaded model is not automatically better: the scan was real, ours fits.

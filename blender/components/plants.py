@@ -7,14 +7,13 @@
 Sources (blender/assets/plants/README.md; the originals stay there untouched, git-ignored):
   - the sill plant (obj_plant): "Monstera Deliciosa Potted Mid-Century Plant" by ChubbyPanda, CC BY 4.0,
     https://sketchfab.com/3d-models/1ab9bf841df04c07b1819be596327629
-  - the snake plant: "Snake plant In Pot" by FranklySketch, CC BY 4.0,
-    https://sketchfab.com/3d-models/68b8acaeb29e402ea4dc7c981cb5b497
   - the small desk plant: "Potted Plant 04" (a zebra haworthia) by Poly Haven, CC0, https://polyhaven.com/a/potted_plant_04
 
 Rich (owner: "keep the heavy models for the Blender file. Don't cut down on that"): the downloaded geometry and
 textures as they are, only normalised: scale, origin at the pot's bottom centre, our names, the monstera's
-mid-century stand removed and its pot recoloured terracotta (plan v3: "young monstera, terracotta pot"), the snake
-plant's unlit scan material turned into a lit one. -> out/components/plants.blend, plants-rich.glb.
+mid-century stand removed and its pot recoloured terracotta (plan v3: "young monstera, terracotta pot").
+-> out/components/plants.blend, plants-rich.glb. The snake plant is our own model (snake_plant(), owner 2026-11-01:
+"Our own, white pot"): rich at 2048 px and full resolution, lite at 512 px and about 1,700 triangles.
 Lite (the web, plants-lite.glb): decimated (LITE_TRIS), textures 256-1024 px, no roughness/occlusion maps; the
 monstera's leaves and their petioles share one atlas material (one draw call per leaf), alpha-tested (MASK).
 
@@ -47,7 +46,6 @@ from lib.blendfile import pack_and_save  # noqa: E402
 
 ASSETS = os.path.join(BL, "assets", "plants")
 SRC = {"plant": os.path.join(ASSETS, "monstera", "monstera_deliciosa_potted_mid-century_plant.glb"),
-       "snake_plant": os.path.join(ASSETS, "snake_plant", "snake_plant_in_pot.glb"),
        "desk_plant": os.path.join(ASSETS, "potted_plant_04", "potted_plant_04_8k.gltf")}
 OUT = os.path.join(BL, "out", "components")
 BLEND = os.path.join(OUT, "plants.blend")
@@ -57,7 +55,7 @@ FOOT = os.path.join(C.FOOTAGE, "2026-11-01-plants")
 PY = "/opt/anaconda3/bin/python3"
 CREDITS = {
     "plant": '"Monstera Deliciosa Potted Mid-Century Plant" by ChubbyPanda, CC BY 4.0',
-    "snake_plant": '"Snake plant In Pot" by FranklySketch, CC BY 4.0',
+    "snake_plant": "our own model (plants.py); the downloaded scan is no longer used",
     "desk_plant": '"Potted Plant 04" by Poly Haven, CC0',
 }
 
@@ -66,9 +64,9 @@ HEIGHT = {"plant": 0.42, "snake_plant": 0.45, "desk_plant": 0.22}
 LAYOUT = {"plant": (0.0, 0.0), "snake_plant": (0.45, 0.0), "desk_plant": (-0.35, 0.0)}   # side by side in the .blend
 TERRACOTTA = (0.70, 0.40, 0.29)     # sRGB, a dusty terracotta (the stand-in was #b4553a)
 # lite: triangle ratios per part (judged on the close-ups and the room stills)
-LITE = {"leaf": 0.5, "pot": 0.5, "snake": 0.12, "desk_pot": 0.2, "desk_leaves": 0.5, "desk_pebbles": 0.5,
+LITE = {"leaf": 0.5, "pot": 0.5, "desk_pot": 0.2, "desk_leaves": 0.5, "desk_pebbles": 0.5,
         "desk_soil": 0.12}
-LITE_TEX = {"leaf_atlas": 1024, "pot": 512, "soil": 256, "snake": 512, "desk": 512}
+LITE_TEX = {"leaf_atlas": 1024, "pot": 512, "soil": 256, "desk": 512}
 
 T0 = time.time()
 REPORT = {}
@@ -479,23 +477,287 @@ def _normalise(objs, height):
     return s
 
 
+# ---------------------------------------------------------------------------
+# the snake plant (set_plants): our own model (2026-11-01, owner: "Our own, white pot"). The downloaded scan
+# ("Snake plant In Pot", FranklySketch) read badly decimated and its cream pot fought the white AI lab; it is no
+# longer used (the file stays in blender/assets/plants/snake_plant/).
+# Sansevieria trifasciata 'Laurentii': 12 leaves from the soil in a loose fan, each a thick, slightly channelled
+# blade (widest a third of the way up, tapering to a point) with a lean, a twist and a soft curve; the pattern
+# (deep green, soft wavy grey-green bands, a cream-yellow edge) painted into one atlas by code; a matte white
+# ceramic pot (13 x 12 cm, slight taper, rounded rim, inner wall, soil 1.5 cm under the rim).
+# ---------------------------------------------------------------------------
+SNAKE = dict(n=12, seed=11, pot_top_r=0.065, pot_bot_r=0.0545, pot_h=0.12, wall=0.006, rim_r=0.003, soil_down=0.015,
+             leaf_min=0.18, leaf_max=0.33, thick=0.0045, white="#ecebe8", pot_rough=0.72, leaf_rough=0.45,
+             soil_rough=0.95, deep=(0.12, 0.23, 0.13), band=(0.40, 0.50, 0.38), edge=(0.84, 0.78, 0.40),
+             soil=(0.17, 0.12, 0.09))
+SNAKE_RES = {"rich": dict(nv=64, nu=12, seg=96, tex=2048), "lite": dict(nv=14, nu=1, seg=20, tex=512)}
+
+
+def _snake_leaves():
+    """The 12 leaves' parameters (deterministic): base point, azimuth, lean, curve, twist, length, width."""
+    rng = np.random.default_rng(SNAKE["seed"])
+    rim = SNAKE["pot_h"]
+    soil_z = rim - SNAKE["soil_down"]
+    out = []
+    n = SNAKE["n"]
+    heights = np.linspace(SNAKE["leaf_max"], SNAKE["leaf_min"], n) + rng.uniform(-0.012, 0.012, n)
+    heights[0] = SNAKE["leaf_max"]
+    for i in range(n):
+        tall = (heights[i] - SNAKE["leaf_min"]) / (SNAKE["leaf_max"] - SNAKE["leaf_min"])   # 1 = tallest
+        az = i * 2.39996 + rng.uniform(-0.3, 0.3)                    # golden-angle spread round the clump
+        rb = 0.006 + 0.030 * (1 - tall) + rng.uniform(0, 0.008)      # the tall ones in the middle
+        base = (rb * math.cos(az), rb * math.sin(az), soil_z - 0.012)
+        lean = math.radians(3 + 21 * (1 - tall) + rng.uniform(-2, 3))
+        curve = math.radians(4 + 10 * (1 - tall) + rng.uniform(0, 4))
+        L = (heights[i] + 0.012 + SNAKE["soil_down"]) / max(math.cos(lean + curve * 0.5), 0.5)
+        out.append(dict(base=base, az=az, lean=lean, curve=curve, L=L, W=0.17 * L + rng.uniform(-0.004, 0.006),
+                        twist=math.radians(rng.uniform(12, 38)) * rng.choice((-1, 1)),
+                        face=rng.uniform(-0.45, 0.45), chan=rng.uniform(0.10, 0.16), seed=int(rng.integers(1e6))))
+    return out
+
+
+def _leaf_width(v, W):
+    v = np.asarray(v, float)
+    lo = W * (0.55 + 0.45 * np.sin(np.pi / 2 * np.clip(v / 0.33, 0, 1)))
+    hi = W * np.cos(np.pi / 2 * np.clip((v - 0.33) / 0.67, 0, 1)) ** 0.9
+    return np.where(v < 0.33, lo, hi)
+
+
+def _leaf_mesh(p, nv, nu, uv_box):
+    """One leaf as a closed blade: a front (inner, channelled) and a back sheet that meet at the edges and the tip.
+    uv_box (u0, v0, u1, v1): its strip in the atlas; across the blade -> u, along it -> v."""
+    vs = 1 - (1 - np.linspace(0, 1, nv + 1)) ** 1.35                 # denser towards the tip
+    us = np.linspace(-1, 1, 2 * nu + 1)
+    th = p["lean"] + p["curve"] * vs ** 2
+    ca, sa = math.cos(p["az"]), math.sin(p["az"])
+    d = np.stack([np.sin(th) * ca, np.sin(th) * sa, np.cos(th)], 1)
+    pts = np.array(p["base"]) + np.concatenate([[[0, 0, 0]], np.cumsum((d[1:] + d[:-1]) / 2 * np.diff(vs)[:, None] * p["L"], 0)])
+    w = _leaf_width(vs, p["W"])
+    t = SNAKE["thick"] * np.maximum(1 - vs ** 3, 0.12)
+    rows_f, rows_b = [], []
+    for k in range(nv + 1):
+        T = Vector(d[k])
+        ang = p["face"] + p["twist"] * vs[k]
+        B = Vector((-sa, ca, 0.0))
+        B = (Matrix.Rotation(ang, 3, T) @ B)
+        B = (B - T * B.dot(T)).normalized()
+        N = T.cross(B).normalized()          # roughly away from the clump's centre
+        P = Vector(pts[k])
+        f, b = [], []
+        for u in us:
+            half = w[k] / 2
+            off = B * (u * half) - N * (p["chan"] * w[k] * u * u)
+            th_ = t[k] / 2 * math.sqrt(max(1 - u * u, 0.0))
+            f.append(P + off - N * th_)
+            b.append(P + off + N * th_)
+        rows_f.append(f)
+        rows_b.append(b)
+    import bmesh
+    bm = bmesh.new()
+    uvl = bm.loops.layers.uv.new("UVMap")
+    u0, v0, u1, v1 = uv_box
+    nu2 = len(us)
+    for rows, flip in ((rows_f, False), (rows_b, True)):
+        V = [[bm.verts.new(x) for x in r] for r in rows]
+        for k in range(nv):
+            for j in range(nu2 - 1):
+                q = [V[k][j], V[k][j + 1], V[k + 1][j + 1], V[k + 1][j]]
+                uvq = [(j, k), (j + 1, k), (j + 1, k + 1), (j, k + 1)]
+                if flip:
+                    q, uvq = q[::-1], uvq[::-1]
+                try:
+                    fc = bm.faces.new(q)
+                except ValueError:
+                    continue
+                for lp, (jj, kk) in zip(fc.loops, uvq):
+                    lp[uvl].uv = (u0 + (us[jj] + 1) / 2 * (u1 - u0), v0 + vs[kk] * (v1 - v0))
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-7)          # the edges and the tip close the blade
+    bmesh.ops.dissolve_degenerate(bm, edges=bm.edges, dist=1e-7)
+    return bm
+
+
+def _smooth(x0, x1, x):
+    t = np.clip((x - x0) / (x1 - x0), 0, 1)
+    return t * t * (3 - 2 * t)
+
+
+def _snoise(h, w, sigma, seed):
+    """Smooth noise (std 1) on an h x w grid: white noise blurred by a Gaussian of `sigma` px (FFT, no creases)."""
+    g = np.random.default_rng(seed).standard_normal((h, w))
+    fy, fx = np.fft.fftfreq(h)[:, None], np.fft.fftfreq(w)[None, :]
+    out = np.real(np.fft.ifft2(np.fft.fft2(g) * np.exp(-2 * (np.pi * sigma) ** 2 * (fx ** 2 + fy ** 2))))
+    return ((out - out.mean()) / (out.std() + 1e-9)).astype(np.float32)
+
+
+def _paint_leaf(p, H, Wd, gut):
+    """The laurentii pattern for one leaf's strip (H x Wd px, sRGB): s across (-1..1 inside the gutter), t along.
+    Soft, wavy grey-green bands across a deep green (one period along the leaf, its phase bent by smooth noise),
+    their strength varying in patches; a narrow cream-yellow edge; paler where the leaf leaves the soil."""
+    ys, xs = np.mgrid[0:H, 0:Wd].astype(np.float32)
+    s = np.clip((xs + 0.5 - gut) / max(Wd - 2 * gut, 1) * 2 - 1, -1, 1)
+    t = np.clip((ys + 0.5 - gut) / max(H - 2 * gut, 1), 0, 1)
+    w_mm = _leaf_width(t, p["W"]) * 1000
+    y_mm = t * p["L"] * 1000
+    px_mm = H / (p["L"] * 1000)                                       # strip pixels per mm along the leaf
+    sd = p["seed"]
+    low = _snoise(H, Wd, 30 * px_mm, sd)
+    mid = _snoise(H, Wd, 9 * px_mm, sd + 1)
+    chevron = 0.22 * np.abs(s + 0.25 * np.sin(sd % 7 + t * 9))     # bands bend into soft V's across the blade
+    phase = y_mm / 19.0 + 0.55 * low + 0.10 * mid + chevron
+    band = 0.5 + 0.5 * np.sin(2 * np.pi * phase)
+    amp = np.clip(0.60 + 0.30 * _snoise(H, Wd, 35 * px_mm, sd + 2), 0.2, 1.0)
+    light = _smooth(0.30, 0.88, band) * amp * 0.62
+    deep, bnd, edge = (np.array(SNAKE[k], np.float32) for k in ("deep", "band", "edge"))
+    fine = _snoise(H, Wd, 1.2 * px_mm, sd + 3)
+    col = deep[None, None] * (1 - light[..., None]) + bnd[None, None] * light[..., None]
+    col *= (1 + 0.03 * fine + 0.04 * low)[..., None]
+    e = np.minimum(0.55, 2.8 / np.maximum(w_mm / 2, 0.1))             # a ~2.8 mm cream-yellow edge
+    em = _smooth(1 - e - 0.05, 1 - e + 0.01, np.abs(s))
+    col = col * (1 - em[..., None]) + edge[None, None] * (1 + 0.05 * mid[..., None]) * em[..., None]
+    base = _smooth(0.10, 0.0, t) * 0.35                                # paler where it leaves the soil
+    col = col * (1 - base[..., None]) + np.array((0.55, 0.58, 0.45), np.float32) * base[..., None]
+    return np.clip(col, 0, 1)
+
+
+def _snake_atlas(leaves, N):
+    """One atlas (N x N, sRGB): the bottom eighth is the pot's white (left) and the soil (right); above it two rows
+    of six leaf strips. Returns the image pixels, the leaves' uv boxes and the pot/soil uv boxes."""
+    from lib import materials as M
+    px = np.ones((N, N, 4), np.float32)
+    band = N // 8
+    white = np.array(M.srgb(SNAKE["white"])[:3])
+    white = np.array([_lin2srgb(c) for c in white], np.float32)
+    px[:band, : N // 2, :3] = white
+    sn = _snoise(band, N - N // 2, N / 160, 5) * 0.22 + _snoise(band, N - N // 2, N / 600, 6) * 0.15
+    px[:band, N // 2:, :3] = np.clip(np.array(SNAKE["soil"], np.float32)[None, None] * (1 + sn[..., None]), 0, 1)
+    gut = max(2, N // 256)
+    sw, sh = N // 6, (N - band) // 2
+    boxes = []
+    for i, p in enumerate(leaves):
+        r, c = divmod(i, 6)
+        x0, y0 = c * sw, band + r * sh
+        px[y0:y0 + sh, x0:x0 + sw, :3] = _paint_leaf(p, sh, sw, gut)
+        boxes.append(((x0 + gut) / N, (y0 + gut) / N, (x0 + sw - gut) / N, (y0 + sh - gut) / N))
+    pot_box = (gut / N, gut / N, (N // 2 - gut) / N, (band - gut) / N)
+    soil_box = ((N // 2 + gut) / N, gut / N, (N - gut) / N, (band - gut) / N)
+    return px, boxes, pot_box, soil_box
+
+
+def _lin2srgb(c):
+    return 12.92 * c if c <= 0.0031308 else 1.055 * c ** (1 / 2.4) - 0.055
+
+
+def _snake_pot(seg, rich, pot_box, soil_box):
+    """The pot (a lathe of its profile) and the soil disc, as bmesh. UVs: the pot on the white, the soil spread
+    over the soil patch."""
+    import bmesh
+    S = SNAKE
+    H, rt, rb, wl, rr = S["pot_h"], S["pot_top_r"], S["pot_bot_r"], S["wall"], S["rim_r"]
+    zr = H - rr
+    r_out = lambda z: rb + (rt - rb) * (z - 0.004) / (zr - 0.004)
+    prof = [(0.0, 0.0), (rb - 0.004, 0.0), (rb - 0.001, 0.0008), (rb, 0.004)]
+    n_wall = 10 if rich else 3
+    prof += [(r_out(z), z) for z in np.linspace(0.004, zr, n_wall + 1)[1:]]
+    n_rim = 10 if rich else 4
+    cx = r_out(zr) - rr
+    prof += [(cx + rr * math.cos(a), zr + rr * math.sin(a)) for a in np.linspace(0, math.pi, n_rim + 1)[1:]]
+    zi = H - S["soil_down"] - 0.01
+    prof += [(r_out(z) - wl, z) for z in np.linspace(zr, zi, (4 if rich else 2) + 1)[1:]]
+    bm = bmesh.new()
+    uvl = bm.loops.layers.uv.new("UVMap")
+    rings = []
+    for r, z in prof:
+        if r < 1e-6:
+            rings.append([bm.verts.new((0, 0, z))])
+        else:
+            rings.append([bm.verts.new((r * math.cos(a), r * math.sin(a), z)) for a in np.linspace(0, 2 * math.pi, seg, endpoint=False)])
+    pu = ((pot_box[0] + pot_box[2]) / 2, (pot_box[1] + pot_box[3]) / 2)
+    for k in range(len(rings) - 1):
+        a, b = rings[k], rings[k + 1]
+        for j in range(seg):
+            if len(a) == 1:
+                q = [a[0], b[(j + 1) % seg], b[j]]
+            else:
+                q = [a[j], a[(j + 1) % seg], b[(j + 1) % seg], b[j]]
+            f = bm.faces.new(q)
+            for lp in f.loops:
+                lp[uvl].uv = pu
+    # soil: a disc tucked into the inner wall
+    zs = H - S["soil_down"]
+    rs = r_out(zs) - wl + 0.0015
+    ns = 2 if rich else 1
+    cen = bm.verts.new((0, 0, zs))
+    soil_rings = [[bm.verts.new((rs * f * math.cos(a), rs * f * math.sin(a), zs)) for a in np.linspace(0, 2 * math.pi, seg, endpoint=False)]
+                  for f in np.linspace(0, 1, ns + 1)[1:]]
+    su = lambda v: (soil_box[0] + (v.co.x / rs * 0.5 + 0.5) * (soil_box[2] - soil_box[0]),
+                    soil_box[1] + (v.co.y / rs * 0.5 + 0.5) * (soil_box[3] - soil_box[1]))
+    soil_faces = []
+    for j in range(seg):
+        soil_faces.append(bm.faces.new([cen, soil_rings[0][j], soil_rings[0][(j + 1) % seg]]))
+    for k in range(ns - 1):
+        a, b = soil_rings[k], soil_rings[k + 1]
+        for j in range(seg):
+            soil_faces.append(bm.faces.new([a[j], b[j], b[(j + 1) % seg], a[(j + 1) % seg]]))
+    for f in soil_faces:
+        for lp in f.loops:
+            lp[uvl].uv = su(lp.vert)
+    return bm
+
+
 def snake_plant(coll, lite):
-    ms = _import(SRC["snake_plant"], coll)
-    body = _join(ms, "snake_plant_body")
-    rep = {"tris_downloaded": _tris([body])}
-    rep["scale"] = round(_normalise([body], HEIGHT["snake_plant"]), 4)
-    # the scan's material is unlit (an Emission shader, the light baked into the photo texture): lit, matte-ish
-    img = next(n.image for n in body.data.materials[0].node_tree.nodes if n.type == "TEX_IMAGE")
-    rep["texture_px"] = list(img.size)
-    if lite:
-        _decimate(body, LITE["snake"])
-        n = LITE_TEX["snake"]
-        img = _image("tex_snake_plant", _pixels(img, n, n))
-    _one_material([body], _material("mat_snake_plant", img, 0.6))
+    import bmesh
+    res = SNAKE_RES["lite" if lite else "rich"]
+    leaves = _snake_leaves()
+    N = res["tex"]
+    px, boxes, pot_box, soil_box = _snake_atlas(leaves, N)
+    img = _image("tex_snake_plant", px)
+    # roughness (G) per region, metal (B) 0: a small map on the atlas's layout
+    R = 64
+    mr = np.zeros((R, R, 4), np.float32)
+    mr[..., 3] = 1
+    mr[..., 1] = SNAKE["leaf_rough"]
+    mr[: R // 8, : R // 2, 1] = SNAKE["pot_rough"]
+    mr[: R // 8, R // 2:, 1] = SNAKE["soil_rough"]
+    mri = _image("tex_snake_plant_mr", mr, "Non-Color")
+    mat = _material("mat_snake_plant", img, SNAKE["leaf_rough"])
+    nt = mat.node_tree
+    b = nt.nodes.get("Principled BSDF")
+    t = nt.nodes.new("ShaderNodeTexImage")
+    t.image, t.location, t.interpolation = mri, (-700, -50), "Closest"
+    sep = nt.nodes.new("ShaderNodeSeparateColor")
+    sep.location = (-400, -50)
+    nt.links.new(t.outputs["Color"], sep.inputs["Color"])
+    nt.links.new(sep.outputs["Green"], b.inputs["Roughness"])
+    nt.links.new(sep.outputs["Blue"], b.inputs["Metallic"])
+    mat.use_backface_culling = True
+    objs = []
+    for name, bm in [("snake_plant_pot", _snake_pot(res["seg"], not lite, pot_box, soil_box))] + \
+            [(f"snake_plant_leaf_{i + 1:02d}", _leaf_mesh(p, res["nv"], res["nu"], boxes[i])) for i, p in enumerate(leaves)]:
+        me = bpy.data.meshes.new(name + "_mesh")
+        bm.to_mesh(me)
+        bm.free()
+        o = bpy.data.objects.new(name, me)
+        coll.objects.link(o)
+        NM.set_name(o, name)
+        me.materials.append(mat)
+        me.shade_smooth()
+        me.set_sharp_from_angle(angle=math.radians(50 if name.endswith("pot") else 70))
+        objs.append(o)
+    body = _join(objs, "snake_plant_body")
     root = _empty("snake_plant", coll)
     _parent(body, root)
-    rep["tris"] = _tris([body])
+    v = _verts(body)
+    rep = {"model": "our own (plants.py, 2026-11-01)", "leaves": len(leaves), "texture_px": [N, N], "mr_px": [R, R],
+           "height": round(float(v[:, 2].max()), 3), "pot_d": round(2 * SNAKE["pot_top_r"], 3),
+           "leaf_heights_above_rim": sorted(round(float(_leaf_top(p) - SNAKE["pot_h"]), 3) for p in leaves),
+           "tris": _tris([body])}
     return root, rep
+
+
+def _leaf_top(p):
+    vs = np.linspace(0, 1, 200)
+    th = p["lean"] + p["curve"] * vs ** 2
+    return p["base"][2] + float(np.sum(np.cos(th[:-1]) * np.diff(vs)) * p["L"])
 
 
 def desk_plant(coll, lite):
