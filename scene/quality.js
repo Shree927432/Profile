@@ -8,12 +8,15 @@
 //           UP_ABOVE_FPS. Never above full. Rungs: 2 -> 1.5 -> 1 -> 0.75 (only those below
 //           the device's own ratio). The only knob is the pixel ratio (the glow is a cheap
 //           halo plane and costs next to nothing, so there is nothing else to switch).
+//   bloom   (2026-11-01, the dusk light) with bloom: true (desktop.js passes it for the GLB room on a desktop)
+//           the top rung is the full pixel ratio WITH bloom, the next the same ratio without it, so auto drops
+//           the bloom before it drops resolution. smooth has no bloom. Phones never get it (desktop.js).
 //   The room draws only on change, so frame() must be fed only the gap between two
 //   CONSECUTIVE drawn frames (motion). Idle gaps are not frame times. With reduce true auto
 //   stays on full.
 //
-// API: mode, fps (rolling, last value measured during motion, 0 before any), rung ({ pixelRatio }),
-//      frame(dtMs), set(mode), pause(), resume(). apply({ pixelRatio }) is called on every
+// API: mode, fps (rolling, last value measured during motion, 0 before any), rung ({ pixelRatio, bloom }),
+//      frame(dtMs), set(mode), pause(), resume(). apply({ pixelRatio, bloom }) is called on every
 //      change, and once when created.
 
 const MAX_PIXEL_RATIO = 2;
@@ -31,10 +34,11 @@ const METER_MS = 500; // the fps readout averages over this
 
 export const MODES = ["full", "auto", "smooth"];
 
-export function createQuality({ dpr = 1, reduce = false, apply }) {
+export function createQuality({ dpr = 1, reduce = false, apply, bloom = false }) {
   const full = Math.min(dpr || 1, MAX_PIXEL_RATIO);
-  const rungs = [full, ...RUNGS.filter((r) => r < full)].map((pixelRatio) => ({ pixelRatio }));
-  const smooth = { pixelRatio: Math.min(full, SMOOTH_PIXEL_RATIO) };
+  const rungs = [full, ...RUNGS.filter((r) => r < full)].map((pixelRatio) => ({ pixelRatio, bloom: false }));
+  if (bloom) rungs.unshift({ pixelRatio: full, bloom: true });
+  const smooth = { pixelRatio: Math.min(full, SMOOTH_PIXEL_RATIO), bloom: false };
 
   let mode = "auto";
   let index = 0; // rung used by full and auto
@@ -61,7 +65,7 @@ export function createQuality({ dpr = 1, reduce = false, apply }) {
   function show(next) {
     rung = next;
     restartMeasuring();
-    apply({ pixelRatio: rung.pixelRatio });
+    apply({ pixelRatio: rung.pixelRatio, bloom: rung.bloom });
   }
 
   function step(by) {
@@ -95,7 +99,7 @@ export function createQuality({ dpr = 1, reduce = false, apply }) {
   const api = {
     get mode() { return mode; },
     get fps() { return fps; },
-    get rung() { return { pixelRatio: rung.pixelRatio }; },
+    get rung() { return { pixelRatio: rung.pixelRatio, bloom: rung.bloom }; },
 
     // dtMs: real time since the previous rendered frame.
     frame(dtMs) {
@@ -142,6 +146,6 @@ export function createQuality({ dpr = 1, reduce = false, apply }) {
     },
   };
 
-  apply({ pixelRatio: rung.pixelRatio });
+  apply({ pixelRatio: rung.pixelRatio, bloom: rung.bloom });
   return api;
 }

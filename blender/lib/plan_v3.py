@@ -88,7 +88,7 @@ SD = dict(w=0.623, d=0.031, h=0.362)             # Apple Studio Display 27, VESA
 SD["z"] = 1.2585                                 # the component: 1.45 cm over the G8
 SD["x"] = POLE[0] + 0.19 - SD["d"] / 2           # front 19 cm in front of the pole
 SD_GLASS = (0.597, 0.336)                        # 27 in 16:9 active area
-POSTS = dict(w=0.538, h=SD_GLASS[1])             # monitor_screen 16:10, 53.8 x 33.6, centred in the glass
+POSTS = dict(w=SD_GLASS[0], h=SD_GLASS[1])       # monitor_screen 16:9, the whole glass (2026-11-01, was 16:10)
 UW_ACTIVE = (0.797, 0.334)                       # rig_screen 21:9
 
 # ADAM A7V white, raised beside the TOP screen on desk poles, as in the photo. The cabinets line
@@ -291,7 +291,7 @@ part("ultrawide", "Main screen, 34 in curved", "Samsung Odyssey OLED G8 34 (21:9
      note="the training dashboard (rig_screen 79.7 x 33.4)", glow="#3a7bd5")
 part("studio_display", "Top screen, 27 in", "Apple Studio Display 27 (16:9), VESA, on the same pole",
      (SD["w"], SD["d"], SD["h"]), (SD["x"], YM, SD["z"]), 90, role="obj_monitor", col=G_,
-     note="the posts (monitor_screen 16:10, 53.8 x 33.6, inside the 16:9 glass)", glow="#8fb8ff")
+     note="the posts (monitor_screen 16:9, 59.7 x 33.6, the whole glass)", glow="#8fb8ff")
 part("screenbar", "Monitor light bar", "BenQ ScreenBar Halo", (0.50, 0.10, 0.03),
      (SD["x"] + 0.02, YM, SD["z"] + SD["h"]), 90, col=B_)
 for i, s in enumerate(SPEAKERS):
@@ -674,7 +674,7 @@ def run_checks():
         chk(f"speaker {'LR'[i]} cabinet to the left wall", wall_gap(CP[f"a7v_{i + 1}"]), 0.02)
     chk("G8 to Studio Display gap (component: 1.45)", SD["z"] - (UW["z"] + UW["h"]), 0.0145)
     chk("ultrawide bottom over the Apollo and the Stream Deck", UW["z"] - (TOP + max(CP["interface"]["size"][2], CP["streamdeck"]["size"][2])), 0.03)
-    chk("posts canvas (16:10) inside the 27 in glass", SD_GLASS[0] - POSTS["w"], 0.0)
+    chk("posts canvas (16:9) fills the 27 in glass", SD_GLASS[0] - POSTS["w"], 0.0)
     chk("light bar to the shelf", SHELF["z"] - SHELF["t"] - (SD["z"] + SD["h"] + 0.03), 0.10)
     chk("key light panels under the shelf", SHELF["z"] - SHELF["t"] - (KL_Z + KL_PANEL[2]), 0.0)
     # the approved speaker component stands taller than A7V's box here (its top at 164.4, measured by the arms build)

@@ -1,0 +1,15 @@
+{
+ "note": "Written by blender/tools/encode_dusk.py from the Cycles bake (blender/lib/lighting_dusk.py). light = texel * max.",
+ "exposure": 0.28,
+ "backdropGain": 1.0,
+ "emissiveGain": 1.0,
+ "lightmap": {
+  "file": "lightmap.webp",
+  "max": 8.1774
+ },
+ "env": {
+  "file": "env.webp",
+  "max": 4.5558,
+  "gain": 0.6
+ }
+}

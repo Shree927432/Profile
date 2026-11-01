@@ -19,7 +19,7 @@ right at +X, Z up, the desk top at z = 0, the pole on x = 0. Every part is a chi
   rig_static     the G8's VESA arm and collar                     (obj_rig)
   rig_stand      the G8's own slab stand, optional, hidden        (not exported)
   monitor_body   the Studio Display: aluminium body, glass, VESA adapter (obj_monitor)
-  monitor_screen the posts canvas, 16:10, 53.8 x 33.6 cm           (obj_monitor, screen UV rule)
+  monitor_screen the posts canvas, the full 16:9 glass, 59.7 x 33.6 cm (obj_monitor, screen UV rule)
   monitor_static the Studio Display's VESA arm and collar          (obj_monitor)
   desk_pole      the pole and its desk clamp                       (set_desk)
   desk_screenbar the light bar, its arm and rear clamp             (set_desk)
@@ -135,7 +135,9 @@ SD_BACK_ROUND = 3.0 * MM            # EST: the back edge's round (hinge close-up
 SD_FRONT_ROUND = 0.5 * MM           # EST
 SD_BEZEL = 13.0 * MM                # MEASURED: the black border, even on all four sides
 SD_ACT_W, SD_ACT_H = 597.0 * MM, 336.0 * MM   # MEASURED; 27-inch 16:9 computes to 597.7 x 336.2
-POSTS_W, POSTS_H = 538 * MM, 336 * MM          # MESHES.md: monitor_screen 16:10, 53.8 x 33.6 cm
+# 2026-11-01 (owner): the whole active area, edge to edge. The 16:10 canvas left 3 cm of black glass at each side,
+# so the side borders read three times the top's. The posts canvas takes the screen's aspect (scene/desktop.js).
+POSTS_W, POSTS_H = SD_ACT_W, SD_ACT_H          # MESHES.md: monitor_screen 16:9, 59.7 x 33.6 cm
 SD_CAM_D, SD_CAM_Z = 3.0 * MM, SD_H - 5.6 * MM  # MEASURED: the camera dot
 SD_GRILLE = (580 * MM, 7 * MM)      # EST from the hinge close-up: perforated band on the bottom and top faces
 # The VESA mount adapter, an H plate (diagram-back-vesa-adapter.jpg, 0.706 mm/px). Below the top, in mm:
@@ -616,7 +618,7 @@ if bpy is not None:
         }
         mats["led"].diffuse_color = M.rgba("#fff3e6")
         mats["led_back"].diffuse_color = M.rgba("#f2f6ff")
-        mats["posts"] = M.screen_image("mat_screens_posts", placeholder_image("screens_posts_placeholder", 512, 320), 1.0)
+        mats["posts"] = M.screen_image("mat_screens_posts", placeholder_image("screens_posts_placeholder", 512, 288), 1.0)
         mats["rig"] = M.screen_image("mat_screens_rig", placeholder_image("screens_rig_placeholder", 512, 214), 1.0)
         # round 2: each picture takes its glass's own gloss, so the screen and the glass round it reflect alike
         # (no lighter or darker band round the posts area when the picture is dark)

@@ -574,7 +574,45 @@ def stills():
         subprocess.run([PY, "-c", code, PHOTO, portrait, os.path.join(OUT, "hero-portrait-vs-photo.jpg")], check=False)
 
 
+# ---------------------------------------------------------------------------
+# dusk (2026-11-01): the lighting pass, blender/lib/lighting_dusk.py. STAGES=dusk,export FROM_BLEND=1 relights the
+# saved room_v3.blend without rebuilding it. DUSK_LM (atlas px), DUSK_SPP (bake samples), DUSK_STILLS=hero,intro,...
+# The EXRs land in blender/out/dusk/; blender/tools/encode_dusk.py makes the site's WebPs from them.
+# ---------------------------------------------------------------------------
+DUSK_OUT = os.path.join(C.FOOTAGE, "2026-11-01-dusk")
+DUSK_DIR = os.path.join(HERE, "out", "dusk")
+BLEND_DUSK = os.path.join(HERE, "out", "room_v3_dusk.blend")
+
+
+def dusk():
+    from lib import lighting_dusk as LD
+    os.makedirs(DUSK_DIR, exist_ok=True)
+    os.makedirs(DUSK_OUT, exist_ok=True)
+    LD.lights(P)
+    LD.backdrop(os.path.join(HERE, "assets", "dusk", "pune-dusk.png"))
+    objs = LD.bake_targets()
+    RES["dusk_baked"] = sorted(o.name for o in objs)
+    LD.lightmap_uvs(objs)
+    if os.environ.get("DUSK_SPP", "96") != "0":
+        LD.bake(objs, os.path.join(DUSK_DIR, "lightmap.exr"), int(os.environ.get("DUSK_LM", "2048")),
+                int(os.environ.get("DUSK_SPP", "96")))
+    if os.environ.get("DUSK_ENV", "1") == "1":
+        LD.env(os.path.join(DUSK_DIR, "env.exr"))
+    want = os.environ.get("DUSK_STILLS", "hero,intro,about,desk-corner")
+    if want:
+        cams = [("hero", BO.camera("still_hero", P.HERO_V3["pos"], P.HERO_V3["target"], P.HERO_V3["vfov"]), (1600, 900)),
+                ("intro", BO.camera("still_intro", P.INTRO["pos"], P.INTRO["target"], P.INTRO["vfov"]), (1600, 900)),
+                ("about", BO.camera("still_about", P.ABOUT["pos"], P.ABOUT["target"], P.ABOUT["vfov"]), (1600, 900)),
+                ("desk-corner", BO.camera("still_desk", (-0.55, -0.15, 1.62), (-1.85, 1.30, 1.10), 58), (1600, 1000))]
+        LD.stills(cams, DUSK_OUT, int(os.environ.get("DUSK_STILL_SPP", "64")), want)
+
+
 def main():
+    if os.environ.get("FROM_BLEND"):
+        bpy.ops.wm.open_mainfile(filepath=BLEND)
+        log(f"opened {BLEND}")
+        relight_and_export()
+        return
     build()
     pb = bpy.data.objects.get("piano_static")
     if pb:
@@ -588,12 +626,21 @@ def main():
     bpy.context.scene.camera = bpy.data.objects.get("still_hero_v3")
     pack_and_save(BLEND)
     log(f"saved {BLEND}")
+    relight_and_export()
+
+
+def relight_and_export():
+    if "dusk" in STAGES:
+        dusk()
+        pack_and_save(BLEND_DUSK)
+        log(f"saved {BLEND_DUSK}")
     if "export" in STAGES:
-        RES["raw_bytes"] = export(GLB_RAW, False, "AUTO")
+        RES["raw_bytes"] = export(os.path.join(DUSK_OUT, "room-dusk-raw.glb") if "dusk" in STAGES else GLB_RAW, False, "AUTO")
         RES["glb_bytes"] = export(GLB, True, "WEBP")
     RES["total_s"] = round(time.time() - T0, 1)
-    os.makedirs(OUT, exist_ok=True)
-    with open(REPORT, "w") as f:
+    rep = os.path.join(DUSK_OUT, "build-report.json") if "dusk" in STAGES else REPORT
+    os.makedirs(os.path.dirname(rep), exist_ok=True)
+    with open(rep, "w") as f:
         json.dump(RES, f, indent=1)
     log("done " + json.dumps({k: RES[k] for k in ("raw_bytes", "glb_bytes", "statics") if k in RES}))
 

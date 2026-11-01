@@ -960,3 +960,19 @@ site or the room. Keep each entry short. No polishing; the post does that.
   living city in the window; ours was flat daylight with live lights, no reflections and block buildings. The owner picked
   the mood: "Dusk in Pune".
 
+- The dusk lighting pass (designer, Opus, 12:55 to 13:50): Cycles bake of every static mesh into one 2048 px lightmap,
+  an env map for reflections, bloom on desktop, a painted Pune dusk skyline in the window. What went wrong on the way:
+  the lightmap UVs became the render UVs (the desk went black); smart project did nothing headless without a context
+  override; pack_islands and correct_aspect crushed the islands into a strip; the backdrop sat past the 30 m far plane
+  and faced away; the sun was too timid in the browser (18 -> 26 W/m2). Draw calls unchanged (102 hero, 86 phone),
+  room download 2.06 -> 2.50 MB. The Mac fell back to battery at 13:50, so the pass stopped there.
+- Owner on the review: "Fix the issues first" (the G8 read as a black slab, the music side near black), and then "also
+  fix the apple screen monitor it has larger bezels in right and left side of it of screen". Cause of the bezels: the
+  posts canvas was 16:10 (53.8 cm) inside the Studio Display's 16:9 glass (59.7 cm), leaving 3 cm of black glass at each
+  side on top of the 1.3 cm border, so the sides read three times the top. A choice from 2026-10-21, made for the posts
+  layout before the real display was modelled. Fixed: `monitor_screen` fills the glass; the posts canvas takes the
+  mesh's aspect (711 x 400, phone 444 x 250; the placeholder room keeps 16:10).
+- The G8 now shows a wordless training dashboard (loss falling, eval rising, eight GPU bars, a heatmap;
+  blender/tools/paint_g8_dashboard.py), the stand-in for obj_rig's live one. The music side gets a hidden warm-lilac
+  fill (first try 60 W read flat and grey, lost the dusk; 30 W kept it) and the lightstick at 6 W (1.2 W read as
+  nothing). Rebaked at 384 spp on battery (23 % at the end). room.glb 2.07 MB, lightmap 201 KB.

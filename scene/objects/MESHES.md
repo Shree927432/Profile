@@ -29,7 +29,7 @@ under `chair_swivel`).
 | Root | Code-facing names in the GLB |
 |---|---|
 | `set_room` | camera anchors (empties, position and look-at): `room_view`, `room_view_target` (HERO_V3, the AI lab as the owner's photo, vfov 54, portrait 66); `camera_intro`, `camera_intro_target` (INTRO, out of the window, vfov 50); `camera_about`, `camera_about_target` (ABOUT, the music side, vfov 50); `camera_phone`, `camera_phone_target` (PHONE_V3, vfov 60). Field of view is not in the GLB; plan v3 and the code hold it |
-| `obj_monitor` | `monitor_body`, `monitor_screen` (the Studio Display 27, 16:10, 53.8 x 33.6 cm, screen rules), `monitor_static` (arm, collar, brand) |
+| `obj_monitor` | `monitor_body`, `monitor_screen` (the Studio Display 27, 16:9, the whole glass, 59.7 x 33.6 cm since 2026-11-01, screen rules), `monitor_static` (arm, collar, brand) |
 | `obj_rig` | `rig_display` (the G8 34 body), `rig_screen` (on the 1800R arc, screen rules), `rig_case`, `rig_case_glass`, `rig_fans` (all case-fan light rings, one emissive mesh, for the pulse), `rig_fan_01`..`_08` (rotors: 01-03 side, 04-05 rear, 06-08 bottom; origin at the hub, +Z is the air's direction), `rig_glow_strips`, `rig_gpu_root` (empty) with `rig_gpu`, `rig_gpu_fan_01`..`_02`, `rig_gpu_light`; `rig_static` (G8 stand, case frame parts, brands) |
 | `obj_studio` | `studio_speaker_01`, `_02` (cabinets, front local -Y in Blender, origin bottom centre), `studio_speaker_0N_woofer` (+Z out of the cone, for the pulse); `apollo` (empty) with `apollo_knob` (the one big knob: volume) and `apollo_leds`; `dj_stand_root` > `dj_root` (empties) with `dj_jog_l`/`_r` (spin about local Z), `dj_pad_l_01`..`_08`, `dj_pad_r_01`..`_08` (back row 01-04), `dj_cue_l`/`_r`, `dj_play_l`/`_r`, `dj_tempo_l`/`_r` and `dj_fader_l`/`_r` (slide along Y), `dj_xfader` (slides along X), `dj_knob_hi`/`mid`/`low`/`trim`/`cfx` `_l`/`_r`, `dj_knob_master`, `dj_knob_browse`, `dj_knob_fx_depth`, `dj_knob_hp_level`, `dj_knob_hp_mix`, `dj_knob_mic`; `lightstick_root` (empty) with `lightstick_head` (own emissive material, for recolouring), `lightstick_shell`, `lightstick_handle`. (Blender: speaker poles and `_iso`, `apollo_body`, `apollo_button_1`..`_8`, `apollo_meter_window`, `dj_body`, `dj_mixer`, `dj_brand_*`, `dj_stand`, `lightstick_cradle`, the brands) |
 | `obj_mic` | joint empties `mic_j_swivel`, `_shoulder`, `_elbow`, `_wrist`, `_wrist_yaw`, `_mount`, `_stem`, `_tilt` (the pose is baked; the arm meshes are in `mic_static`), `mic_body` (click target, under `mic_j_tilt`), `mic_led`. (Blender: `mic_arm_*`, `mic_stem`, `mic_yoke`, `mic_knobs`, the brands) |
@@ -281,7 +281,7 @@ widest body):
 | Name | What | Code does | Pivot / origin |
 |---|---|---|---|
 | `monitor_body` | case and bezel. **Fixed name** | camera framing uses its size | — |
-| `monitor_screen` | the screen. **Fixed name.** 16:10 | screen: posts (`content/posts`), click target, glide target | screen rules |
+| `monitor_screen` | the screen. **Fixed name.** 16:10 in the placeholder room, 16:9 on the v3 Studio Display (2026-11-01); the canvas takes the mesh's aspect | screen: posts (`content/posts`), click target, glide target | screen rules |
 | `monitor_static` | stand and base | — | — |
 | `monitor_view`, `monitor_view_target` | close-up anchors | reserved; today the code computes its own close-up from the screen | empties |
 
@@ -478,6 +478,7 @@ with it.
 | Collection `lights_night` | `lt_night_sky`, `lt_storm_flash`, `lt_monitor` | video storm only |
 | Collection `lights_sunrise` | `lt_dawn_sky` keyed from blue to gold, `lt_sun` rising | video dawn only, never baked for the site |
 | `video_cam_hero`, `video_path_hero`, `video_cam_hero_target` | the fixed hero camera, its path curve, its look-at | the storm build, every lighting iteration |
+| `lt_sun`, `lt_dusk_sky`, `lt_keylight_1`, `lt_keylight_2`, `lt_monitor_screen`, `lt_rig_screen`, `lt_laptop_screen`, `lt_neon_glow`, `lt_nanoleaf`, `lt_pegboard_glow`, `lt_pc`, `lt_lightstick`, `lt_music_fill` (hidden from camera and gloss); camera `still_env` | the dusk rig (2026-11-01, `blender/lib/lighting_dusk.py`): low warm sun through the window, the window's sky, the room's own lights at their glowing parts; the equirect camera for the environment map | the dusk bake (`scene/assets/dusk/`), the dusk stills. Supersedes the 5:40 a.m. blue-hour default above for room v3 |
 | `video_cam_dawn`, `video_path_dawn`, `video_cam_dawn_target` | the slow drift from the bed to the window, settling on the monitor | the dawn section |
 | `still_cam_home` | matches `room_view` | review stills, desktop |
 | `still_cam_phone` | same place, portrait 390 × 844 framing | review stills, phone |

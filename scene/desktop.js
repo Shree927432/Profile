@@ -41,6 +41,7 @@ import { createPickMap } from "./pick.js";
 import { batchRoom } from "./batch.js";
 import { createQuality, MODES } from "./quality.js";
 import { createGlide } from "./glide.js";
+import { loadRoomLight, applyRoomLight, createBloom } from "./room-light.js";
 
 const deg = THREE.MathUtils.degToRad;
 
@@ -66,11 +67,12 @@ const GLOW = { color: 0x9fd0ff, opacity: 0.14, reach: 0.14, sigma: 0.04, pxPerMe
 const GLOW_BEHIND = 0.0005; // metres behind the screen plane
 // Opening a post lights the screen up: colour and glow multiplied by 1 + these at full light.
 const LIGHT = { screen: 0.22, glow: 0.9 };
-// Logical size of the screen canvas (backing store is 2x). Same rule as screen-host.js and the
-// decision of 2026-10-19: under 480 CSS px wide the screen is the narrow 400x250 layout.
+// Logical height of the screen canvas (backing store is 2x); the width follows the screen mesh's
+// aspect (16:10 in the placeholder room: 640x400 and 400x250, the decision of 2026-10-19; 16:9 on
+// the v3 Studio Display, 2026-11-01). Under 480 CSS px wide the screen is the narrow layout.
 // Chosen once at start; picking uses the same numbers.
-const SCREEN_WIDE = { w: 640, h: 400 };
-const SCREEN_NARROW = { w: 400, h: 250 };
+const SCREEN_WIDE_H = 400;
+const SCREEN_NARROW_H = 250;
 const NARROW_BELOW = 480;
 // Tap vs drag: a pointer that moved less than this many CSS px and was down less than this
 // many ms counts as a tap.
@@ -83,10 +85,13 @@ const ROOM_GLB = "/scene/assets/room.glb";
 const DRACO_DECODER = "/scene/vendor/three/addons/libs/draco/gltf/";
 const ROOM_FOV = 54;
 const ROOM_FOV_PORTRAIT = 66;
+// The dusk light (2026-11-01, scene/room-light.js): bloom on desktop only (not on touch or narrow screens), and only
+// the top quality rung. threshold is in the scene's linear light after EXPOSURE (room-light.json).
+const BLOOM = { strength: 0.3, radius: 0.45, threshold: 1.0, minWidth: 768 };
 
 export async function start({ canvas, content, overlay, params, reduce }) {
   const text = content.site.room;
-  const { w: SCREEN_W, h: SCREEN_H } = window.innerWidth < NARROW_BELOW ? SCREEN_NARROW : SCREEN_WIDE;
+  const SCREEN_H = window.innerWidth < NARROW_BELOW ? SCREEN_NARROW_H : SCREEN_WIDE_H;
 
   // ---- renderer ----
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -99,6 +104,12 @@ export async function start({ canvas, content, overlay, params, reduce }) {
 
   const useGlb = params.has("glb");
   const uvtest = useGlb && params.has("uvtest");
+  // The dusk light files load while the GLB does (the GLB room only).
+  const lightLoad = useGlb ? loadRoomLight(THREE) : null;
+  const bloomAllowed = useGlb && !params.has("nobloom") && window.innerWidth >= BLOOM.minWidth &&
+    !window.matchMedia("(pointer: coarse)").matches;
+  let post = null; // the bloom composer, once made (createBloom)
+  let bloomOn = false;
   const camera = new THREE.PerspectiveCamera(FOV, 1, 0.05, 30);
 
   // The loop draws only when this is true (see renderFrame). Anything that changes the picture sets it.
@@ -106,20 +117,24 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   // The one place that changes resolution.
   function setPixelRatio(pr) {
     renderer.setPixelRatio(pr);
+    if (post) post.setPixelRatio(pr);
     needsRender = true;
   }
   // Called by the quality ladder at start and on every change.
-  function applyQuality({ pixelRatio }) {
+  function applyQuality({ pixelRatio, bloom }) {
+    bloomOn = !!bloom;
     setPixelRatio(pixelRatio);
   }
-  const quality = createQuality({ dpr: window.devicePixelRatio || 1, reduce, apply: applyQuality });
+  const quality = createQuality({ dpr: window.devicePixelRatio || 1, reduce, apply: applyQuality, bloom: bloomAllowed });
 
   // ---- scene ----
-  // Inside the GLB room the "ground" light also reaches the ceiling: a neutral bounce, not floor brown.
-  scene.add(new THREE.HemisphereLight(0xcdd5e6, useGlb ? 0x8c8a86 : 0x3e281a, 1.1));
-  const sun = new THREE.DirectionalLight(0xffd7a3, 1.6); // early light from the window, left/back
-  sun.position.set(-2.5, 2.2, 0.4);
-  scene.add(sun);
+  // The placeholder room is lit live; the GLB room by its bake (scene/room-light.js), no live lights.
+  if (!useGlb) {
+    scene.add(new THREE.HemisphereLight(0xcdd5e6, 0x3e281a, 1.1));
+    const sun = new THREE.DirectionalLight(0xffd7a3, 1.6); // early light from the window, left/back
+    sun.position.set(-2.5, 2.2, 0.4);
+    scene.add(sun);
+  }
 
   let room;
   if (useGlb) {
@@ -136,6 +151,17 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   scene.add(room);
   scene.updateMatrixWorld(true);
   if (useGlb) batchRoom(room); // keys, pads, knobs, faders: one draw call per material (batch.js)
+  if (useGlb) {
+    renderer.toneMapping = THREE.AgXToneMapping;
+    const exp = parseFloat(params.get("exp") || ""); // &exp=0.5: tuning only
+    const light = await lightLoad.catch((e) => { console.warn("room light:", e); return null; });
+    if (light) applyRoomLight(THREE, { renderer, scene, room, light, exposure: Number.isFinite(exp) ? exp : undefined });
+    else scene.add(new THREE.HemisphereLight(0xcdd5e6, 0x8c8a86, 1.1)); // the bake files missing: plain light, still usable
+    if (light && bloomAllowed) {
+      post = await createBloom(THREE, { renderer, scene, camera, ...BLOOM });
+      post.setPixelRatio(renderer.getPixelRatio());
+    }
+  }
 
   // Phase 4: the screen and body come out of the GLB by name, never by held reference.
   const screenMesh = room.getObjectByName("monitor_screen");
@@ -154,6 +180,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     geo.boundingBox.getSize(screenSize).multiply(scl);
   }
   const screenNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(screenQuat);
+  const SCREEN_W = Math.round((SCREEN_H * screenSize.x) / screenSize.y);
 
   // ---- posts screen on the monitor ----
   const screenCanvas = document.createElement("canvas");
@@ -355,6 +382,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     const w = Math.max(1, canvas.clientWidth);
     const h = Math.max(1, canvas.clientHeight);
     renderer.setSize(w, h, false);
+    if (post) post.setSize(w, h);
     camera.aspect = w / h;
     if (useGlb) camera.fov = camera.aspect < 1 ? ROOM_FOV_PORTRAIT : ROOM_FOV;
     camera.clearViewOffset(); // applyShift() sets it again for the new size
@@ -599,7 +627,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     panel.append(fpsEl, ratioEl, ...buttons.map(([, b]) => b));
     overlay.append(panel);
     // For measuring from the console or a test script: draw calls and triangles of the last frame.
-    window.roomDebug = { info: renderer.info, THREE, scene, camera, renderer };
+    window.roomDebug = { info: renderer.info, THREE, scene, camera, renderer, get post() { return post; }, get bloomOn() { return bloomOn; } };
 
     function refreshDebug() {
       // quality.fps keeps the last value measured during motion; 0 until there has been motion.
@@ -637,7 +665,8 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     const drew = needsRender;
     if (drew) {
       applyShift();
-      renderer.render(scene, camera);
+      if (post && bloomOn) post.render();
+      else renderer.render(scene, camera);
       needsRender = false;
       if (lastDrew && dt > 0) quality.frame(dt);
     }

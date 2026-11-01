@@ -91,6 +91,7 @@ object at a time. -->
 
 <!-- 11. (100 words) The room in Blender, the instruments that play, the window that
 follows Pune's real time and weather. Link to the room. -->
+<!-- NOTE 2026-11-01: the owner spotted the Studio Display's fat side bezels in the browser: a 16:10 posts canvas I chose on day one, before the real display existed, sitting inside 16:9 glass. The model was exact; the old decision wasn't. -->
 <!-- NOTE 2026-10-21: Phase 4 began with a list of names, not a model: 88 piano keys
 named by note so the code can play them, because names are the only thing the
 Blender file and the website share. -->
