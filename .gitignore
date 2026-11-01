@@ -27,3 +27,8 @@ __pycache__/
 
 # personal Claude Code settings (local hooks)
 .claude/settings.local.json
+
+# Downloaded plant models (2026-11-01): the full originals stay local, too big for git.
+# blender/assets/plants/README.md lists each one's source and licence, to download again.
+blender/assets/plants/*/
+!blender/assets/plants/README.md

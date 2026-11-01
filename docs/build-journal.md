@@ -976,3 +976,16 @@ site or the room. Keep each entry short. No polishing; the post does that.
   blender/tools/paint_g8_dashboard.py), the stand-in for obj_rig's live one. The music side gets a hidden warm-lilac
   fill (first try 60 W read flat and grey, lost the dusk; 30 W kept it) and the lightstick at 6 W (1.2 W read as
   nothing). Rebaked at 384 spp on battery (23 % at the end). room.glb 2.07 MB, lightmap 201 KB.
+- Owner, on why Felix's camera looks real: "how did felix got everything right 3d modeling part his camera looks much
+  more realistic than ours". Answer: he didn't model it. It is Poly Haven's "Camera 01", a CC0 model by a human artist
+  (Rajil Jose Macatangay), and its realism is the hand-painted worn textures, not the geometry. His post says some items
+  came from Poly Haven. We searched Poly Haven and Sketchfab for our crude props (local page
+  video-local/viewer/props-candidates.html); no free TOD10 exists, the double-neck is blue, Lucille's nearest is a 335.
+- Owner: "Plants first", and "keep the heavy models for the Blender file. Don't cut down on that". The Sketchfab files
+  need a login, so the owner downloaded them (they landed in ~/Downloads as .glb, not zips in the folder I opened).
+  Designer (Opus) built blender/components/plants.py: rich = the downloads as they are (161 MB GLB), lite = cut down.
+  What went wrong: a stale object reference after deleting the monstera's stand crashed the first run; the snake plant
+  is a photo scan with an unlit (emission) material, made lit; at 3,000 tris its lite leaf edges go jagged close up
+  (seam smear), kept because it is 90 px tall in the hero. The monstera has 25 leaves, a full plant, not a young one.
+  Hero draw calls 102 -> 103, phone 86; the 25 leaves cost a call each in the intro (44 there), not batched yet. Room
+  download 2.53 -> 2.99 MB, 6 KB under the 3.0 MB cap.

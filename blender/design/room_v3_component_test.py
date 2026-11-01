@@ -146,6 +146,30 @@ def build_returndesk(lite=False):
     return RD.build_room(collection=col, lite=lite)
 
 
+# 2026-11-01: the three plants (blender/components/plants.py: the monstera on the sill, obj_plant; the snake plant and
+# the small desk plant, set_plants) from downloaded models, rich from plants.blend, lite from plants-lite.glb, at
+# plan v3's numbers (PLANTS=0 keeps the blockout's stand-ins).
+PLANTS = os.environ.get("PLANTS", "plan")
+if PLANTS != "0":
+    REPLACED = REPLACED | {"plant", "snake_plant", "desk_plant"}
+
+
+def build_plants(lite=False):
+    """The rich plants appended from plants.blend (collection 'plants'), or the lite ones from plants-lite.glb."""
+    sys.path.insert(0, os.path.join(BL, "components"))
+    import plants as PL
+    if lite:
+        new = import_glb(PL.LITE_GLB)
+    else:
+        with bpy.data.libraries.load(PL.BLEND, link=False) as (src, dst):
+            dst.collections = ["plants"]
+        col = dst.collections[0]
+        bpy.context.scene.collection.children.link(col)
+        new = list(col.all_objects)
+    PL.place(lambda n: bpy.data.objects[n], P)
+    return new
+
+
 def M_at(x, y, z=0.0, yaw=0.0):
     return Matrix.Translation((x, y, z)) @ Matrix.Rotation(math.radians(yaw), 4, "Z")
 
@@ -473,6 +497,8 @@ def main():
             if o.name.startswith(("dj_top", "dj_leg", "dj_rail")):
                 bpy.data.objects.remove(o, do_unlink=True)
         build_returndesk()
+    if PLANTS != "0":
+        build_plants()
     BO.lights()
     append_rich()
     music = music_side()
@@ -554,6 +580,12 @@ def main():
         for o in list(col.all_objects):
             bpy.data.objects.remove(o, do_unlink=True)
         build_returndesk(lite=True)
+    if PLANTS != "0":                                # the plants: rich out, lite in
+        col = bpy.data.collections.get("plants")
+        for o in list(col.all_objects):
+            bpy.data.objects.remove(o, do_unlink=True)
+        bpy.data.collections.remove(col)
+        build_plants(lite=True)
     drop = {"sky", "ground", "ceiling"}
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:

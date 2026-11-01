@@ -36,8 +36,9 @@ SUN_DIR = (-0.80, -0.50)
 SUN_ELEV = 11.0
 SUN = dict(strength=26.0, color=(1.0, 0.47, 0.20), angle=0.8)
 WORLD = (0.030, 0.040, 0.075)
+# the sill plant (2026-11-01): pot, soil and the leafless stems (plant_static) are baked; plant_leaf_NN grow and sway
 BAKE = re.compile(r"^(?!(chair|city|frame_\d|guitar_0\d)_static$)(.+_static|monitor_body|rig_case|rig_gpu|"
-                  r"studio_speaker_0\d|mic_body)$")
+                  r"studio_speaker_0\d|mic_body|plant_pot|plant_soil)$")
 EXPOSURE = -1.3                       # the stills' exposure (the site sets its own)
 ENV_AT = (-1.05, 0.95, 1.20)          # above the desk's corner, in free air, near the hero target
 # the music side (2026-11-01, the owner: fix the dark About view): the lightstick's watts, the hidden fill (Blender

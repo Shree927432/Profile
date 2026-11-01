@@ -41,7 +41,9 @@ under `chair_swivel`).
 | `set_laptop` | `mstand_root` > `laptop_root` > `laptop_hinge` (empties; the lid is baked open at -110 about local X), `laptop_screen` (UV 0..1, top-left (0,1)) |
 | `obj_piano` | as section 3 (keys, `piano_fallboard`, `piano_lid`, `piano_interior`, `piano_strings`, `piano_hammers`, `piano_sheet`, `piano_static` with the bench, `piano_view`, `piano_inside_view` and their targets) |
 | `obj_guitars` | `guitar_01`..`_06` (empties) with `guitar_NN_body`; `guitar_02_strings`, `guitar_04_strings` (the two built guitars); 01, 03, 05, 06 are flat stand-in outlines without strings until they are built; `guitars_static` (stand-in hooks and rack) |
-| `obj_window`, `obj_light`, `obj_plant`, `set_city`, `set_plants`, `set_rug` | stand-ins: `window_static` (frame, grill, ledge), `light_shade`, `light_static`, `plant_static` (sill plant), `city_static` (sky, ground and blocks, scaled to sit inside 30 m), `plants_static` (snake plant, small desk plant), `rug_static`. `window_sky`, `window_glass`, `window_beam`, `plant_pot`, `plant_soil`, `plant_leaf_NN` do not exist yet |
+| `obj_plant` | the young monstera on the sill (2026-11-01, `blender/components/plants.py`, a downloaded model): `plant_pot` (terracotta), `plant_soil`, `plant_leaf_01`..`_25` (blade + petiole, one mesh each, largest first, the youngest last; origin where the petiole meets the stem or the crown, so grow = scale from 0 there, sway = a small rotation there; 23 at the petiole's foot, 21 and 24 have no petiole in the model and sit at the blade's nearest point on a stem; all 25 share one material, alpha-tested), `plant_static` (stem stubs at the crown). Pot, soil and `plant_static` are in the dusk bake; the leaves are lit by the environment map. The leaves are not batched (scene/batch.js has no group for them): one draw call per leaf in view |
+| `set_plants` | `plants_static`: the snake plant and the small desk plant (a zebra haworthia), downloaded models (plants.py), one textured material each |
+| `obj_window`, `obj_light`, `set_city`, `set_rug` | stand-ins: `window_static` (frame, grill, ledge), `light_shade`, `light_static`, `city_static` (sky, ground and blocks, scaled to sit inside 30 m), `rug_static`. `window_sky`, `window_glass`, `window_beam` do not exist yet |
 
 Replaced by the names above (the components' own names): `frame_NN` with two digits by
 `frame_N`; `studio_dj_N_*` by `dj_*` (`l`/`r` for decks 1/2, more knobs, `dj_xfader`
@@ -502,7 +504,7 @@ Names the code may rely on, under the nine roots:
 | `obj_piano` | 99: 88 keys, 7 parts, 4 anchors |
 | `obj_studio` | 46: 35 DJ controller parts, 2 interface knobs, 2 cabinets, 2 woofers, 2 lightstick parts, `studio_static`, 2 anchors |
 | `obj_guitars` | 19: 6 guitars × 3, plus `guitars_static` (wall hooks and floor rack) |
-| `obj_plant` | 15: 12 leaves, 3 parts |
+| `obj_plant` | 15: 12 leaves, 3 parts (room v3, 2026-11-01: 28, 25 leaves and 3 parts, see section 0) |
 | `obj_frames` | 9: 3 frames × 3 |
 | `obj_monitor` | 5 |
 | `obj_mic` | 4 |
