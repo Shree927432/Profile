@@ -170,6 +170,26 @@ def build_plants(lite=False):
     return new
 
 
+# 2026-11-02: the window (blender/components/window.py: the owner's white casement pair, the window board, the
+# architrave, the white net curtains on a ceiling track) replaces the blockout's aluminium window, grill and stone
+# ledge; built live (rich here, lite=True in build_v3.py) at plan v3's WINDOW_V3 (WINDOW=0 keeps the stand-in).
+WINDOW = os.environ.get("WINDOW", "plan")
+
+
+def build_window(lite=False):
+    """The window in its own collection 'window', in place of the blockout's stand-in."""
+    sys.path.insert(0, os.path.join(BL, "components"))
+    import window as WN
+    WN.replace_standin()
+    col = bpy.data.collections.get("window") or bpy.data.collections.new("window")
+    if col.name not in bpy.context.scene.collection.children:
+        bpy.context.scene.collection.children.link(col)
+    root, rep = WN.build(lite=lite, collection=col)
+    WN.place(lambda n: bpy.data.objects[n], P)
+    rep["clearances"] = WN.clearances()
+    return rep
+
+
 def M_at(x, y, z=0.0, yaw=0.0):
     return Matrix.Translation((x, y, z)) @ Matrix.Rotation(math.radians(yaw), 4, "Z")
 
@@ -499,6 +519,8 @@ def main():
         build_returndesk()
     if PLANTS != "0":
         build_plants()
+    if WINDOW != "0":
+        build_window()
     BO.lights()
     append_rich()
     music = music_side()
@@ -586,7 +608,12 @@ def main():
             bpy.data.objects.remove(o, do_unlink=True)
         bpy.data.collections.remove(col)
         build_plants(lite=True)
-    drop = {"sky", "ground", "ceiling"}
+    if WINDOW != "0":                                # the window: rich out, lite in
+        col = bpy.data.collections.get("window")
+        for o in list(col.all_objects):
+            bpy.data.objects.remove(o, do_unlink=True)
+        build_window(lite=True)
+    drop ={"sky", "ground", "ceiling"}
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:
         if o.type in ("MESH", "EMPTY") and o.name not in drop and not o.name.startswith("city_"):

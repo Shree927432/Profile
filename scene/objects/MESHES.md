@@ -43,7 +43,8 @@ under `chair_swivel`).
 | `obj_guitars` | `guitar_01`..`_06` (empties) with `guitar_NN_body`; `guitar_02_strings`, `guitar_04_strings` (the two built guitars); 01, 03, 05, 06 are flat stand-in outlines without strings until they are built; `guitars_static` (stand-in hooks and rack) |
 | `obj_plant` | the young monstera on the sill (2026-11-01, `blender/components/plants.py`, a downloaded model): `plant_pot` (terracotta), `plant_soil`, `plant_leaf_01`..`_25` (blade + petiole, one mesh each, largest first, the youngest last; origin where the petiole meets the stem or the crown, so grow = scale from 0 there, sway = a small rotation there; 23 at the petiole's foot, 21 and 24 have no petiole in the model and sit at the blade's nearest point on a stem; all 25 share one material, alpha-tested), `plant_static` (stem stubs at the crown). Pot, soil and `plant_static` are in the dusk bake; the leaves are lit by the environment map. The leaves are not batched (scene/batch.js has no group for them): one draw call per leaf in view |
 | `set_plants` | `plants_static`: the snake plant (our own model since 2026-11-01: 12 leaves, matte white pot, one atlas material) and the small desk plant (a zebra haworthia, downloaded), plants.py, one textured material each |
-| `obj_window`, `obj_light`, `set_city`, `set_rug` | stand-ins: `window_static` (frame, grill, ledge), `light_shade`, `light_static`, `city_static` (sky, ground and blocks, scaled to sit inside 30 m), `rug_static`. `window_sky`, `window_glass`, `window_beam` do not exist yet |
+| `obj_window` | the owner's casement pair and white net curtains (2026-11-02, `blender/components/window.py`, lite built live): `window_sash_1`, `window_sash_2` (proposed; origin on the hinge line, see the `obj_window` section), `window_glass`, `window_curtains` (both net panels), `window_static` (frame, board, architrave, track). All but the glass are baked. `window_sky`, `window_beam` do not exist yet |
+| `obj_light`, `set_city`, `set_rug` | stand-ins: `light_shade`, `light_static`, `city_static` (sky, ground and blocks, scaled to sit inside 30 m), `rug_static` |
 
 Replaced by the names above (the components' own names): `frame_NN` with two digits by
 `frame_N`; `studio_dj_N_*` by `dj_*` (`l`/`r` for decks 1/2, more knobs, `dj_xfader`
@@ -425,9 +426,11 @@ which works.
 | Name | What | Code does | Pivot / origin |
 |---|---|---|---|
 | `window_sky` | plane just outside the glass | screen: sky painted from Pune's real time and weather | screen rules, aspect of the opening |
-| `window_glass` | the panes | transparent; rain drawn on it later | — |
+| `window_glass` | the panes of both sashes, one mesh (one quad per sash in the GLB; a double-glazed unit in Blender), alpha-blended, single-sided, not baked | transparent; rain drawn on it later. If a sash ever opens, its glass needs splitting first | — |
+| `window_sash_1`, `window_sash_2` | proposed 2026-11-02: the two casement sashes (left, right) with their glazing bars, lever and hinge knuckles; one mesh each, one shared palette material; baked closed | nothing yet; could open one later | on the hinge line: sash 1 at the left outer edge, sash 2 at the right, 7.5 mm in front of the sash face, at the sash's bottom; local +Z is the hinge axis. Opening into the room: sash 1 turns negative about Z, sash 2 positive (the monstera on the board stops sash 2 at a small angle) |
 | `window_beam` | soft light shaft from the window to the floor | additive, not baked. Hidden while the real sun is down (so at 5:40 a.m.); code fades it in by the sun's height | — |
-| `window_static` | frame, sill, blind, curtains | — | — |
+| `window_curtains` | proposed 2026-11-02: both white net curtains, one mesh, one material (a tiling weave texture, alphaMode BLEND, double-sided: three.js draws it in two passes, back faces then front). Baked, with its own unfolded lightmap layout | nothing (a sway could come later) | the window's root |
+| `window_static` | outer frame, window board, apron, architrave, ceiling track (2026-11-02, `blender/components/window.py`; Blender names `window_frame`, `window_board`, `window_architrave`, `window_track`); one palette material (white, black) | — | — |
 
 ### `obj_plant`: plant on the sill
 

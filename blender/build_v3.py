@@ -9,7 +9,8 @@ is untouched) for every placement, and the v3 blockout (through the room test) f
 the city and the stand-ins. Then:
   - the lite components replace the blockout's boxes: desk, screens, speakers, PC (their lite GLBs),
     arms, desk-top group, chair, wall group, return desk (built live with lite=True), the lite piano and
-    guitars 02 and 04 (their lite GLBs), the three plants (plants-lite.glb, blender/components/plants.py);
+    guitars 02 and 04 (their lite GLBs), the three plants (plants-lite.glb, blender/components/plants.py), the
+    window with its board, architrave and net curtains (built live with lite=True, blender/components/window.py);
   - organise(): every object goes under its root from scene/objects/MESHES.md (obj_* / set_*), `_lite`
     is dropped from names, the code-facing names stay separate meshes, everything else under a group is
     joined into `<group>_static` (one mesh per group, one primitive per material);
@@ -18,8 +19,7 @@ the city and the stand-ins. Then:
   - saves blender/out/room_v3.blend (pack_and_save) and exports scene/assets/room.glb with Draco and WebP;
   - stills (EEVEE) into video-local/footage/2026-10-31-room-v3/.
 Stand-ins still from the blockout (no component yet): guitars 01, 03, 05, 06 (flat outlines), the guitar
-rack and hooks, the window frame, ledge and grill, the city, the ceiling light (obj_light), the felt desk mat,
-the rug, the door.
+rack and hooks, the city, the ceiling light (obj_light), the felt desk mat, the rug, the door.
 """
 import json
 import math
@@ -91,7 +91,8 @@ def build():
     RT.build_wall(lite=True)
     RT.build_returndesk(lite=True)
     RT.build_plants(lite=True)
-    log("live components (lite), plants")
+    RES["window"] = RT.build_window(lite=True)
+    log("live components (lite), plants, window")
     RT.import_lite()
     RES["music"] = RT.music_side()
     log(f"lite GLBs, music side {RES['music'].get('ok')}")
@@ -112,7 +113,7 @@ KEEP = re.compile(
     r"|desk_led|desk_drawers_\d\d_drawer_\d\d|kb_key_[a-z0-9]+|kb_knob|mouse_wheel"
     r"|mic_(body|led)|keylight_\d_glow|cam_screen_lcd"
     r"|frame_\d_(border|picture)|neon|neon_glow|neon_halo|pegboard_glow|nanoleaf_panel_\d\d"
-    r"|laptop_screen|light_shade|plant_(pot|soil|leaf_\d\d)"
+    r"|laptop_screen|light_shade|plant_(pot|soil|leaf_\d\d)|window_(sash_\d|glass|curtains)"
     r"|piano_(key_[a-g]s?\d|fallboard|lid|interior|strings|hammers|sheet)"
     r"|guitar_0\d_(body|strings))$")
 GROUPS = {f"frame_{i}" for i in (1, 2, 3)} | {f"guitar_0{i}" for i in range(1, 7)} | {"chair_swivel"}
@@ -127,11 +128,11 @@ TOP_ROOT = {
     "pegboard_root": "set_wall", "neon_root": "set_wall", "nanoleaf_root": "set_wall", "mstand_root": "set_laptop",
     "guitar_02": "obj_guitars", "guitar_04": "obj_guitars", "rug": "set_rug",
     "floor": "set_room", "ceiling": "set_room", "door": "set_room", "wall_front": "set_room", "wall_right": "set_room",
-    "ledge": "obj_window", "sky": "set_city", "ground": "set_city",
+    "sky": "set_city", "ground": "set_city",
     "pendant_cord": "obj_light", "pendant_shade": "obj_light",
 }
-TOP_PREFIX = [("wall_l_", "set_room"), ("wb_", "set_room"), ("sk_", "set_room"), ("win_frame", "obj_window"),
-              ("grill", "obj_window"), ("city_", "set_city"), ("hook", "obj_guitars"), ("rack_", "obj_guitars")]
+TOP_PREFIX = [("wall_l_", "set_room"), ("wb_", "set_room"), ("sk_", "set_room"),
+              ("city_", "set_city"), ("hook", "obj_guitars"), ("rack_", "obj_guitars")]
 RENAME = {"pendant_shade": "light_shade", "pendant_cord": "light_cord"}
 
 
@@ -216,6 +217,18 @@ def plants():
         bpy.data.objects.remove(e, do_unlink=True)
 
 
+def window():
+    """The window component's root (window.py): its parts to obj_window; the sashes and the glass stay separate
+    meshes (KEEP), and so do the curtains (window_curtains: baked with their own lightmap layout); the frame, board,
+    architrave and track join into window_static."""
+    e = bpy.data.objects.get("window")
+    if e is None:
+        return
+    for o in list(e.children):
+        reparent(o, root("obj_window"))
+    bpy.data.objects.remove(e, do_unlink=True)
+
+
 def organise():
     for o in bpy.data.objects:                # the room test hides the piano's camera anchors for its renders
         if o.type == "EMPTY":
@@ -237,6 +250,7 @@ def organise():
     outside_city()
     guitar_standins()
     plants()
+    window()
     # flatten the component roots that MESHES.md does not have
     for o in list(bpy.data.objects["screens"].children):
         n = o.name
@@ -408,7 +422,7 @@ def make_palette(word, k, cells, rep):
 
 # code-facing meshes whose materials nothing drives by colour: their flat materials collapse too, and meshes with
 # the same cells share one palette (the fans), so the load-time batching (scene/batch.js) can draw them together
-PALETTE_EXTRA = re.compile(r"^(rig_(case|gpu|fan_\d\d|gpu_fan_\d\d)|mic_body)$")
+PALETTE_EXTRA = re.compile(r"^(rig_(case|gpu|fan_\d\d|gpu_fan_\d\d)|mic_body|window_sash_\d)$")   # the sashes share one
 
 
 def palettes():
@@ -510,7 +524,8 @@ def check_names():
             "camera_about", "camera_about_target", "camera_phone", "camera_phone_target", "rig_screen", "mic_body",
             "kb_key_a", "dj_jog_l", "chair_swivel", "frame_1_picture", "laptop_screen", "guitar_02_body",
             "piano_view", "piano_view_target", "piano_inside_view", "piano_inside_view_target",
-            "plant_pot", "plant_soil", "plant_leaf_01", "plant_static", "plants_static"]
+            "plant_pot", "plant_soil", "plant_leaf_01", "plant_static", "plants_static",
+            "window_static", "window_sash_1", "window_sash_2", "window_glass", "window_curtains"]
     missing = [n for n in need if n not in bpy.data.objects]
     multi = [o.name for o in exported if o.type == "MESH" and KEEP.match(o.name) and len(o.data.materials) > 1]
     RES["names"] = dict(bad=bad, roots=roots, missing=missing, keep_multi_material=multi)

@@ -1,7 +1,7 @@
 """Dusk in Pune: the room's light (2026-11-01, the lighting pass). Used by blender/build_v3.py (stage `dusk`).
 
 Felix's method, fitted to our pipeline: Cycles lights the room, the light is baked, the browser draws the bake.
-  - lights(): a low warm sun through the window (WINDOW_V3) and its grill, the window's sky as a soft area light, a
+  - lights(): a low warm sun through the window (WINDOW_V3) and its glazing bars, the window's sky as a soft area light, a
     dim world, and the room's own lights as real sources matched to their glowing parts: the two key lights
     (dimmed, warm white), the Studio Display and the G8, the neon (white), the Nanoleaf (blue-white), the pegboard
     backlight (blue, aimed at the wall), the PC (blue-white, inside the case). The desk LED strip and the other
@@ -37,8 +37,14 @@ SUN_ELEV = 11.0
 SUN = dict(strength=26.0, color=(1.0, 0.47, 0.20), angle=0.8)
 WORLD = (0.030, 0.040, 0.075)
 # the sill plant (2026-11-01): pot, soil and the leafless stems (plant_static) are baked; plant_leaf_NN grow and sway
+# the window (2026-11-02): window_static (frame, board, architrave, track, the net curtains) and the two sashes are
+# baked (closed; if the site ever opens one, its baked light turns with it); window_glass is not (env reflections only);
+# the net curtains (window_curtains) are baked with their own unfolded layout (LM_PRE, see lightmap_uvs)
 BAKE = re.compile(r"^(?!(chair|city|frame_\d|guitar_0\d)_static$)(.+_static|monitor_body|rig_case|rig_gpu|"
-                  r"studio_speaker_0\d|mic_body|plant_pot|plant_soil)$")
+                  r"studio_speaker_0\d|mic_body|plant_pot|plant_soil|window_sash_\d|window_curtains)$")
+# the window's sky light sits behind the glass (2026-11-02, window.py: frame 8-15 cm into the 23 cm opening), so the
+# frame and the glazing bars shade it as they shade the sun; it was 6 cm in, in front of the old frame
+SKY_Y = 0.20
 EXPOSURE = -1.3                       # the stills' exposure (the site sets its own)
 ENV_AT = (-1.05, 0.95, 1.20)          # above the desk's corner, in free air, near the hero target
 # the music side (2026-11-01, the owner: fix the dark About view): the lightstick's watts, the hidden fill (Blender
@@ -101,8 +107,10 @@ def lights(P):
     so.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
     # the sky in the window: amber low, lilac-blue high (one soft rectangle in the opening, facing in)
     wx, wz = (W["x0"] + W["x1"]) / 2, (W["sill"] + W["head"]) / 2
-    _lamp("lt_dusk_sky", "AREA", (wx, P.RY + 0.06, wz), (0, -1, -0.15), 20, (0.66, 0.70, 1.0),
+    _lamp("lt_dusk_sky", "AREA", (wx, P.RY + SKY_Y, wz), (0, -1, -0.05), 20, (0.66, 0.70, 1.0),   # less tilt: clear of the frame
           W["x1"] - W["x0"], W["head"] - W["sill"])
+    sky = bpy.data.objects["lt_dusk_sky"]
+    sky.visible_transmission = False                # never a sheet of light seen through a true-glass pane
     ob = bpy.data.objects
     # key lights: the panel's glow faces the desk; dimmed, warm white (about 3200 K)
     for k in (1, 2):
@@ -290,7 +298,76 @@ def lightmap_uvs(objs, margin=0.0015):
                                       correct_aspect=False, scale_to_bounds=False)
         r2 = "smart project packs"                 # pack_islands squeezed it into a 0.2-wide column (2026-11-01)
         bpy.ops.object.mode_set(mode="OBJECT")
-    log(f"lightmap UVs on {len(objs)} meshes: {r1} {r2}, in edit: {sum(1 for o in objs if o.data.uv_layers.active.name == 'LM')}")
+    pre = _place_pre(objs, margin)
+    log(f"lightmap UVs on {len(objs)} meshes: {r1} {r2}, in edit: {sum(1 for o in objs if o.data.uv_layers.active.name == 'LM')}"
+        f"{', pre-made: ' + pre if pre else ''}")
+
+
+def _uv_world_areas(o, layer):
+    import numpy as np
+    me = o.data
+    me.calc_loop_triangles()
+    n = len(me.loop_triangles)
+    if not n:
+        return 0.0, 0.0
+    co = np.empty(len(me.vertices) * 3, np.float32)
+    me.vertices.foreach_get("co", co)
+    co = co.reshape(-1, 3)
+    M = np.array(o.matrix_world)
+    co = co @ M[:3, :3].T + M[:3, 3]
+    tv = np.empty(n * 3, np.int32)
+    me.loop_triangles.foreach_get("vertices", tv)
+    tl = np.empty(n * 3, np.int32)
+    me.loop_triangles.foreach_get("loops", tl)
+    uv = np.empty(len(me.loops) * 2, np.float32)
+    me.uv_layers[layer].data.foreach_get("uv", uv)
+    uv = uv.reshape(-1, 2)
+    p = co[tv].reshape(n, 3, 3)
+    a3 = 0.5 * np.linalg.norm(np.cross(p[:, 1] - p[:, 0], p[:, 2] - p[:, 0]), axis=1).sum()
+    q = uv[tl].reshape(n, 3, 2)
+    e1, e2 = q[:, 1] - q[:, 0], q[:, 2] - q[:, 0]
+    a2 = 0.5 * np.abs(e1[:, 0] * e2[:, 1] - e1[:, 1] * e2[:, 0]).sum()
+    return float(a2), float(a3)
+
+
+def _place_pre(objs, margin):
+    """Meshes that bring their own lightmap layout (a UV layer LM_PRE in metres, e.g. window.py's curtains, whose folds
+    smart project cuts into strips a texel or two wide) keep it: the smart-projected atlas is shrunk by s towards
+    the origin, and the pre-made layouts go into the freed strip on the right at the atlas's texel density. LM_PRE is
+    removed (it must not reach the GLB)."""
+    import numpy as np
+    pre = [o for o in objs if "LM_PRE" in o.data.uv_layers]
+    if not pre:
+        return ""
+    rest = [o for o in objs if o not in pre]
+    a2 = a3 = 0.0
+    for o in rest:
+        x, y = _uv_world_areas(o, "LM")
+        a2, a3 = a2 + x, a3 + y
+    d = math.sqrt(a2 / a3)                          # atlas units per metre
+    blocks, wb, hb = [], 0.0, 0.0
+    for o in pre:
+        uv = np.empty(len(o.data.loops) * 2, np.float32)
+        o.data.uv_layers["LM_PRE"].data.foreach_get("uv", uv)
+        uv = uv.reshape(-1, 2)
+        uv -= uv.min(axis=0)
+        blocks.append((o, uv, wb))
+        wb += float(uv[:, 0].max()) + 0.05
+        hb = max(hb, float(uv[:, 1].max()))
+    s = (1 - 3 * margin) / (1 + wb * d)
+    k = min(d * s, (1 - 2 * margin) / hb)
+    for o in rest:
+        lm = o.data.uv_layers["LM"]
+        uv = np.empty(len(o.data.loops) * 2, np.float32)
+        lm.data.foreach_get("uv", uv)
+        lm.data.foreach_set("uv", uv * s)
+    for o, uv, x0 in blocks:
+        out = np.empty_like(uv)
+        out[:, 0] = s + margin + (uv[:, 0] + x0) * k
+        out[:, 1] = margin + uv[:, 1] * k
+        o.data.uv_layers["LM"].data.foreach_set("uv", out.ravel())
+        o.data.uv_layers.remove(o.data.uv_layers["LM_PRE"])
+    return f"{[o.name for o in pre]} at {k / d:.2f}x the density, the rest shrunk to {s:.3f}"
 
 
 def bake(objs, path, size=2048, samples=96):
@@ -338,6 +415,19 @@ def bake(objs, path, size=2048, samples=96):
     t0 = time.time()
     bpy.ops.object.bake(type="DIFFUSE", pass_filter={"DIRECT", "INDIRECT"}, margin=4, use_clear=True)
     log(f"baked {size}px {samples} spp in {time.time() - t0:.0f} s")
+    # a see-through material (the net curtains, 2026-11-02) bakes its opacity into alpha (about 0.4), while the RGB is
+    # its light, not premultiplied (checked against a plain white plane). encode_dusk.py reads alpha > 0.5 as baked,
+    # so every covered texel is marked fully covered here.
+    import numpy as np
+    px = np.empty(size * size * 4, np.float32)
+    img.pixels.foreach_get(px)
+    al = px[3::4]
+    part = int(((al > 0) & (al < 0.5)).sum())
+    al[al > 0] = 1.0
+    px[3::4] = al
+    img.pixels.foreach_set(px)
+    if part:
+        log(f"{part} texels of see-through surfaces marked as baked")
     img.filepath_raw = path
     img.file_format = "OPEN_EXR"
     img.save()

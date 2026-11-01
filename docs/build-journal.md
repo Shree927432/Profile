@@ -995,3 +995,21 @@ site or the room. Keep each entry short. No polishing; the post does that.
   Laurentii pattern, a matte white pot matched to the mic arm's white). First paint read as wood grain (band spacing
   drifting with noise); fixed with one 19 mm period bent by smooth noise. Web version 1,824 tris, crisp. Room download
   2.99 -> 2.91 MB, draw calls unchanged. A downloaded model is not automatically better: the scan was real, ours fits.
+
+## 2026-11-02
+
+- The window: the owner sent a photo of a white uPVC casement ("you can use this design and I want white net curtains").
+  Before anything was modelled, two changes came through the coordinator: "the frames of each panel are too narrower,
+  I would say" (outer frame 5 cm, stiles 6.5, bottom rail 8, bars 2.5) and "Instead of four panels, can we create two
+  panels?" (a French pair). Designer (Opus) wrote blender/components/window.py: rich 118,840 tris (bevels, a
+  double-glazed unit, gaskets, three-knuckle hinges, shaped levers, drain caps, curtain folds with heading and hem),
+  lite 4,608 for the web. The grill is gone; the sun's streaks now carry the glazing bars' grid.
+- What went wrong, in order. The glTF exporter skipped the net's texture (it only follows an output targeted ALL, not
+  EEVEE). Crossing glazing bars rendered black squares (coplanar faces). In the browser the first curtains looked like
+  glass strips: the lightmap's smart project had cut every fold into islands a texel or two wide, the bake had written
+  the net's opacity (0.4) into the lightmap's alpha so the encoder threw its light away, and the default specular lit
+  the fold edges. A small bake test (net beside a white plane under one sun) showed the baked colour is the light, not
+  premultiplied. Fixed with a pre-made unfolded lightmap layout for the curtains, every covered texel marked as baked,
+  no specular. One wrong guess: I blamed the glass for a haze over the city in the page's intro; hiding the glass
+  changed nothing, the haze is the no-bloom render path's backdrop.
+- Hero draw calls 103 -> 108, phone 86 -> 88, room download 2.91 -> 2.95 MB. Three 10-minute bakes, on AC.

@@ -236,3 +236,10 @@ next to the clips it renders.
   in git history. A screen recording of the first load and the glide into the posts screen is worth capturing once the
   lighting pass lands.
 
+
+## Update 2026-11-02: the new window
+
+- The INTRO shot now looks through a white casement pair (3 x 4 panes per sash, black levers at the centre) with white
+  net curtains at both edges of the frame; the city reads in tall panes instead of between grill bars. The dawn section's
+  "plant on the sill" now stands on a white window board. The left curtain glows when the low sun is behind it: a good
+  close shot. Before/after stills: `video-local/footage/2026-11-01-window/sheet-intro.jpg`, `sheet-hero.jpg`.
