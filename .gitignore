@@ -32,3 +32,9 @@ __pycache__/
 # blender/assets/plants/README.md lists each one's source and licence, to download again.
 blender/assets/plants/*/
 !blender/assets/plants/README.md
+
+# Downloaded headphones model (2026-11-02): the full original stays local; README lists the source.
+blender/assets/headphones/*.glb
+
+# Downloaded car models (2026-11-02): full originals stay local; README lists sources.
+blender/assets/cars/*/
