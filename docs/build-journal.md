@@ -1013,3 +1013,10 @@ site or the room. Keep each entry short. No polishing; the post does that.
   no specular. One wrong guess: I blamed the glass for a haze over the city in the page's intro; hiding the glass
   changed nothing, the haze is the no-bloom render path's backdrop.
 - Hero draw calls 103 -> 108, phone 86 -> 88, room download 2.91 -> 2.95 MB. Three 10-minute bakes, on AC.
+
+## 2026-11-02
+
+- The four waiting components went to the owner as photo-vs-model sheets, with my honest read of each. Approved: the
+  return desk and the keyboard legends. The chair "for now" (its side view is the weak one, the same chair the essay is
+  about). The wall group except the headphones, whose cups read as mugs with no ear pads. Sketchfab has a free CC BY
+  white ATH-M50x (tejay21, 396k tris) that looks right; the owner downloads it (login), then rich/lite as the plants.
