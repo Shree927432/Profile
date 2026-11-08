@@ -88,6 +88,52 @@ export function applyRoomLight(THREE, { renderer, scene, room, light, exposure }
   return { baked: nBaked };
 }
 
+// The car display (2026-11-08, scene/assets/cars.glb): the first deferred asset. Its own lightmap from the same dusk
+// rig (blender/components/cars.py), written next to the room's as cars-light.json + cars-lightmap.webp, decoded the
+// same way (light = texel * max, times the room's exposure). cars_static is one mesh with one palette material (one
+// draw call) and a second UV set for the lightmap; cars_shadow is a card 1 mm off the wall whose alpha is how much
+// the shelves darken the wall (baked as a ratio, so the room's own lightmap stays as it is): drawn black, unlit.
+const CARS_LIGHT_URL = "/scene/assets/dusk/cars-light.json";
+
+export async function loadCarsLight(THREE) {
+  const res = await fetch(CARS_LIGHT_URL);
+  if (!res.ok) throw new Error("no " + CARS_LIGHT_URL);
+  const json = await res.json();
+  const base = CARS_LIGHT_URL.slice(0, CARS_LIGHT_URL.lastIndexOf("/") + 1);
+  const lightMap = await new THREE.TextureLoader().loadAsync(base + json.lightmap.file);
+  lightMap.flipY = false;
+  lightMap.channel = 1;
+  lightMap.colorSpace = THREE.SRGBColorSpace;
+  return { json, lightMap };
+}
+
+// root: the loaded cars.glb scene. exposure: the room's (room-light.json, or the &exp override). Returns the
+// materials to fade in.
+export function applyCarsLight(THREE, { root, light, exposure }) {
+  const mats = [];
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    const src = o.material;
+    if (o.name === "cars_shadow") {
+      o.material = new THREE.MeshBasicMaterial({
+        color: 0x000000, map: src.map, transparent: true, depthWrite: false,
+        polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
+      });
+      o.renderOrder = 1;
+    } else if (light && o.geometry.attributes.uv1 && src.isMeshStandardMaterial) {
+      const m = src.clone();
+      m.lightMap = light.lightMap;
+      m.lightMapIntensity = Math.PI * light.json.lightmap.max * exposure;
+      m.onBeforeCompile = (s) => bakedShader(s, THREE);
+      m.customProgramCacheKey = () => "baked-dusk";
+      o.material = m;
+    }
+    if (o.material !== src) src.dispose();
+    mats.push(o.material);
+  });
+  return mats;
+}
+
 // Bloom on desktop: RenderPass -> UnrealBloomPass -> OutputPass (tone mapping and sRGB move into OutputPass).
 // The render target keeps 4x MSAA. Only parts brighter than the threshold glow: the emissives, the sun's patch.
 export async function createBloom(THREE, { renderer, scene, camera, strength, radius, threshold }) {

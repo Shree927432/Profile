@@ -15,7 +15,7 @@
 //   CONSECUTIVE drawn frames (motion). Idle gaps are not frame times. With reduce true auto
 //   stays on full.
 //
-// API: mode, fps (rolling, last value measured during motion, 0 before any), rung ({ pixelRatio, bloom }),
+// API: mode, fps (rolling, last value measured during motion, 0 before any), rung ({ pixelRatio, bloom }), lowest,
 //      frame(dtMs), set(mode), pause(), resume(). apply({ pixelRatio, bloom }) is called on every
 //      change, and once when created.
 
@@ -100,6 +100,8 @@ export function createQuality({ dpr = 1, reduce = false, apply, bloom = false })
     get mode() { return mode; },
     get fps() { return fps; },
     get rung() { return { pixelRatio: rung.pixelRatio, bloom: rung.bloom }; },
+    // The ladder's bottom rung (auto stepped all the way down): extras such as the car display stay off.
+    get lowest() { return mode !== "smooth" && rungs.length > 1 && rung === rungs[rungs.length - 1]; },
 
     // dtMs: real time since the previous rendered frame.
     frame(dtMs) {

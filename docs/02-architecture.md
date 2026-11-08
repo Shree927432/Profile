@@ -74,6 +74,24 @@ Mechanics, copied on purpose from the reference:
 - Quality ladder: full / auto / smooth, auto drops resolution when fps drags.
 - Audio: Web Audio graph with one gain bus per source.
 
+## Deferred assets (2026-11-08, the car display first)
+
+The room's first load has a budget (about 3 MB, about 3 s on 4G). Anything that is not
+needed for the first picture ships as its own file and loads after the room is on screen:
+
+- Its own GLB in `scene/assets/` (Draco, WebP), with its own baked light next to the room's
+  (`scene/assets/dusk/<name>-light.json` + `<name>-lightmap.webp`, the same dusk rig and the
+  same decoding, the room's exposure applies). It never changes `room.glb` or its lightmap;
+  a contact shadow it casts on the room is a card in its own file (black, alpha = 1 - baked
+  ratio of the light with and without it), not a room rebake.
+- `desktop.js` asks for it only after the first frames have drawn (a few animation frames,
+  then `requestIdleCallback`), so the first load pays nothing.
+- It fades in (opacity, under a second); under `prefers-reduced-motion` it just appears.
+- It is skipped on the quality ladder's bottom rung (`quality.lowest`) and hidden if the
+  ladder steps down to it later; never loaded for the placeholder room or the static site.
+- Draw calls: one mesh, one palette material where possible, as the room's statics.
+- The static site never depends on it; the room never waits for it.
+
 ## Build order dependency
 
     content  →  static site  →  hook  →  2D screen object (no 3D)

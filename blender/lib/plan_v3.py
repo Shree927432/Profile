@@ -196,6 +196,14 @@ LAPTOP_AT = (RET["x1"] - 0.24, WB - 0.29)
 LAPTOP_YAW = _aim(*LAPTOP_AT, *SEAT)             # turned to the chair, as in the photo
 PEG = dict(w=0.76, h=0.56, x1=WINDOW_V3["x0"] - 0.06, z=1.28, off=0.04)   # SKADIS, 4 cm off the wall, backlit
 PEG["x"] = PEG["x1"] - PEG["w"] / 2
+# The car display (2026-11-08, owner: "B + Dusk"): two slim white floating shelves on the back wall above the light
+# panels, left of the neon; four 1:18 cars (blender/components/cars.py), its own deferred GLB (scene/assets/cars.glb).
+# Numbers only: nothing in build_v3.py reads this, so the room's GLB does not change. x0..x1 along the back wall,
+# under = each shelf's underside (bottom first), rows = the cars left to right (nose to +X, towards the window).
+# The bottom shelf's underside sits 12.5 cm over key light 2's panel (28 px in the hero at 900 px); the shelves end
+# 23 cm short of the neon's acrylic and clear of the pegboard's blue halo.
+CARS_SHELF = dict(x0=-1.93, x1=-1.29, d=0.14, t=0.025, under=(2.03, 2.26),
+                  rows=(("gt3", "porsche"), ("w17", "one")), car_h=0.071)
 
 # ---------------------------------------------------------------------------
 # The music side (the secret): piano on the right wall, the three wall guitars over its lid,
@@ -706,6 +714,26 @@ def run_checks():
     chk("PC top to the light panels", CP["nanoleaf"]["at"][2] - (TOP + PC_SIZE[2]), 0.05)
     chk("pegboard to the light panels", (PEG["x"] - PEG["w"] / 2) - (CP["nanoleaf"]["at"][0] + CP["nanoleaf"]["size"][0] / 2), 0.03)
     chk("neon top to the ceiling", H - (CP["neon"]["at"][2] + CP["neon"]["size"][2]), 0.50)
+    # 8b. the car display (CARS_SHELF): clear of the neon, key light 2, the light panels, the pegboard's halo, the
+    # frames shelf; in the hero frame and partly on the phone; out of the music side's About frame
+    cs_ = CARS_SHELF
+    neon_x0 = CP["neon"]["at"][0] - CP["neon"]["size"][0] / 2
+    chk("car shelves to the neon's acrylic (side)", neon_x0 - cs_["x1"], 0.15)
+    kl2_top = KL_Z + KL_PANEL[2]
+    chk("bottom car shelf over key light 2's panel", cs_["under"][0] - kl2_top, 0.10)
+    chk("bottom car shelf over the light panels", cs_["under"][0] - (CP["nanoleaf"]["at"][2] + CP["nanoleaf"]["size"][2]), 0.15)
+    chk("bottom car shelf over the pegboard's halo (top at 2.01, from x -1.26)", cs_["under"][0] - 2.01 if cs_["x1"] > -1.26 else 1.0, 0.0)
+    chk("car shelves to the frames shelf's end (x)", cs_["x0"] - SHELF["x1"], 0.0)
+    chk("car shelves: air over the bottom cars", cs_["under"][1] - (cs_["under"][0] + cs_["t"] + cs_["car_h"]), 0.12)
+    chk("top cars to the ceiling", H - (cs_["under"][1] + cs_["t"] + cs_["car_h"]), 0.50)
+    hero = cams()["hero"]
+    tops = [(x, RY - 0.07, cs_["under"][1] + cs_["t"] + cs_["car_h"]) for x in (cs_["x0"], cs_["x1"])]
+    chk("hero sees the top cars (share of their corners in frame)", sum(hero.visible(p) for p in tops) / 2 - 1.0, 0.0)
+    kl_px = (hero.ndc(hero.cam((-1.307, 1.52, kl2_top)))[1], hero.ndc(hero.cam((cs_["x1"], RY - cs_["d"], cs_["under"][0])))[1])
+    chk("hero: bottom car shelf over key light 2 (px at 900)", (kl_px[1] - kl_px[0]) * 450 / 100, 0.20)
+    ph = Cam(HERO_V3["pos"], (-1.90, YM, 1.44), HERO_V3["portrait_vfov"], 375 / 812)   # the site's phone frame
+    chk("phone sees the left cars (top shelf's left end in frame)", 0.0 if ph.visible((cs_["x0"] + 0.05, RY - 0.07, cs_["under"][1] + 0.05)) else -1.0, 0.0)
+    chk("About: car display out of frame", 0.0 if not cams()["about"].visible((cs_["x1"], RY - 0.07, cs_["under"][0])) else -1.0, 0.0)
     # 9. the music side
     WG = WALL_GUITARS_V3
     for i in range(2):

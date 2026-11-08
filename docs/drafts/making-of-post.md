@@ -96,6 +96,7 @@ follows Pune's real time and weather. Link to the room. -->
 <!-- NOTE 2026-11-01: then the downloaded snake plant scan lost to one we made in code: the scan was real but jagged on the web and its pot clashed with the white desk. -->
 <!-- NOTE 2026-11-02: the window came from a photo the owner sent; two changes (thicker frames, two panels instead of four) arrived before a single frame was modelled. The net curtains looked like glass strips in the browser until the lightmap stopped cutting each fold into slivers. -->
 <!-- NOTE 2026-11-02: the headphones came from a free model too (tejay21, CC BY). The brief said to delete its "Logo" mesh; it turned out to be a plain bracket holding the cup on, so it stayed. The web copy went from 395,000 triangles to 1,178, and the hard part was bytes, not triangles: marked hard edges alone doubled its size. -->
+<!-- NOTE 2026-11-08: four downloaded scale cars on a shelf, every logo removed by hand: some were stickers, some were parts, and the GT3's AMG mark was cut into the sills, so it got a new skin. The shelf is the first thing that loads after the room, so the room stays fast. -->
 <!-- NOTE 2026-10-21: Phase 4 began with a list of names, not a model: 88 piano keys
 named by note so the code can play them, because names are the only thing the
 Blender file and the website share. -->

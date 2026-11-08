@@ -1041,3 +1041,28 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - 2026-11-08: the headphones rebake waited five days for power (the bake stopped at 21 % battery on 11-02, and the
   charger was not reaching the Mac on 11-03). Rebaked with the sharper web version (about 1,550 tris); room download
   about 2.95 MB, 107 draw calls at 1024 x 768. Approved: "Approve, push".
+
+## 2026-11-08
+
+- The car display. Stage 1 put three placements and two liveries in front of the owner (options-placement.jpg,
+  options-livery.jpg); the owner chose "B + Dusk": the back wall above the light panels, left of the neon, and the
+  dusk colours. B was the crowded one, so the shelves moved: shorter (64 cm), 12.5 cm higher over key light 2 (33 px
+  of air in the hero instead of about 10), 23 cm clear of the neon, clear of the pegboard's blue halo. plan_v3 carries
+  the numbers and twelve new checks (all pass); build_v3 does not read them, so the room did not change.
+- blender/components/cars.py: rich keeps the four downloaded cars whole (1.5M faces, cars.blend 95 MB), repainted, with
+  the logos out: decal faces deleted, logo parts found by ray and island probes and deleted (the GT3's grille, bonnet
+  and boot stars, the ONE's rear star and the AMG letters on its fin, the Porsche's bonnet crest), and the GT3's AMG
+  mark, cut into both sills, covered by a paint-coloured skin laid on the sill. Lite: 46k tris, one mesh, one palette
+  material. Its own lightmap from the same dusk rig (7 s bake), a shadow card for the wall instead of a room rebake.
+  cars.glb 503 KB + 98 KB lightmap. Hero draw calls 108 -> 110, phone 88 -> 90. The cars ask to load right after the
+  room's first frames and appear 0.75 s later on localhost (fade included).
+- What went wrong. The stage-1 EEVEE stills were far darker than the approved Cycles ones (no bounce light); Cycles at
+  40 samples took 50 s a still, so the options were Cycles. One still took 54 minutes, a stall; a 150 s limit now.
+  The first lite was wreckage: torn panels, a spike out of the GT3's roof, the W17 missing. Two causes: the W17 was
+  copied before Blender updated the world matrices after the cars moved onto the shelves (it sat at the origin), and
+  the collapse was run on the raw game-style meshes with every UV seam and custom normal still splitting vertices.
+  Welding, clearing the normals and keeping the UV layers until after the collapse fixed it; see-through rim-blur discs
+  had turned into white wheels and now leave the lite. The shadow card first baked from behind (its face pointed at
+  the wall), so it was 59 % dark on average and invisible in the browser (back-face culled); turned round, 23 %.
+  The AMG ONE's "blue side strip" from stage 1 was the room's blue light on its gloss black, not paint.
+  Disk: free space fell from 3.7 to 1.4 GB during the day while my own outputs were about 100 MB; not found.

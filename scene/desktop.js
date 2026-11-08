@@ -41,7 +41,7 @@ import { createPickMap } from "./pick.js";
 import { batchRoom } from "./batch.js";
 import { createQuality, MODES } from "./quality.js";
 import { createGlide } from "./glide.js";
-import { loadRoomLight, applyRoomLight, createBloom } from "./room-light.js";
+import { loadRoomLight, applyRoomLight, createBloom, loadCarsLight, applyCarsLight } from "./room-light.js";
 
 const deg = THREE.MathUtils.degToRad;
 
@@ -88,6 +88,11 @@ const ROOM_FOV_PORTRAIT = 66;
 // The dusk light (2026-11-01, scene/room-light.js): bloom on desktop only (not on touch or narrow screens), and only
 // the top quality rung. threshold is in the scene's linear light after EXPOSURE (room-light.json).
 const BLOOM = { strength: 0.3, radius: 0.45, threshold: 1.0, minWidth: 768 };
+// The car display (2026-11-08): the first deferred asset. cars.glb (blender/components/cars.py) loads only after the
+// room is on screen and has drawn its first frames, when the browser is idle, so it costs the first load nothing. It
+// fades in over FADE_MS (reduced motion: it just appears). Not on the quality ladder's bottom rung (quality.lowest):
+// never loaded there, hidden if the ladder steps down to it later. &nocars leaves it out (measuring).
+const CARS = { url: "/scene/assets/cars.glb", fadeMs: 700, afterFrames: 3, idleTimeout: 1500 };
 
 export async function start({ canvas, content, overlay, params, reduce }) {
   const text = content.site.room;
@@ -121,9 +126,11 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     needsRender = true;
   }
   // Called by the quality ladder at start and on every change.
+  let carsRoot = null; // the car display once loaded (see loadCars)
   function applyQuality({ pixelRatio, bloom }) {
     bloomOn = !!bloom;
     setPixelRatio(pixelRatio);
+    if (carsRoot) carsRoot.visible = !quality.lowest; // quality exists by the time the cars do
   }
   const quality = createQuality({ dpr: window.devicePixelRatio || 1, reduce, apply: applyQuality, bloom: bloomAllowed });
 
@@ -137,6 +144,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   }
 
   let room;
+  let roomExposure = null; // the dusk light's exposure, for the deferred cars
   if (useGlb) {
     const [{ GLTFLoader }, { DRACOLoader }] = await Promise.all([
       import("three/addons/loaders/GLTFLoader.js"),
@@ -156,6 +164,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     const exp = parseFloat(params.get("exp") || ""); // &exp=0.5: tuning only
     const light = await lightLoad.catch((e) => { console.warn("room light:", e); return null; });
     if (light) applyRoomLight(THREE, { renderer, scene, room, light, exposure: Number.isFinite(exp) ? exp : undefined });
+    if (light) roomExposure = Number.isFinite(exp) ? exp : light.json.exposure;
     else scene.add(new THREE.HemisphereLight(0xcdd5e6, 0x8c8a86, 1.1)); // the bake files missing: plain light, still usable
     if (light && bloomAllowed) {
       post = await createBloom(THREE, { renderer, scene, camera, ...BLOOM });
@@ -649,6 +658,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   // the screen's frame() returning true, a resize, a quality change. Otherwise the tick is free.
   // The ladder is fed only with the gap between two consecutive drawn ticks, i.e. during motion.
   // Gaps around idle draws (the cursor blink) are not frame times and never reach it.
+  let carsFade = null; // { mats, t0 } while the cars fade in
   let last = 0; // time of the previous loop tick
   let lastDrew = false; // did the previous tick draw?
   function renderFrame(t) {
@@ -662,6 +672,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
       updateHover();
     }
     if (screenHandle.frame(t, dt)) { screenTexture.needsUpdate = true; needsRender = true; }
+    if (carsFade) stepCarsFade(t);
     const drew = needsRender;
     if (drew) {
       applyShift();
@@ -677,6 +688,59 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   function stop() { renderer.setAnimationLoop(null); quality.pause(); }
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
 
+  // ---- the car display (deferred) ----
+  // Fade: opacity 0 -> 1 with the materials briefly transparent; then opaque again (the shadow card stays blended).
+  function stepCarsFade(t) {
+    const k = Math.min(1, (t - carsFade.t0) / CARS.fadeMs);
+    const e = k * k * (3 - 2 * k);
+    for (const m of carsFade.mats) m.opacity = e;
+    if (k >= 1) {
+      for (const m of carsFade.mats) {
+        if (m.isMeshStandardMaterial) { m.transparent = false; m.needsUpdate = true; }
+      }
+      carsFade = null;
+    }
+    needsRender = true;
+  }
+  const carsTiming = { roomShown: 0, requested: 0, shown: 0, skipped: "" };
+  async function loadCars() {
+    if (quality.lowest) { carsTiming.skipped = "lowest rung"; return; }
+    carsTiming.requested = performance.now();
+    const [{ GLTFLoader }, { DRACOLoader }] = await Promise.all([
+      import("three/addons/loaders/GLTFLoader.js"),
+      import("three/addons/loaders/DRACOLoader.js"),
+    ]);
+    const draco = new DRACOLoader().setDecoderPath(DRACO_DECODER);
+    const [gltf, carLight] = await Promise.all([
+      new GLTFLoader().setDRACOLoader(draco).loadAsync(CARS.url),
+      loadCarsLight(THREE).catch((e) => { console.warn("cars light:", e); return null; }),
+    ]);
+    draco.dispose();
+    const root = gltf.scene;
+    const mats = applyCarsLight(THREE, { root, light: carLight, exposure: roomExposure ?? 1 });
+    if (!reduce) {
+      for (const m of mats) { m.transparent = true; m.opacity = 0; }
+      carsFade = { mats, t0: performance.now() };
+    }
+    scene.add(root);
+    carsRoot = root;
+    root.visible = !quality.lowest;
+    needsRender = true;
+    carsTiming.shown = performance.now() + (reduce ? 0 : CARS.fadeMs);
+  }
+  function scheduleCars() {
+    let frames = 0;
+    const idle = window.requestIdleCallback || ((f) => setTimeout(f, 200));
+    const wait = () => {
+      if (++frames < CARS.afterFrames) { requestAnimationFrame(wait); return; }
+      idle(() => loadCars().catch((e) => console.warn("cars:", e)), { timeout: CARS.idleTimeout });
+    };
+    requestAnimationFrame(wait);
+  }
+  if (window.roomDebug) window.roomDebug.cars = carsTiming;
+
   renderFrame(performance.now()); // first frame, drawn before start() resolves
+  carsTiming.roomShown = performance.now();
   if (!document.hidden) run();
+  if (useGlb && roomExposure !== null && !params.has("nocars")) scheduleCars();
 }

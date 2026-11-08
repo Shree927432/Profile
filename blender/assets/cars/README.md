@@ -15,3 +15,17 @@ Files are git-ignored (too big); download them again from the links.
 
 Not used: MattDoesBlender's Porsche 992 GT3 R and AMG GT3 Evo (CC BY-NC-SA) and the Porsche 992 GT3 RS (no licence in
 the file).
+
+## Credits (2026-11-08: all four ship, repainted, in `scene/assets/cars.glb`)
+
+Each author gets a line in the site's credits (the credits text itself is a separate task):
+
+- "2026 Mercedes W17" by Tyler_Dave, CC BY 4.0, https://sketchfab.com/3d-models/b806f1e70aa343219e7158169549b97b
+- "2024 Porsche 992 GT3 R" by Dave Love (Tyler_Dave), CC BY 4.0, https://sketchfab.com/3d-models/2024-porsche-992-gt3-r-b76c9b2ae2d548c3869426eac4ab8a19
+- "Mercedes AMG GT3 Evo 2020" by vecarz (heynic), CC BY 4.0, https://sketchfab.com/3d-models/mercedes-amg-gt3-evo-2020-wwwvecarzcom-39e77243109f4e5cb7134b6f31c8f619
+- "Mercedes AMG One" by GT Cars (Car2022), CC BY 4.0, https://sketchfab.com/3d-models/mercedes-amg-one-3f22c626f5274455a90a14801e62527c
+
+Changes made (CC BY asks for them to be indicated): scaled to 1:18, repainted in our own colours (the owner's "Dusk"
+palette), every real logo, sponsor, number and tyre marking removed (decal faces deleted, logo parts deleted, the GT3's
+sill lettering covered), and a cut-down web version. `blender/components/cars.py` does all of it; the files here stay
+as downloaded.

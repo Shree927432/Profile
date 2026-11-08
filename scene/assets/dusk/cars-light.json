@@ -1,0 +1,9 @@
+{
+ "note": "Written by blender/components/cars.py from its own Cycles bake in the dusk room. light = texel * max; the room's exposure (room-light.json) applies.",
+ "glb": "/scene/assets/cars.glb",
+ "lightmap": {
+  "file": "cars-lightmap.webp",
+  "max": 1.0565
+ },
+ "shadow": "cars_shadow"
+}
