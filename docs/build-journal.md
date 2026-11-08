@@ -1020,3 +1020,24 @@ site or the room. Keep each entry short. No polishing; the post does that.
   return desk and the keyboard legends. The chair "for now" (its side view is the weak one, the same chair the essay is
   about). The wall group except the headphones, whose cups read as mugs with no ear pads. Sketchfab has a free CC BY
   white ATH-M50x (tejay21, 396k tris) that looks right; the owner downloads it (login), then rich/lite as the plants.
+
+## 2026-11-02
+
+- The headphones: the owner's verdict on the wall sheet was "Fix the headphones" (cups like mugs, no ear pads). The
+  downloaded ATH-M50x (tejay21, CC BY 4.0, 395,356 tris) replaces round 2's modelled one through a new helper,
+  blender/components/headphones.py, that wall.py calls; nothing else in the wall group changed. Rich keeps the model
+  whole (400,516 tris with ARVELL, both 1024 px images), scaled from centimetres, hung in the hook's dip and tilted
+  8.75 degrees so the cups clear the board. ARVELL is printed on the band's top where the real wordmark sits, wrapped
+  along the band's arc. Lite: 1,178 tris, no textures, the wall's flat materials, so it folds into wall_static.
+  Photo compare IoU 0.53/0.55 -> 0.62/0.63. Draw calls unchanged (hero 108, phone 88).
+- What went wrong. The brief named the "3 Logo" mesh as the Audio-Technica emblem; it is a plain notched bracket under
+  each pivot with no lettering, and the model has no real logo anywhere, so it stayed (removing it floats the pivots).
+  The first lite (3,805 tris) cost 31-49 KB in Draco against the old 12 KB: hard edges split every vertex, and my own
+  byte bench quietly re-set the sharp-edge angle, so two "fixes" measured nothing until I printed the attributes. The
+  model's band ends are non-manifold and would not decimate below about 1,050 tris (voxel remesh first). In the room,
+  lightmap islands cost more than the bench showed: the room grows 2.3 KB (2,494,852 -> 2,497,192 bytes) at 1,178 tris,
+  6.4 KB at 1,602. The battery was at 21-31 % and discharging, so the room bake did not run; the shipped room.glb is
+  untouched.
+- 2026-11-08: the headphones rebake waited five days for power (the bake stopped at 21 % battery on 11-02, and the
+  charger was not reaching the Mac on 11-03). Rebaked with the sharper web version (about 1,550 tris); room download
+  about 2.95 MB, 107 draw calls at 1024 x 768. Approved: "Approve, push".

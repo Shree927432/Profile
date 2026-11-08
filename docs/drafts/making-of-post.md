@@ -95,6 +95,7 @@ follows Pune's real time and weather. Link to the room. -->
 <!-- NOTE 2026-11-01: I asked why Felix's camera looked so real. He didn't model it: a free CC0 model by a human artist, worn textures painted by hand. So the plants came from Poly Haven and Sketchfab, the originals kept whole for Blender, cut down only for the web. -->
 <!-- NOTE 2026-11-01: then the downloaded snake plant scan lost to one we made in code: the scan was real but jagged on the web and its pot clashed with the white desk. -->
 <!-- NOTE 2026-11-02: the window came from a photo the owner sent; two changes (thicker frames, two panels instead of four) arrived before a single frame was modelled. The net curtains looked like glass strips in the browser until the lightmap stopped cutting each fold into slivers. -->
+<!-- NOTE 2026-11-02: the headphones came from a free model too (tejay21, CC BY). The brief said to delete its "Logo" mesh; it turned out to be a plain bracket holding the cup on, so it stayed. The web copy went from 395,000 triangles to 1,178, and the hard part was bytes, not triangles: marked hard edges alone doubled its size. -->
 <!-- NOTE 2026-10-21: Phase 4 began with a list of names, not a model: 88 piano keys
 named by note so the code can play them, because names are the only thing the
 Blender file and the website share. -->

@@ -20,7 +20,8 @@ Parts (plan v3 names, blender/lib/plan_v3.py):
             it; each frame's light grey mount is `frame_N_picture`, a clean 0..1 UV, top-left at (0, 1)
   plants    two trailing pothos in white pots (vine_pot_1..2) with vines hanging VINE_LEN (vine_1..2)
   pegboard  IKEA SKADIS 76 x 56 white, 4 cm off the wall on spacers, a soft glow behind it (pegboard_glow), with the
-            Audio-Technica ATH-M50x white (headphones: _cup_l/_r, _band, _brand) hanging on a SKADIS hook
+            Audio-Technica ATH-M50x white (headphones_*, the downloaded model by tejay21, CC BY 4.0, via
+            headphones.py; ARVELL on the band's top) hanging on a SKADIS hook
   neon      white LED neon on clear acrylic 0.70 x 0.26 (neon, neon_glow); the words come from
             content/room-brands.json "neon" -> "text" at build time
   nanoleaf  Nanoleaf Shapes Triangles, 7 panels (nanoleaf_panel_01..07), the owner's photo's arrangement
@@ -33,7 +34,8 @@ test places each part's root empty at plan v3's `at` with its yaw (0 on the back
   vine_pot_N origin at the pot's base centre on the shelf top; the shelf's front edge at y -0.14 (plan: pot 0.11
              from the wall, shelf 0.25 deep); `end_side` = -1 or +1 says which x side is the shelf's end (7 cm away)
   pegboard   origin at the board's centre; the wall at y +0.04 (plan: board centre at RY - off + 0.01)
-  headphones origin at the hook point (the band's inside top); the band's plane parallel to the wall
+  headphones origin at the hook point (the band's inside top); the band's plane parallel to the wall, tilted so the
+             cups rest just off the board
   neon       origin at the acrylic plate's centre; the wall at y +0.01
   nanoleaf   origin at the layout's centre; the wall at y +0.005
 Brand names: ARVELL on the headphones from content/room-brands.json via lib/brands.py. The Nanoleaf's LUMARA is not
@@ -94,20 +96,8 @@ PEG_OFF = 40.0                                         # plan v3: 4 cm off the w
 PEG_SCREW = (28.0, 28.0)                               # EST: the four mounting screws in from the corners
 HOOK_WIRE = 5.0                                        # EST: SKADIS hook wire
 HOOK_REACH = 45.0                                      # EST: the hook's reach from the board face
-# ATH-M50x (no official drawing; MEASURED from the Thomann photos against the 45 mm driver and the 285 g class)
-HP_BAND_HW = 92.0                                      # EST: the band's inside half-width at the yoke pivots
-HP_BAND_DROP = 118.0                                   # EST: the yoke pivots below the band's top
-HP_BAND_W, HP_BAND_T = 30.0, 11.0                      # EST: the band's width (across the head) and thickness
-HP_PAD_W, HP_PAD_T = 36.0, 17.0                        # EST: the padded top third
-HP_SLIDER_W, HP_SLIDER_T = 17.0, 6.0                   # EST: the slider arms
-HP_CUP = (98.0, 88.0, 42.0)                            # EST: cup height, width, depth (an oval, the M50x shell)
-HP_PAD_RING = (26.0, 24.0)                             # EST: pad thickness, pad ring width
-HP_DISC = 56.0                                         # EST: the logo disc 40 across with a thin silver ring
-HP_YOKE = (13.0, 9.0)                                  # EST: the yoke's section (width, depth)
-HP_CUP_Z = -205.0                                      # EST: the cup centre below the band's top (hanging)
-HP_LOGO = (30.0, 7.0)                                  # EST: the wordmark in the disc's centre, inside the silver ring,
-#                                                        about the real audio-technica mark's size (30 wide in a 56 disc)
-CUP_CX = HP_BAND_HW - 18.0                             # EST: the cup centres, 148 apart (the pads about 90 apart when hanging)
+# ATH-M50x (2026-11-02): the downloaded model (blender/components/headphones.py), hanging in the hook's dip
+HP_CUP_CX, HP_CUP_Z = 40.0, -165.0                     # MEASURED on the model: a cup's centre from the hook point (close-ups)
 NEON_W, NEON_H = 700.0, 260.0                          # plan v3: 0.70 x 0.26
 NEON_PLATE_T = 4.0                                     # EST: clear acrylic 3 to 5
 NEON_TUBE = 8.0                                        # EST: LED neon flex 6 to 8 wide
@@ -138,8 +128,8 @@ HOOK_COL, HOOK_ROW = 14, 1                             # the hook's slot (column
 CUT = os.path.join(FOOT, "cutouts")
 HP_REF = os.path.join(REF, "13-headphones")
 HP_EXPLAIN = ("pose, not shape: the Thomann shots show the band slid out and the cups swivelled flat for display; ours "
-              "hangs on the SKADIS hook with the sliders in and the cups facing each other, so the arch is shorter and the "
-              "cups sit higher and closer; white on white also leaves a ragged photo mask")
+              "(the downloaded model, 2026-11-02) hangs on the SKADIS hook with the sliders in, the cups facing each other and "
+              "the whole tilted about 9 degrees off the board; white on white also leaves a ragged photo mask")
 PHOTOS = {
     "headphones-front": dict(photo=os.path.join(HP_REF, "front-1.jpg"), part="headphones",
                              title="ATH-M50x: front (Thomann photo) vs our model",
@@ -820,163 +810,17 @@ def build_hook(coll, mp, parent, x, z, lite, rough, sfx):
     return [ob.name]
 
 
-def band_path(n):
-    """The headband's centre line (mm) from the left pivot over the top to the right pivot: a flattened arch."""
-    pts = []
-    for k in range(n + 1):
-        t = -1 + 2 * k / n
-        x = HP_BAND_HW * math.sin(t * math.pi / 2)
-        z = -HP_BAND_DROP * (1 - math.cos(t * math.pi / 2) ** 0.85)
-        pts.append(V(x, 0, z))
-    return pts
-
-
 def build_headphones(coll, mp, root, lite, sfx):
-    """ATH-M50x white, hanging: the band's inside top at the origin, the band in the XZ plane, cups facing in."""
-    names = {"headphones": [], "headphones_band": [], "headphones_cup_l": [], "headphones_cup_r": [],
-             "headphones_brand": []}
-    n = 12 if lite else 36
-    path = band_path(n)
-    # the outer band shell: a rounded rectangle section, wider and thicker at the padded top
-    bm = bmesh.new()
-    rings = []
-    for i, p in enumerate(path):
-        t = abs(-1 + 2 * i / n)
-        pad = max(0.0, 1 - (t / 0.42) ** 2)          # 1 at the crown, 0 beyond 42% of the way down
-        w = HP_BAND_W + (HP_PAD_W - HP_BAND_W) * pad
-        th = HP_BAND_T + (HP_PAD_T - HP_BAND_T) * pad
-        sec = rrect2(w, th, 4.0 if not lite else 1.0, 2 if not lite else 1)
-        rings.append((p, sec, th))
-    # sweep by hand: the section lies in the plane perpendicular to the path, u along Y, v along the outward normal
-    vr = []
-    for i, (p, sec, th) in enumerate(rings):
-        if i == 0:
-            tg = (path[1] - path[0]).normalized()
-        elif i == n:
-            tg = (path[-1] - path[-2]).normalized()
-        else:
-            tg = (path[i + 1] - path[i - 1]).normalized()
-        out_n = Vector((0, 1, 0)).cross(tg).normalized()     # outward from the head
-        if out_n.z < 0 and abs(p.x) < 0.01:
-            out_n = -out_n
-        vr.append([bm.verts.new(p + Vector((0, 1, 0)) * (a * MM) + out_n * ((b + th / 2 + 2) * MM)) for a, b in sec])
-    m = len(vr[0])
-    for i in range(n):
-        for j in range(m):
-            bm.faces.new((vr[i][j], vr[i + 1][j], vr[i + 1][(j + 1) % m], vr[i][(j + 1) % m]))
-    bm.faces.new(list(reversed(vr[0])))
-    bm.faces.new(vr[-1])
-    fix_normals(bm)
-    band = obj_from_bm("headphones_band" + sfx, bm, mp["hp_white"], coll, root, smooth=True, auto=45)
-    names["headphones_band"].append(band.name)
-    # the underside pad (the padded top third, protein leather), a slimmer sweep under the shell
-    if not lite:
-        bm = bmesh.new()
-        sub = [p for i, p in enumerate(path) if abs(-1 + 2 * i / n) < 0.45]
-        sweep(bm, sub, rrect2(HP_BAND_W - 2, 7, 3, 2), up=(0, 1, 0))
-        pad = obj_from_bm("headphones_pad" + sfx, bm, mp["hp_pad"], coll, root, smooth=True, auto=45)
-        names["headphones_band"].append(pad.name)
-    for side, key in ((-1, "l"), (1, "r")):
-        names[f"headphones_cup_{key}"] += build_cup(coll, mp, root, side, key, lite, sfx)
-    # the slider arms: flat bars from the band's ends down to the yokes
-    for side in (-1, 1):
-        bm = bmesh.new()
-        x = side * HP_BAND_HW
-        p0 = V(x, 0, -HP_BAND_DROP)
-        p1 = V(side * (CUP_CX + HP_CUP[2] * 0.62), 0, HP_CUP_Z + HP_CUP[0] / 2 + 5 + 14)
-        sweep(bm, [p0, p1], rrect2(HP_SLIDER_T, HP_SLIDER_W, 1.5, 1), up=(0, 1, 0))
-        sl = obj_from_bm(f"headphones_slider_{'l' if side < 0 else 'r'}{sfx}", bm, mp["hp_silver"], coll, root, smooth=True, auto=45)
-        names["headphones"].append(sl.name)
-    # the brand: the small wordmark on each cup's disc (where the real text sits, white-on-white print)
-    if not lite or True:
-        from lib import brands
-        for side, key in ((-1, "l"), (1, "r")):
-            # round 2: in the centre of the cup's outer disc, inside the silver ring, embossed tone-on-tone (the real
-            # audio-technica mark sits there, a slightly glossier white on the matte white disc)
-            at = (side * (CUP_CX + HP_CUP[2] + 1.2) * MM, 0.0, HP_CUP_Z * MM)
-            d = brands.decal("headphones", at, (side, 0, 0), (0, 0, 1), height=HP_LOGO[1] * MM, finish="embossed",
-                             colour="#d0d0ce", parent=root, collection=coll, lite=lite,
-                             name=f"headphones_brand_{key}{sfx}", max_width=HP_LOGO[0] * MM)
-            if d is not None:
-                names["headphones_brand"].append(d.name)
-    names["headphones"] = names["headphones"] + names["headphones_band"] + names["headphones_cup_l"] + names["headphones_cup_r"] + names["headphones_brand"]
+    """ATH-M50x white, hanging from the hook: the downloaded model (headphones.py), rich as downloaded, lite cut down for
+    the web; ARVELL printed on the band's top. The hook's numbers go in the root's frame (metres)."""
+    sys.path.insert(0, HERE)
+    import headphones as HP
+    board_y = (HOOK_REACH - 12) * MM                  # the board's face behind the root (build_pegboard's hp_root)
+    tip_y = -12 * MM                                  # the hook's up-turned tip in front of it
+    names, info = HP.build(coll, mp, root, lite, sfx, board_y, tip_y, HOOK_WIRE / 2 * MM)
+    log(f"headphones ({'lite' if lite else 'rich'}): {info}")
+    names["headphones"] = names["headphones"] + names["headphones_brand"]
     return names
-
-
-def build_cup(coll, mp, root, side, key, lite, sfx):
-    """One ear cup facing inward (+X for the left cup at -X): the oval shell with a domed back and logo disc, the
-    silver ring, the thick pad ring, and the yoke over its top half."""
-    out = []
-    h, w, d = HP_CUP
-    cx = side * CUP_CX
-    cz = HP_CUP_Z
-    seg = 16 if lite else 48
-    sv = w / h
-    # shell: a lathe along X (the cup axis) from the pad face (inner, x toward the centre) to the domed back
-    rr = h / 2
-    # a shallow shell: straight sides, a soft shoulder, then the wide flat back with the raised disc
-    prof = [(rr - 1, 0), (rr, 3), (rr, d - 16), (rr - 3, d - 9), (rr - 9, d - 3.5), (rr - 16, d - 1), (HP_DISC / 2 + 5, d - 0.5),
-            (HP_DISC / 2 + 3, d + 0.6), (HP_DISC / 2, d + 1.2), (0, d + 1.2)]
-    if lite:
-        prof = [(rr - 1, 0), (rr, 3), (rr, d - 14), (rr - 8, d - 3), (HP_DISC / 2 + 3, d + 0.6), (0, d + 1.2)]
-    bm = bmesh.new()
-    rings = lathe(bm, [(r, -a) for r, a in prof], "X", seg, sv)       # the back at -X, the pad face at 0: the left cup
-    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-6)
-    cap_ring(bm, rings[0], flip=True)
-    fix_normals(bm)
-    bm.transform(Matrix.Translation((cx * MM, 0, cz * MM)) @ Matrix.Scale(-side, 4, (1, 0, 0)))   # mirrored for the right
-    if side > 0:
-        for f in bm.faces:
-            f.normal_flip()
-    shell = obj_from_bm(f"headphones_cup_{key}{sfx}", bm, mp["hp_white"], coll, root, smooth=True, auto=40)
-    out.append(shell.name)
-    # the pad ring: an oval torus on the inner face
-    bm = bmesh.new()
-    pt, pw_ = HP_PAD_RING
-    ring_prof = []
-    nseg = 6 if lite else 14
-    for k in range(nseg + 1):
-        a = math.pi * k / nseg
-        ring_prof.append((rr - pw_ / 2 + (pw_ / 2) * math.cos(a), pt * math.sin(a) ** 0.8 if k > 0 else 0))
-    ring_prof.append((rr - pw_, 0))
-    rings = lathe(bm, [(r, a) for r, a in ring_prof], "X", seg, sv)
-    bm.transform(Matrix.Translation((cx * MM, 0, cz * MM)) @ Matrix.Scale(-side, 4, (1, 0, 0)))
-    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-6)
-    fix_normals(bm)
-    pad = obj_from_bm(f"headphones_pad_{key}{sfx}", bm, mp["hp_pad"], coll, root, smooth=True, auto=40)
-    out.append(pad.name)
-    # the silver ring around the disc, on the back
-    if not lite:
-        bm = bmesh.new()
-        prof = [(HP_DISC / 2 + 0.5, -(d + 2.2)), (HP_DISC / 2 + 2.5, -(d + 1.0)), (HP_DISC / 2 + 2.5, -(d - 1))]
-        lathe(bm, prof, "X", seg)
-        bm.transform(Matrix.Translation((cx * MM, 0, cz * MM)) @ Matrix.Scale(-side, 4, (1, 0, 0)))
-        fix_normals(bm)
-        out.append(obj_from_bm(f"headphones_ring_{key}{sfx}", bm, mp["hp_silver"], coll, root, smooth=True).name)
-    # the yoke: a rounded bar over the cup's top half in the cup's plane, 10 mm off the shell's rim, ending at the
-    # pivots at 9 and 3 o'clock; plus the two pivot bosses
-    bm = bmesh.new()
-    yr = rr + 5
-    yx = cx + side * (d * 0.62)                       # the yoke sits over the back half of the rim
-    pts = []
-    ny = 8 if lite else 20
-    for k in range(ny + 1):
-        a = math.pi * k / ny                           # from +Y (front pivot) over the top to -Y (back pivot)
-        pts.append(V(yx, yr * sv * math.cos(a), cz + yr * math.sin(a)))
-    sweep(bm, pts, rrect2(HP_YOKE[1], HP_YOKE[0], 2.5 if not lite else 0.5, 2 if not lite else 1), up=(side, 0, 0))
-    fix_normals(bm)
-    out.append(obj_from_bm(f"headphones_yoke_{key}{sfx}", bm, mp["hp_white"], coll, root, smooth=True, auto=40).name)
-    for sy in (-1, 1):
-        bm = bmesh.new()
-        p0 = V(yx, sy * (rr * sv - 2), cz)
-        p1 = V(yx, sy * (rr * sv + 8), cz)
-        sweep(bm, [p0, p1], circle(8, 8 if lite else 16), up=(0, 0, 1))
-        out.append(obj_from_bm(f"headphones_pivot_{key}{'f' if sy < 0 else 'b'}{sfx}", bm, mp["hp_white"], coll, root, smooth=True, auto=40).name)
-    # the hinge block joining the yoke's crown to the slider
-    bm = bmesh.new()
-    box_bm(bm, 16, 20, 18, (yx, 0, cz + yr + 2), -4)
-    out.append(obj_from_bm(f"headphones_hinge_{key}{sfx}", bm, mp["hp_white"], coll, root).name)
-    return out
 
 
 def neon_text():
@@ -1615,7 +1459,7 @@ def closeup_specs(names):
     if "pegboard" in names["parts"]:
         hp = bpy.data.objects.get("headphones_root")
         hpw = hp.matrix_world.translation if hp else Vector(S["pegboard"])
-        cl = hpw + Vector((-CUP_CX * MM, 0, HP_CUP_Z * MM))
+        cl = hpw + Vector((-HP_CUP_CX * MM, 0, HP_CUP_Z * MM))
         specs += [
             ("hp-cup", "ATH-M50x: an ear cup and the yoke (ours: left cup)", os.path.join(HP_REF, "side-cup-profile.jpg"),
              cl + Vector((-0.26, -0.22, 0.10)), cl + Vector((0, 0, 0.01)), 60),
