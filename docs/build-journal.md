@@ -1066,3 +1066,41 @@ site or the room. Keep each entry short. No polishing; the post does that.
   the wall), so it was 59 % dark on average and invisible in the browser (back-face culled); turned round, 23 %.
   The AMG ONE's "blue side strip" from stage 1 was the room's blue light on its gloss black, not paint.
   Disk: free space fell from 3.7 to 1.4 GB during the day while my own outputs were about 100 MB; not found.
+
+## 2026-11-12: the chair, rebuilt and in the room
+
+- The 28 October Aeron was approved "for now" on 2 November: a flat tray for a seat, boxy arms, a thin base, and a
+  side view that scored 0.51 against the photo. It got its own session on Fable 5.2, three rounds in one night.
+- No scan: the only real Aeron on Sketchfab is still non-commercial. Built by hand in
+  `blender/components/chair.py`, every free-form part a loft traced from the Herman Miller photos on a millimetre
+  grid: the seat one saddle surface (side rails 49 mm above the datum, the middle 8 below, the front falling 64)
+  with a ring frame on it; the back a wedge-section frame leaning along the traced curve with a hooked top bar;
+  sculpted pads on a cast horn sliding on polished posts; the polished link under the seat; shield-section legs.
+- Scores, old to new: front 0.74 to 0.90, side 0.51 to 0.68, back 0.76 to 0.87, three-quarter 0.48 to 0.81. No
+  view passes the 0.98 gate. Rich 62,296 triangles; lite 7,151 triangles and 518 KB (the old lite: 7,259, 569).
+- The owner, after round 2: "Another round first". Round 3 came from zoomed grids (the tilt housing, the link's
+  bend and ball, the arm's horn, creased frame, screws, the mesh groove, ribs that show). It moved no score; it
+  changed what the eye sees inside the outline. Then: "Yes, approve it", and "put it in the room now".
+- In the room: build_v3 with `STAGES=build,dusk,export`, then encode_dusk (115 s in all; the bake 89 s). room.glb
+  2.50 MB, the same 28 baked meshes, no console errors on desktop or phone. The chair touches nothing but the rug
+  stand-in. Pad tops sit 59 mm under the desk top's underside.
+- What went wrong.
+  - The old build took the photos' last non-white row as the floor. That row is the casters' reflection: every
+    height was 90 mm too high. Found by reading the casters' feet on the grid (51, 78 and 121 mm by depth).
+  - The three-quarter compare had searched turns of +28 to +36 degrees since October; the photo is at about -50.
+    It had been comparing two different angles (0.48). Fixed: 0.80.
+  - The side camera search fitted a wide-angle view because the photo masks still held the floor reflections;
+    new cutouts, and later the camera held to 4.5 to 6 m. The honest camera scores lower (0.68) than the free
+    one (0.70).
+  - Blender 5.2 rejects `--cycles` even after `--`: the first full run died at once. `CHAIR_CYCLES=1` instead.
+  - The lite went over its ceiling three times: 7,955 triangles at first, then 611 KB (lowering the JPEG quality
+    did nothing, the exporter re-encodes; the atlas went from 1024 to 768 px), then 7,359 after round 3.
+  - The weave: 2.2 mm threads vanished at render size; a denser band in the web tile read as horizontal stripes;
+    a quarter-open mesh made the seat look like a glass bowl. Now 4.4 mm ribs, about a fifth open.
+  - Subdivision made the frames puffy; the back and seat frames are creased instead.
+  - The session restarted during the last render; the run had finished and nothing was lost.
+- Still short, plainly: the tilt housing is a simple bowl with no small levers, the seat's underside is closed,
+  no cable, the Y's arms end in flat wings, and with the honest side camera the base sits about 15 mm high at the
+  leg tips against the photo. `plan_v3.CHAIR_BASE_R` says 0.343; the new base reaches 0.352.
+- Footage: `video-local/footage/2026-11-12-chair/` (PROGRESS.md, photo-vs-model and before/after sheets,
+  close-ups, `room/room-before-after.jpg` from the browser).

@@ -1,22 +1,33 @@
-"""The chair (component, 2026-10-28): Herman Miller Aeron Remastered, Size B, Mineral, polished aluminium base,
-hard-floor casters, fully adjustable arms, PostureFit SL. An exact replica in shape and finish from the official
-photos and sizes in docs/moodboard/local/ai-lab/25-chair/ (SOURCES.md). Built from scratch (MODELS.md: no usable
-free Aeron). Pattern: tools/component_template.py, components/desktop.py and arms.py.
+"""The chair (component; first built 2026-10-28, rebuilt 2026-11-12): Herman Miller Aeron Remastered, Size B,
+Mineral, polished aluminium base, hard-floor casters, fully adjustable arms, PostureFit SL. Shape and finish from
+the official photos and sizes in docs/moodboard/local/ai-lab/25-chair/ (SOURCES.md). Built from scratch: the only
+real Aeron on Sketchfab is non-commercial (checked again 2026-11-12).
 
 Always headless:
 
     /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \\
-        --python blender/components/chair.py -- [stages] [--cycles]
+        --python blender/components/chair.py -- [stages]        (CHAIR_CYCLES=1 for Cycles stills: Blender 5.2
+                                                                 rejects a --cycles flag even after the --)
 
 stages: outline | build,stills,compare,closeups,export (default) | any comma list.
 Plain Python (Pillow): python3 chair.py --pairs <pairs.json> <dir>
 
-Frame: origin on the floor under the cylinder's axis, front (the sitter's knees) -Y, up Z, the sitter's right +X.
-Sub-assemblies, each its own function and mesh set: back (frame, mesh, PostureFit Y), seat (frame, mesh, waterfall
-edge), arms (post, support, pad, knob), mechanism (box, levers, tension knob), base (hub, five legs, cylinder,
-casters). All assembled under the empty `chair_swivel` at the cylinder's axis so the site can turn the chair.
-The brand name "kalder" comes from content/room-brands.json via lib/brands.py at the real round mark's spot (the top
-crossbar's rear face, centre).
+Frame: origin on the floor under the cylinder's axis, front (the sitter's knees) -Y, up Z. The side photo looks
+from +X (Blender's "right" view), which is the sitter's left: the polished tilt lever with the ball is on +X, the
+tilt-tension knob on -X.
+
+2026-11-12 rebuild. Every free-form part is a lofted surface traced from the photos on a millimetre grid:
+  seat   one saddle surface S(x, y) (side rails arched, centre sagging, the front falling 110 mm: the waterfall);
+         the frame is a ring lofted on S with a rolled outer edge and deep side skirts, the mesh hangs inside it
+  back   a wedge-section frame (slim bezel in front, a broad flange behind, deeper up top) lofted round the loop,
+         leaning along the traced S-curve, the top bar hooked back; the mesh cupped inside; the PostureFit Y
+  arms   a sculpted pad on a carrier plate, a thin cast blade, a yoke sliding on a polished post behind the back
+  link   the polished yoke from the posts forward under the seat to the tilt housing, the brackets up to the
+         seat's side pivots
+  base   five legs with a crowned shield section tapering to a turned-down boss, twin-wheel casters
+Sub-assemblies under the empty `chair_swivel` at the cylinder's axis so the site can turn the chair. The brand
+name comes from content/room-brands.json via lib/brands.py, where the real round mark sits (the top bar's rear
+face, centre).
 """
 import json
 import math
@@ -40,76 +51,82 @@ except ImportError:
 NAME = "chair"
 MM = 0.001
 REF = os.path.join(REPO, "docs", "moodboard", "local", "ai-lab", "25-chair")
-FOOT = os.path.join(REPO, "video-local", "footage", "2026-10-28-components", "chair")
-
-# ---------------------------------------------------------------------------
-# 1. numbers (mm), each tagged OFFICIAL / MEASURED / EST. The photos (front, side, back, 2500 px) were measured at
-#    0.4528 mm/px (front: the base with casters spans 1515 px = 686 OFFICIAL overall width). In the photos the
-#    seat sits at its highest (top 600 above the floor, overall 1079); SEAT_H sets the seat height when built.
-# ---------------------------------------------------------------------------
-OVERALL_W = 686.0          # OFFICIAL (27 in), arms and base
-SEAT_D = 432.0             # OFFICIAL (17 in) seat depth
-PHOTO_SEAT_H = 600.0       # MEASURED front/side: seat top in the photos (the cylinder at its highest)
-ROOM_SEAT_H = 480.0        # EST: a mid setting in the room (OFFICIAL range 406 to 521 with the standard cylinder)
-SEAT_FRONT = -277.0        # MEASURED side: front lip (y, mm behind the cylinder axis negative = forward)
-SEAT_BACK = SEAT_FRONT + SEAT_D   # 155
-SEAT_HW_FRONT, SEAT_HW_BACK = 250.0, 222.0   # MEASURED front: 500 across the front corners, 444 at the back
-SEAT_RAIL = (24.0, 22.0)   # EST: the seat frame rail, a slim rounded tube; the front lip rolls out to about 1.8 x
-WATERFALL = (-215.0, 42.0)  # MEASURED side: the front edge starts curving at y -215 and drops about 40 (the thick lip)
-SEAT_BOLSTER = 28.0        # EST side/3q: the frame sides rise at the rear corners (hip bolsters)
-SEAT_TILT = 2.5            # EST: the seat pan tilts back 2 to 3 degrees
-SEAT_DISH = 20.0           # EST: the mesh dishes into the frame
-# Back: half-width and centre line (y behind the axis) per height above the seat, MEASURED front and side
-BACK_HW = [(0, 206), (25, 200), (50, 195), (75, 194), (100, 193), (130, 194), (160, 197), (190, 204), (215, 212),
-           (240, 223), (265, 234), (290, 245), (320, 253), (345, 257), (370, 258), (400, 255), (425, 249), (452, 218)]
-BACK_YC = [(0, 202), (60, 190), (130, 181), (200, 186), (260, 199), (320, 218), (380, 240), (425, 258), (452, 271), (479, 294)]   # an S: lumbar bowed forward, about 11 degrees overall, the top rail curling back
-BACK_TOP = 479.0           # MEASURED: the top arc's crown above the seat (1079 overall in the photo)
-BACK_CORNER_Z = 440.0      # MEASURED: where the side rails turn into the top arc
-BACK_RAIL = (36.0, 28.0)   # MEASURED front: the frame rail about 36 across its face; 28 deep EST
-BACK_CUP = 22.0            # EST: the mesh is cupped (the centre 22 behind the rails)
-BACK_BOTTOM = -40.0        # EST: the frame's lower crossbar centre below the seat top (behind the seat)
-SPINE_X = 215.0            # MEASURED back: the two polished spine bars, 430 apart
-Y_STEM = (48.0, 18.0)      # MEASURED back: the PostureFit stem 48 wide, 18 thick EST
-Y_SPLIT_Z = 150.0          # MEASURED back: the Y forks 150 above the seat
-Y_ARM_END = (200.0, 265.0)  # MEASURED front: the Y's arms end at x 200, z 265
-Y_PAD = (160.0, 20.0)      # MEASURED back: the lumbar bar 160 wide, 20 tall, at the stem's foot
-ARM_X = 250.0              # MEASURED front: the arm posts' centres, 500 apart
-ARM_POST = (40.0, 24.0)    # MEASURED front: the post 40 across, 24 deep EST
-ARM_POST_Y = 165.0         # MEASURED side: the post rises from the back link, 165 behind the axis
-ARM_H = 182.0              # MEASURED side: pad top above the seat in the photos (the OFFICIAL range 173 to 274)
-PAD = (250.0, 80.0, 26.0)  # MEASURED side/front: the pad 250 long, 80 wide, 26 thick
-PAD_Y = (-137.0, 113.0)    # MEASURED side: the pad from 137 in front of the axis to 113 behind
-PAD_X = 295.0              # MEASURED front: the pad's centre (outer edge at 335)
-MECH = (250.0, 200.0, 90.0)    # MEASURED front/side, coordinator 2026-10-28: the cast tilt housing 250 wide, 200 long, 90 tall
-MECH_Y = 95.0              # MEASURED side: housing centre 95 behind the axis
-MECH_Z = -160.0            # MEASURED side: housing bottom 160 below the seat top
-LEVER = (110.0, 22.0)      # EST: paddle length, width
-COLUMN_R = 13.5            # MEASURED front: the black column 27 across
-COLLAR = (24.0, 40.0)      # MEASURED front: the polished collar 48 across, 40 tall above the hub
-HUB = (41.0, 280.0)        # MEASURED front: the hub 82 across at the top; its top 280 above the floor
-LEG_R = 330.0              # MEASURED front: the leg tips (caster stems at 310)
-LEG_ROOT = (36.0, 62.0)    # EST: leg section at the hub (wide, tall): a slim blade
-LEG_TIP = (20.0, 24.0)     # EST: leg section at the tip
-LEG_Z = (250.0, 108.0)     # MEASURED front: leg top at the hub 250, the tip 108 (the caster cap meets it)
-CASTER = (60.0, 14.0, 12.0)  # MEASURED front: twin wheels 60 across, each 14 wide, 12 apart
-CASTER_R = 310.0           # MEASURED front: the caster stems at r 310; the wheels trail 18 outward (centres 328)
-LOGO = (22.0, 5.0)         # MEASURED back: the round mark 20 across on the top crossbar's rear face; our word 22 wide, cap 5
-
+FOOT = os.path.join(REPO, "video-local", "footage", "2026-11-12-chair")
 CUT = os.path.join(FOOT, "cutouts")
+
+# ---------------------------------------------------------------------------
+# 1. numbers (mm). Traced 2026-11-12 on a millimetre grid over side.jpg, front.jpg and back.jpg (0.4528 mm/px,
+#    the column's axis at x 1216 / 1258 / 1255). "Upper" numbers are relative to the old seat datum (grid z 600).
+#    The 2026-10-28 build took the photos' last non-white row as the floor; that row is the casters' reflection.
+#    The casters touch the floor 90 mm higher (their bottoms sit at grid z 51, 78 and 121 by depth), so the datum
+#    is 510 above the floor in the photos, not 600, and the base is 90 mm lower than it was built.
+# ---------------------------------------------------------------------------
+PHOTO_SEAT_H = 510.0       # MEASURED side: the seat datum above the floor in the photos
+ROOM_SEAT_H = 480.0        # the datum in the room; the mesh's middle sits about 8 under it (a 470 seat)
+
+# Seat. The outline of the frame's outer edge from above, right half, front centre to rear centre (x, y).
+SEAT_OUT = [(0, -286), (80, -283), (160, -266), (215, -235), (244, -185), (252, -120), (250, -50), (244, 20),
+            (235, 85), (222, 125), (196, 148), (130, 157), (0, 158)]
+# The saddle: height of the side rails' top, of the centre line, and of the frame's underside, by y (MEASURED side)
+SEAT_SIDE = [(-286, -64), (-261, -37), (-230, -17), (-202, 0), (-148, 22), (-103, 36), (-57, 45), (-12, 49),
+             (33, 45), (78, 34), (115, 20), (140, 9), (158, 3)]
+SEAT_MID = [(-286, -64), (-262, -46), (-230, -30), (-190, -18), (-120, -9), (-40, -8), (40, -9), (110, -6), (158, 3)]
+SEAT_BOT = [(-286, -73), (-261, -68), (-216, -55), (-148, -46), (-103, -43), (-35, -43), (56, -40), (124, -42),
+            (158, -30)]
+SEAT_PIVOT = (6.0, 0.0, 27.0)   # MEASURED side: the polished side pivot's centre (y, z) and radius
+
+# Back. The frame's outer edge from the front, right half, bottom centre to the crown (x, z): the mean of the
+# front and back photos (the front photo alone reads 4-5 % narrow: the back is behind the axis there).
+BACK_OUT = [(0, -138), (70, -138), (125, -134), (162, -118), (181, -92), (188, -55), (190, -10), (191, 50),
+            (193, 100), (197, 150), (209, 200), (223, 240), (239, 280), (255, 320), (266, 360), (270, 385),
+            (268, 405), (260, 428), (245, 447), (222, 461), (180, 473), (127, 481), (60, 486), (0, 488)]
+# The frame's front edge behind the axis, by height (MEASURED side): the lumbar bows forward at 100 to 150, the
+# upper back leans about 20 degrees, the top bar hooks back
+BACK_YF = [(-138, 178), (-100, 174), (-40, 168), (0, 162), (50, 150), (100, 143), (150, 144), (200, 149),
+           (220, 157), (240, 165), (260, 173), (280, 182), (300, 188), (320, 195), (340, 200), (360, 204),
+           (380, 209), (400, 216), (420, 225), (440, 238), (460, 251), (475, 266), (488, 283)]
+BACK_CUP = [(-138, 6), (-60, 14), (50, 24), (150, 26), (300, 32), (420, 22), (488, 8)]   # the mesh behind the rails
+TOP_SKEW = 0.55            # MEASURED side: the top bar's front edge sits 15 lower than its crown
+POST_X, POST_Y = 181.0, 191.0     # MEASURED back/side: the polished posts the arms slide on
+POST_Z = (-105.0, 142.0)
+ARM_X = 287.0              # MEASURED front/back: the pad's centre (outer edge 340: 680 over both)
+# The pad: stations along y (y, width, top, thickness): a thick drooping nose, a slim tail (MEASURED side)
+PAD = [(-139, 46, 166, 24), (-129, 80, 181, 40), (-108, 100, 189, 50), (-70, 108, 191, 50), (-10, 110, 191, 49),
+       (70, 110, 186, 45), (120, 104, 178, 38), (142, 84, 172, 30), (150, 50, 168, 22)]
+# The tilt housing: stations along y (y, width, top, bottom) (MEASURED front/side)
+MECH = [(-192, 150, -152, -190), (-180, 200, -146, -197), (-130, 212, -132, -198), (-85, 212, -119, -198),
+        (-40, 212, -124, -200), (40, 212, -130, -200), (90, 190, -140, -182), (128, 150, -148, -156)]
+MECH_BOTTOM = -200.0
+STALK = (-152.0, -172.0)   # MEASURED side/front: the two side stalks' axis (y, z)
+# Base (above the floor)
+HUB_TOP = 209.0            # MEASURED side
+COLUMN_R = 12.5            # MEASURED: the black column 24 to 27 across
+LEG_R = (30.0, 322.0)      # the leg from the hub to where it turns down
+LEG_TOP = (163.0, 121.0)   # MEASURED side: the leg's top edge at the hub and at the tip
+LEG_SEC = ((44.0, 54.0), (27.0, 34.0))   # (width, height) at the root and the tip: a crowned shield
+BOSS = (335.0, 17.0, 68.0, 124.0)        # the turned-down end: radius of its centre, its radius, bottom, top
+WHEEL = (62.0, 17.0, 12.0)               # twin wheels: diameter, each one's width, the gap
+TRAIL = 26.0               # the wheels trail the stem (all toward +Y, as if the chair was rolled to the desk)
+SCREWS = [(248, 427), (-248, 427), (252, 337), (-252, 337), (192, 190), (-192, 190), (0, 478), (0, -113)]   # MEASURED back
+LOGO = (30.0, 5.0)         # MEASURED back: the round mark is 20 across at z 438; our word 30 wide, cap 5
+LOGO_Z = 440.0
+
 PHOTOS = {
     "front": dict(photo=os.path.join(CUT, "front-cut.png"), title="Aeron: front (Herman Miller photo) vs our model",
                   camera={"mode": "fit", "view": "front", "tilts": [0.0, 4.0, 8.0]}, mask="alpha",
-                  explain="a perspective product shot (all five casters show): the camera is searched; the weave reads solid in the photo's silhouette but open in ours"),
+                  explain="a perspective product shot: the camera is searched; the fit is by silhouette only"),
     "side": dict(photo=os.path.join(CUT, "side-cut.png"), title="Aeron: side (Herman Miller photo) vs our model",
-                 camera={"mode": "fit", "view": "right", "tilts": [0.0, 4.0, 8.0]}, mask="alpha", base_turn=18.0,
-                 explain="a perspective shot with the base turned about 18 degrees (a leg points at the camera; the five casters sit at -293, -164, 14, 186, 335 mm, not a pure side); ours is turned 18 for this view"),
+                 camera={"mode": "fit", "view": "right", "tilts": [0.0], "distances": [4.5, 6.0],
+                         "heights": [-0.08, 0.0, 0.08]}, mask="alpha",
+                 base_turn=18.0,
+                 explain="a perspective shot with the base turned 18 degrees (a leg points at the camera); ours is turned 18 for this view"),
     "back": dict(photo=os.path.join(CUT, "back-cut.png"), title="Aeron: back (Herman Miller photo) vs our model",
                  camera={"mode": "fit", "view": "back", "tilts": [0.0, 4.0, 8.0]}, mask="alpha",
-                 explain="a perspective product shot: the camera is searched; the weave reads solid in the photo, open in ours"),
-    "three-quarter-front": dict(photo=os.path.join(REF, "three-quarter-front.jpg"),
+                 explain="a perspective product shot: the camera is searched"),
+    "three-quarter-front": dict(photo=os.path.join(CUT, "three-quarter-front-cut.png"), mask="alpha",
                                 title="Aeron: three-quarter front (Herman Miller photo) vs our model",
-                                camera={"mode": "fit", "view": "front", "yaws": [28.0, 36.0], "tilts": [0.0],
-                                        "distances": [3.0, 4.5]}, crop=(0, 2500, 0, 2400),
+                                camera={"mode": "fit", "view": "front", "yaws": [-50.0, -42.0, -34.0],
+                                        "tilts": [0.0, 6.0], "distances": [3.5, 5.0]},
                                 explain="a turned perspective shot: the camera's distance, height, turn and tilt are searched"),
 }
 
@@ -117,18 +134,75 @@ PHOTOS = {
 # ---------------------------------------------------------------------------
 # 2. helpers
 # ---------------------------------------------------------------------------
-def interp(table, z):
-    if z <= table[0][0]:
+def hermite(table, x):
+    """A smooth curve through a table of (x, value) pairs (cubic, Catmull-Rom tangents), clamped at the ends."""
+    n = len(table)
+    if x <= table[0][0]:
         return table[0][1]
-    for (z0, v0), (z1, v1) in zip(table, table[1:]):
-        if z <= z1:
-            t = (z - z0) / (z1 - z0)
-            return v0 + (v1 - v0) * t
+    if x >= table[-1][0]:
+        return table[-1][1]
+    for i in range(n - 1):
+        x0, v0 = table[i]
+        x1, v1 = table[i + 1]
+        if x <= x1:
+            h = x1 - x0
+            t = (x - x0) / h
+            m0 = (v1 - table[i - 1][1]) / (x1 - table[i - 1][0]) if i > 0 else (v1 - v0) / h
+            m1 = (table[i + 2][1] - v0) / (table[i + 2][0] - x0) if i + 2 < n else (v1 - v0) / h
+            t2, t3 = t * t, t * t * t
+            return (2 * t3 - 3 * t2 + 1) * v0 + (t3 - 2 * t2 + t) * h * m0 + (-2 * t3 + 3 * t2) * v1 + (t3 - t2) * h * m1
     return table[-1][1]
 
 
+def lerp_table(table, x):
+    if x <= table[0][0]:
+        return table[0][1]
+    for (x0, v0), (x1, v1) in zip(table, table[1:]):
+        if x <= x1:
+            return v0 + (v1 - v0) * (x - x0) / max(x1 - x0, 1e-9)
+    return table[-1][1]
+
+
+interp = lerp_table
+
+
+def spline(pts, n, closed=False):
+    """Catmull-Rom through pts (tuples of any length): n samples when closed, n + 1 when open."""
+    P = [tuple(float(c) for c in p) for p in pts]
+    m = len(P)
+
+    def at(i):
+        return P[i % m] if closed else P[min(max(i, 0), m - 1)]
+    segs = m if closed else m - 1
+    out = []
+    for k in range(n if closed else n + 1):
+        t = k / n * segs
+        i = min(int(t), segs - 1)
+        u = t - i
+        out.append(tuple(0.5 * ((2 * b) + (-a + c) * u + (2 * a - 5 * b + 4 * c - d) * u * u
+                                + (-a + 3 * b - 3 * c + d) * u * u * u)
+                         for a, b, c, d in zip(at(i - 1), at(i), at(i + 1), at(i + 2))))
+    return out
+
+
+def mirror_loop(half):
+    """A closed loop from its right half (first and last points on the centre line)."""
+    return list(half) + [(-p[0],) + tuple(p[1:]) for p in reversed(half[1:-1])]
+
+
 def smooth(t):
+    t = min(max(t, 0.0), 1.0)
     return t * t * (3 - 2 * t)
+
+
+def sup(w, h, e, n, cu=0.0, cv=0.0):
+    """A superellipse section (u, v), n points, CCW: e = 2 an ellipse, 4 a soft rounded rectangle."""
+    out = []
+    for k in range(n):
+        a = 2 * math.pi * (k + 0.5) / n
+        c, s = math.cos(a), math.sin(a)
+        out.append((cu + w / 2 * math.copysign(abs(c) ** (2 / e), c), cv + h / 2 * math.copysign(abs(s) ** (2 / e), s)))
+    return out
 
 
 def mats():
@@ -139,77 +213,80 @@ def mats():
         d[n] = bpy.data.materials.get("mat_chair_" + n) or M.principled("mat_chair_" + n, **v)
         return d[n]
     get("mineral", base="#c9cccb", rough=0.6, spec=0.4)             # soft-touch pale grey plastic
-    get("pad", base="#cfd2d1", rough=0.8, spec=0.3)                  # the arm pads and lumbar pads
-    get("polished", base="#eef0f3", rough=0.05, metal=1.0)           # polished aluminium
-    get("black", base="#1a1a1b", rough=0.55)                         # casters, the column
-    get("dark", base="#3e4043", rough=0.5)                           # the tension knob's grip
-    get("cast", base="#6d7075", rough=0.42, metal=0.85)              # the cast tilt housing, dark grey metal
-    get("mesh", base="#d2d5d5", rough=0.5, sheen=0.6, sheen_tint="#ffffff")
+    get("pad", base="#c2c5c5", rough=0.85, spec=0.3)                 # the arm pads and lumbar pads, a foam skin
+    get("polished", base="#eef0f3", rough=0.06, metal=1.0)           # polished aluminium
+    get("black", base="#1a1a1b", rough=0.55)                         # casters, the column, the posts' slots
+    get("dark", base="#55585c", rough=0.5)                           # the PostureFit dial
+    get("cast", base="#c3c6ca", rough=0.28, metal=1.0)               # the tilt housing: bright cast aluminium
     return d
 
 
 def mesh_material(lite):
-    """8Z Pellicle: pale grey, see-through. Rich: a procedural weave (two wave textures) drives alpha and a bump
-    for the sheen. Lite: a small tiling alpha-tested weave texture (alphaMode MASK)."""
+    """8Z Pellicle: pale grey, see-through, fine vertical threads crossed by sparser wefts whose density changes
+    in bands (the eight zones). Rich: procedural threads (alpha, colour and a bump). Lite: a small tiling
+    alpha-tested weave texture (alphaMode MASK)."""
     name = "mat_chair_weave" + ("_lite" if lite else "")
     m = bpy.data.materials.get(name)
     if m:
         return m
     from lib import materials as M
     m, nt, b = M._new(name)
-    M._set(b, base="#a9a59c", rough=0.42, spec=0.5, sheen=0.6, sheen_tint="#fff4e4")   # a touch warmer than the frame
-    try:
-        b.inputs["Anisotropic"].default_value = 0.6
-        b.inputs["Anisotropic Rotation"].default_value = 0.25
-    except KeyError:
-        pass
+    M._set(b, base="#b4b3ad", rough=0.45, spec=0.5, sheen=0.6, sheen_tint="#fff4e4")
     m.use_backface_culling = False
+    N = nt.nodes
+
+    def math_(op, a, bv=None, c=None):
+        n = N.new("ShaderNodeMath")
+        n.operation = op
+        for i, v in enumerate((a, bv, c)):
+            if v is None:
+                continue
+            if isinstance(v, (int, float)):
+                n.inputs[i].default_value = v
+            else:
+                nt.links.new(v, n.inputs[i])
+        return n.outputs[0]
     if lite:
         im = weave_image()
-        tex = nt.nodes.new("ShaderNodeTexImage")
+        tex = N.new("ShaderNodeTexImage")
         tex.image = im
         tex.interpolation = "Linear"        # Closest exported a nearest-mip sampler that moires in three.js
-        uv = nt.nodes.new("ShaderNodeUVMap")
-        mp = nt.nodes.new("ShaderNodeMapping")
-        mp.inputs["Scale"].default_value = (170.0, 170.0, 1.0)
+        uv = N.new("ShaderNodeUVMap")
+        mp = N.new("ShaderNodeMapping")
+        mp.inputs["Scale"].default_value = (15.6, 15.6, 1.0)     # the 8-rib tile every 35 mm (4.4 mm ribs)
         nt.links.new(uv.outputs[0], mp.inputs[0])
         nt.links.new(mp.outputs[0], tex.inputs[0])
-        gt = nt.nodes.new("ShaderNodeMath")
-        gt.operation = "GREATER_THAN"
-        gt.inputs[1].default_value = 0.5
-        nt.links.new(tex.outputs["Alpha"], gt.inputs[0])
-        nt.links.new(gt.outputs[0], b.inputs["Alpha"])
+        nt.links.new(tex.outputs["Color"], b.inputs["Base Color"])
+        nt.links.new(math_("GREATER_THAN", tex.outputs["Alpha"], 0.5), b.inputs["Alpha"])
         for attr, val in (("blend_method", "CLIP"), ("alpha_threshold", 0.5), ("surface_render_method", "DITHERED")):
             try:
                 setattr(m, attr, val)
             except Exception:
                 pass
     else:
-        tc = nt.nodes.new("ShaderNodeTexCoord")
-        mp = nt.nodes.new("ShaderNodeMapping")
-        mp.inputs["Scale"].default_value = (1.0, 1.0, 1.0)
-        nt.links.new(tc.outputs["UV"], mp.inputs[0])
-        w1 = nt.nodes.new("ShaderNodeTexWave")
-        w1.bands_direction, w1.wave_profile = "X", "SAW"
-        w1.inputs["Scale"].default_value = 400.0
-        w2 = nt.nodes.new("ShaderNodeTexWave")
-        w2.bands_direction, w2.wave_profile = "Y", "SAW"
-        w2.inputs["Scale"].default_value = 300.0
-        nt.links.new(mp.outputs[0], w1.inputs[0])
-        nt.links.new(mp.outputs[0], w2.inputs[0])
-        mx = nt.nodes.new("ShaderNodeMath")
-        mx.operation = "MINIMUM"           # a hole where both saws are high: about a quarter open
-        nt.links.new(w1.outputs["Fac"], mx.inputs[0])
-        nt.links.new(w2.outputs["Fac"], mx.inputs[1])
-        ramp = nt.nodes.new("ShaderNodeMapRange")
-        ramp.inputs["From Min"].default_value, ramp.inputs["From Max"].default_value = 0.30, 0.36   # about 45 % open
-        ramp.inputs["To Min"].default_value, ramp.inputs["To Max"].default_value = 0.98, 0.06
-        nt.links.new(mx.outputs[0], ramp.inputs[0])
-        nt.links.new(ramp.outputs[0], b.inputs["Alpha"])
-        bump = nt.nodes.new("ShaderNodeBump")
-        bump.inputs["Strength"].default_value = 0.3
+        # UV is metres / 0.55. Warps (the vertical ribs the photos show, about 22 in 100 mm) every 4.4 mm, 64 % of
+        # the pitch; wefts every 2.2 mm, 36 to 60 % by zone: about a fifth open (at a quarter open the seat read
+        # as a glass bowl with the tilt housing showing through), denser where the bands are
+        uv = N.new("ShaderNodeUVMap")
+        sep = N.new("ShaderNodeSeparateXYZ")
+        nt.links.new(uv.outputs[0], sep.inputs[0])
+        fu = math_("FRACT", math_("MULTIPLY", sep.outputs[0], 0.55 / 0.0044))
+        fv = math_("FRACT", math_("MULTIPLY", sep.outputs[1], 0.55 / 0.0022))
+        zone = math_("MULTIPLY_ADD", math_("SINE", math_("MULTIPLY", sep.outputs[1], 2 * math.pi * 0.55 / 0.14)), 0.12, 0.48)
+        warp = math_("LESS_THAN", fu, 0.64)
+        weft = math_("LESS_THAN", fv, zone)
+        thread = math_("MAXIMUM", warp, weft)
+        nt.links.new(thread, b.inputs["Alpha"])
+        mix = N.new("ShaderNodeMix")
+        mix.data_type = "RGBA"
+        mix.inputs["A"].default_value = M.rgba("#84837f")           # wefts, darker: the ribs must read
+        mix.inputs["B"].default_value = M.rgba("#c6c5bf")           # warps (the ribs)
+        nt.links.new(warp, mix.inputs["Factor"])
+        nt.links.new(mix.outputs["Result"], b.inputs["Base Color"])
+        bump = N.new("ShaderNodeBump")
+        bump.inputs["Strength"].default_value = 0.4
         bump.inputs["Distance"].default_value = 0.0004
-        nt.links.new(mx.outputs[0], bump.inputs["Height"])
+        nt.links.new(math_("ADD", warp, math_("MULTIPLY", weft, 0.5)), bump.inputs["Height"])
         nt.links.new(bump.outputs[0], b.inputs["Normal"])
         for attr, val in (("surface_render_method", "DITHERED"), ("blend_method", "HASHED")):
             try:
@@ -220,7 +297,8 @@ def mesh_material(lite):
 
 
 def weave_image(px=32):
-    """A tiling weave tile: threads on a 2 px pitch (one cell = one thread crossing), holes transparent."""
+    """A tiling weave tile, 8 ribs across: 4 px pitch (2 thread, 2 gap), a weft every 8 px; holes transparent.
+    (A denser band in half the tile read as horizontal stripes from across the room: removed 2026-11-12.)"""
     name = "chair_weave"
     im = bpy.data.images.get(name)
     if im:
@@ -229,70 +307,95 @@ def weave_image(px=32):
     data = []
     for y in range(px):
         for x in range(px):
-            on = (x % 4) < 2 or (y % 8) < 2          # dense warps, sparser wefts: fine vertical stripes
-            shade = 0.66 if (x % 4) < 2 else 0.58
-            data += [shade, shade - 0.015, shade - 0.05, 1.0 if on else 0.0]
+            warp = (x % 4) < 2
+            weft = (y % 8) == 0
+            shade = 0.72 if warp else 0.60
+            data += [shade, shade - 0.005, shade - 0.03, 1.0 if (warp or weft) else 0.0]
     im.pixels = data
     im.pack()
     return im
 
 
 class A:
-    """One sub-assembly's bmesh (lib/parts.Mesh with a sweep and a grid added)."""
+    """One sub-assembly's bmesh (lib/parts.Mesh plus lofts and sweeps). Points are Vectors or tuples in mm."""
 
     def __init__(self):
         from lib import parts as P
         self.m = P.Mesh()
         self.P = P
 
-    def sweep(self, path, profile, key, ref=None, closed=False, caps=True, refs=None):
-        """Sweep a closed 2D profile [(u, v)] along a 3D path (mm). u lies in the plane normal to `ref`, v along
-        it; `refs` gives a reference direction per station."""
+    def ring(self, pts):
+        return self.m.verts([Vector(p) * MM for p in pts])
+
+    def loft(self, rings, key, closed=False, caps=True):
+        """Join rings of points (mm, the same count each) into a skin."""
+        vs = [self.ring(r) for r in rings]
+        n = len(vs)
+        for i in range(n if closed else n - 1):
+            self.m.strip(vs[i], vs[(i + 1) % n], key)
+        if caps and not closed:
+            self.m.face(list(reversed(vs[0])), key)
+            self.m.face(vs[-1], key)
+        return vs
+
+    def sweep(self, path, profs, key, across, closed=False, caps=True, dome=0.0):
+        """Sweep sections along a path (mm). profs: one profile [(u, v)] or one per station; u lies along
+        `across` (made perpendicular to the path), v along tangent x across. dome > 0 rounds both ends."""
+        path = [Vector(p) for p in path]
         n = len(path)
-        ref = ref or Vector((0, -1, 0))
+        across = Vector(across)
+        one = isinstance(profs[0][0], (int, float))
         rings = []
         for i, p in enumerate(path):
             if closed:
                 t = (path[(i + 1) % n] - path[i - 1]).normalized()
             else:
                 t = (path[min(i + 1, n - 1)] - path[max(i - 1, 0)]).normalized()
-            r = (refs[i] if refs else ref)
-            n1 = t.cross(r).normalized()
-            n2 = n1.cross(t).normalized()
-            rings.append(self.m.verts([p + u * n1 + v * n2 for u, v in profile]))
-        for i in range(n if closed else n - 1):
-            self.m.strip(rings[i], rings[(i + 1) % n], key)
-        if caps and not closed:
-            self.m.face(list(reversed(rings[0])), key)
-            self.m.face(rings[-1], key)
-        return rings
-
-    def grid(self, rows, key, double=False):
-        """A surface from rows of points (each row the same length); quads wound so normals face -Y/+Z-ish."""
-        vs = [self.m.verts(r) for r in rows]
-        for a, b in zip(vs, vs[1:]):
-            for i in range(len(a) - 1):
-                self.m.face([a[i], a[i + 1], b[i + 1], b[i]], key)
-        return vs
+            a = (across - across.dot(t) * t).normalized()
+            b = t.cross(a)
+            pr = profs if one else profs[i]
+            rings.append([p + u * a + v * b for u, v in pr])
+        if dome and not closed:
+            for end, sgn in ((0, -1), (-1, 1)):
+                r0 = rings[end]
+                c = sum(r0, Vector()) / len(r0)
+                i0 = 0 if end == 0 else n - 1
+                t = (path[min(i0 + 1, n - 1)] - path[max(i0 - 1, 0)]).normalized() * sgn
+                extra = [[c + (q - c) * s + t * dome * d for q in r0] for s, d in ((0.82, 0.5), (0.45, 0.9))]
+                if end == 0:
+                    rings = list(reversed(extra)) + rings
+                else:
+                    rings = rings + extra
+        return self.loft(rings, key, closed=closed, caps=caps)
 
     def lathe(self, prof, seg, key, m=None):
         return self.m.lathe([(r * MM, z * MM) for r, z in prof], seg, key, m)
 
-    def prism(self, outline, z0, z1, key, m=None):
-        return self.m.prism([(x * MM, y * MM) for x, y in outline], z0 * MM, z1 * MM, key, m=m)
+    def disc(self, at, axis, prof, seg, key):
+        """A lathe about `axis` through `at` (mm): prof [(r, h)] along the axis."""
+        q = Vector(axis).normalized().to_track_quat("Z", "Y").to_matrix().to_4x4()
+        return self.lathe(prof, seg, key, Matrix.Translation(Vector(at) * MM) @ q)
 
-    def finish(self, name, mp, coll, parent=None, at=(0, 0, 0), smooth=30, bevel=None):
-        return self.m.finish(name, mp, "+Z", at, coll, parent, smooth=smooth, bevel=bevel)
+    def rbox(self, c, size, r, seg, key):
+        """A rounded box centred at c (mm), size (x, y, z), corner radius r."""
+        n0 = len(self.m.bm.verts)
+        w, d, h = size
+        self.P._rbox(self.m, w * MM, d * MM, h * MM, min(r, w / 2 - 0.5, d / 2 - 0.5) * MM,
+                     min(r, h / 2 - 0.5) * MM, min(r, h / 2 - 0.5) * MM, seg, key, z0=-h / 2 * MM)
+        self.m.bm.verts.ensure_lookup_table()
+        bmesh.ops.translate(self.m.bm, verts=self.m.bm.verts[n0:], vec=Vector(c) * MM)
+
+    def finish(self, name, mp, coll, parent=None, smooth=40, subsurf=0):
+        bmesh.ops.recalc_face_normals(self.m.bm, faces=self.m.bm.faces)
+        o = self.m.finish(name, mp, "+Z", (0, 0, 0), coll, parent, smooth=smooth)
+        if subsurf:
+            md = o.modifiers.new("subsurf", "SUBSURF")
+            md.levels = md.render_levels = subsurf
+        return o
 
 
 def V(x, y, z):
     return Vector((x * MM, y * MM, z * MM))
-
-
-def rprof(w, h, r, n):
-    """Rounded rectangle profile (u, v) in metres, CCW, centred."""
-    from lib import parts as P
-    return [(u * MM, v * MM) for u, v in P.rrect(w, h, r, n)]
 
 
 def empty(name, coll, parent=None, loc=(0, 0, 0)):
@@ -304,351 +407,383 @@ def empty(name, coll, parent=None, loc=(0, 0, 0)):
     return e
 
 
-# ---------------------------------------------------------------------------
-# 3. sub-assemblies (all in the chair frame, mm, seat top at z = 0 until the whole upper part is lifted)
-# ---------------------------------------------------------------------------
-def back_loop(n_side=18, n_top=16):
-    """The back frame's centre line: a closed loop (bottom crossbar, left rail, top arc, right rail)."""
-    pts = []
-    zs = [BACK_BOTTOM + (BACK_CORNER_Z - BACK_BOTTOM) * i / n_side for i in range(n_side + 1)]
-    for s in (-1, 1):
-        rail = []
-        for z in zs:
-            hw = interp(BACK_HW, max(z, 0)) - BACK_RAIL[0] / 2 - (0 if z >= 0 else -4 * (z / BACK_BOTTOM))
-            rail.append(V(s * hw, interp(BACK_YC, max(z, 0)) - (0 if z >= 0 else 0.3 * z), z))
-        pts.append(rail)
-    left, right = pts
-    top = []
-    hw_c = interp(BACK_HW, BACK_CORNER_Z) - BACK_RAIL[0] / 2
-    for i in range(1, n_top):
-        t = i / n_top
-        x = -hw_c * math.cos(math.pi * t)
-        rise = math.sin(math.pi * t)
-        z = BACK_CORNER_Z + (BACK_TOP - BACK_RAIL[0] / 2 - BACK_CORNER_Z) * rise
-        top.append(V(x, interp(BACK_YC, z), z))
-    loop = left + top + list(reversed(right))
-    return loop
-
-
-def build_back(coll, mp, parent, rough=False, lite=False, sfx=""):
-    names = []
-    seg = 4 if lite else 8
-    # the frame: a rounded rail swept round the loop
-    B = A()
-    loop = back_loop(10 if lite else 18, 10 if lite else 16)
-    B.sweep(loop, rprof(BACK_RAIL[0], BACK_RAIL[1], 9.0, 2 if lite else 4), "mineral", closed=True,
-            refs=[Vector((0, -0.94, 0.34)) for _ in loop])
-    # the lower crossbar behind the seat, joining the rails
-    hw0 = interp(BACK_HW, 0)
-    B.sweep([V(-hw0, 186, BACK_BOTTOM), V(hw0, 186, BACK_BOTTOM)], rprof(34, 40, 10, 2 if lite else 4), "mineral",
-            ref=Vector((0, 0, 1)))
-    # the polished spine bars, from the mechanism up the rails' lower half
-    for s in (-1, 1):
-        path = [V(s * SPINE_X, 150, -150), V(s * SPINE_X, 175, -60), V(s * (SPINE_X - 4), 188, 40),
-                V(s * (SPINE_X - 10), 196, 140), V(s * (SPINE_X - 20), 204, 210)]
-        B.sweep(path, rprof(18, 26, 6, 2 if lite else 4), "polished", ref=Vector((0, -1, 0)))
-    obj = B.finish("chair_back" + sfx, mp, coll, parent)
-    names.append(obj.name)
-    # the mesh: a cupped grid inside the rails (kept in rough too: the photos' silhouettes are filled)
-    Mh = A()
-    nz, nx = (14, 10) if lite else (30, 22)
-    rows = []
-    for i in range(nz + 1):
-        z = 8 + (BACK_TOP - 30 - 8) * i / nz
-        hw = interp(BACK_HW, min(z, BACK_CORNER_Z)) - BACK_RAIL[0] * 0.45
-        if z > BACK_CORNER_Z:   # under the top arc
-            t = (z - BACK_CORNER_Z) / (BACK_TOP - BACK_CORNER_Z)
-            hw = hw * math.sqrt(max(1 - t * t, 0.02))
-        yc = interp(BACK_YC, z)
-        row = []
-        for j in range(nx + 1):
-            u = -1 + 2 * j / nx
-            row.append(V(u * hw, yc + BACK_CUP * (1 - u * u) * (1 - 0.5 * (z / BACK_TOP)), z))
-        rows.append(row)
-    Mh.grid(rows, "weave")
-    mesh = Mh.finish("chair_back_mesh" + sfx, mp, coll, parent, smooth=80)
-    mesh.data.materials.clear()
-    mesh.data.materials.append(mesh_material(lite))
-    uv = mesh.data.uv_layers.new(name="UVMap")
-    for poly in mesh.data.polygons:
+def planar_uv(obj, ax, ay):
+    """UVs in metres / 0.55 from two local axes (the weave's threads run along the second)."""
+    me = obj.data
+    uv = me.uv_layers.new(name="UVMap")
+    for poly in me.polygons:
         for li in poly.loop_indices:
-            v = mesh.data.vertices[mesh.data.loops[li].vertex_index].co
-            uv.data[li].uv = (v.x / 0.55 + 0.5, v.z / 0.55)
-    names.append(mesh.name)
-    if rough:
-        return names
-    # PostureFit SL: the Y on the back of the mesh (stem, two arms, the lumbar bar with two pads, the dial)
-    Yp = A()
-    yb = lambda z: interp(BACK_YC, z) + BACK_CUP * (1 - 0.5 * z / BACK_TOP) + 6   # just behind the mesh centre
-    stem = [V(0, yb(z), z) for z in (-10, 40, 90, Y_SPLIT_Z)]
-    Yp.sweep(stem, rprof(Y_STEM[0], Y_STEM[1], 7, 2 if lite else 4), "mineral", ref=Vector((0, 0, 1)))
-    for s in (-1, 1):
-        arm = []
-        for i in range(5):
-            t = i / 4
-            x = s * (8 + (Y_ARM_END[0] - 8) * t)
-            z = Y_SPLIT_Z - 10 + (Y_ARM_END[1] - Y_SPLIT_Z + 10) * t
-            u = x / (interp(BACK_HW, z) - BACK_RAIL[0] * 0.45)
-            arm.append(V(x, interp(BACK_YC, z) + BACK_CUP * (1 - u * u) * (1 - 0.5 * z / BACK_TOP) + 5, z))
-        Yp.sweep(arm, rprof(26, 14, 5, 2 if lite else 4), "mineral", ref=Vector((0, 1, 0)))
-    # the lumbar bar and its two pads
-    Yp.sweep([V(-Y_PAD[0] / 2, yb(28) + 3, 28), V(Y_PAD[0] / 2, yb(28) + 3, 28)], rprof(Y_PAD[1], 16, 6, 2 if lite else 4),
-             "mineral", ref=Vector((0, 1, 0)))
-    for s in (-1, 1):
-        Yp.sweep([V(s * 62, yb(28) + 2, 12), V(s * 62, yb(28) + 2, 52)], rprof(52, 20, 8, 2 if lite else 4), "pad",
-                 ref=Vector((0, 1, 0)))
-    # the dial on the stem (the lumbar depth adjuster)
-    Yp.lathe([(0, 0), (11, 0), (11, 6), (0, 6)], 8 if lite else 24, "mineral",
-             Matrix.Translation(V(0, yb(70) + Y_STEM[1] / 2, 70)) @ Matrix.Rotation(-math.pi / 2, 4, "X"))
-    y = Yp.finish("chair_back_posturefit" + sfx, mp, coll, parent)
-    names.append(y.name)
-    return names
+            v = me.vertices[me.loops[li].vertex_index].co
+            uv.data[li].uv = (v[ax] / 0.55 + 0.5, v[ay] / 0.55 + 0.5)
 
 
-def seat_outline(n=40):
-    """The seat frame's centre line in the top view, CCW, (x, y) in mm: a sculpted rounded outline, widest just
-    behind the front corners, narrowing to the back (side.jpg and three-quarter-front.jpg)."""
-    pts = []
-    yf = SEAT_FRONT + SEAT_RAIL[0] / 2 + 2
-    yb = SEAT_BACK - SEAT_RAIL[0] / 2
-    L = yb - yf
-    for i in range(n):
-        t = i / n                              # 0 at the front centre, round the right side, back, left side
-        a = 2 * math.pi * t
-        # a superellipse-ish outline: y from a cosine, x from a sine shaped by the local half-width
-        y = yf + L * (1 - math.cos(a)) / 2
-        v = (y - yf) / L
-        hw = SEAT_HW_FRONT - 10 + 24 * math.sin(math.pi * min(v / 0.55, 1.0)) * (v < 0.55) \
-            - (SEAT_HW_FRONT - SEAT_HW_BACK + 2) * max(v - 0.35, 0) / 0.65
-        hw -= SEAT_RAIL[0] / 2
-        x = hw * math.sin(a) / max(abs(math.sin(a)), 1e-6) * abs(math.sin(a)) ** 0.55
-        pts.append((x, y))
-    return pts
+# ---------------------------------------------------------------------------
+# 3. sub-assemblies (the chair frame, mm; the upper parts relative to the seat datum)
+# ---------------------------------------------------------------------------
+_CACHE = {}
 
 
-def waterfall_z(y):
-    y0, drop = WATERFALL
-    if y >= y0:
-        return 0.0
-    t = min((y0 - y) / (y0 - SEAT_FRONT), 1.0)
-    return -drop * (1 - math.sqrt(max(1 - t * t, 0.0)))
+def _half_width(key, half, axis):
+    """Half-width of a mirrored outline by its other coordinate (a table from a fine sampling of the loop)."""
+    if key not in _CACHE:
+        loop = spline(mirror_loop(half), 720, closed=True)
+        tab = sorted((p[axis], p[0]) for p in loop if p[0] >= 0)
+        out = []
+        for v, x in tab:                      # keep the widest x where the loop doubles back on one value
+            if out and abs(out[-1][0] - v) < 0.25:
+                out[-1] = (out[-1][0], max(out[-1][1], x))
+            else:
+                out.append((v, x))
+        _CACHE[key] = out
+    return _CACHE[key]
 
 
-def bolster_z(x, y, hw):
-    """The frame's sides rise at the back into the hip bolsters (28 mm at the rear corners)."""
-    v = max((y - 20) / (SEAT_BACK - 20), 0.0)
-    return SEAT_BOLSTER * (v ** 1.5) * min(abs(x) / max(hw, 1), 1.0) ** 2
+def seat_hw(y):
+    return lerp_table(_half_width("seat", SEAT_OUT, 1), y)
+
+
+def seat_S(x, y):
+    """The seat's saddle surface: the centre line sags, the side rails arch, the front falls away."""
+    u = min(abs(x) / max(seat_hw(y), 1.0), 1.0)
+    mid, side = hermite(SEAT_MID, y), hermite(SEAT_SIDE, y)
+    return mid + (side - mid) * u ** 2.4
+
+
+def seat_stations(n):
+    """Stations round the frame: (point, outward normal, frame width)."""
+    loop = spline(mirror_loop(SEAT_OUT), n, closed=True)
+    out = []
+    for i, p in enumerate(loop):
+        a, b = loop[i - 1], loop[(i + 1) % n]
+        t = Vector((b[0] - a[0], b[1] - a[1])).normalized()
+        nrm = (t.y, -t.x)                       # the loop runs counter-clockwise from above
+        w = 28 - 6 * max(-nrm[1], 0) ** 2 - 2 * max(nrm[1], 0) ** 2      # slimmest across the front: a thin lip
+        out.append((p, nrm, w))
+    return out
 
 
 def build_seat(coll, mp, parent, rough=False, lite=False, sfx=""):
     names = []
     S = A()
-    ol = seat_outline(24 if lite else 48)
-    path, refs = [], []
-    for x, y in ol:
-        hw = SEAT_HW_FRONT - 16 if y < 0 else SEAT_HW_BACK
-        path.append(V(x, y, waterfall_z(y) - SEAT_RAIL[1] / 2 + bolster_z(x, y, hw)))
-        refs.append(Vector((0, 0, 1)))
-    # the rail: a rounded section, taller and rounder across the front (the thick waterfall lip)
-    prof = rprof(SEAT_RAIL[0], SEAT_RAIL[1], 10, 3 if lite else 6)       # near-round tube
-    rings = S.sweep(path, prof, "mineral", closed=True, ref=Vector((0, 0, 1)))
-    for ring, (x, y) in zip(rings, ol):
-        if y < WATERFALL[0] + 60:
-            f = smooth(min((WATERFALL[0] + 60 - y) / 90, 1.0))
-            c = sum((v.co for v in ring), Vector()) / len(ring)
-            for v in ring:
-                v.co = c + (v.co - c) * (1 + 0.8 * f) - Vector((0, 0, 4 * f * MM))   # the front lip rolls out, 1.8 x
-    # the shallow pan under the frame, inset from the rail so the frame reads at the edges; dark cast like the
-    # mechanism (it shows through the weave from above)
-    n0 = len(S.m.bm.verts)
-    S.P._rbox(S.m, 300 * MM, 270 * MM, 22 * MM, 60 * MM, 4 * MM, 10 * MM, 1 if lite else 3, "cast",
-              z0=-(SEAT_RAIL[1] + 34) * MM)
-    S.m.bm.verts.ensure_lookup_table()
-    bmesh.ops.translate(S.m.bm, verts=S.m.bm.verts[n0:], vec=(0, 30 * MM, 0))
-    obj = S.finish("chair_seat" + sfx, mp, coll, parent, smooth=50)
-    obj.rotation_euler.x = math.radians(-SEAT_TILT)
+    st = seat_stations(44 if lite else 96)
+    rings = []
+    for (x, y), n, w in st:
+        sig = abs(n[0]) ** 1.5
+        Sp = seat_S(x, y)
+
+        def top(d):
+            return seat_S(x - d * n[0], y - d * n[1])
+
+        def under(d):                            # hollow under the side rails, a solid wedge under the lip
+            return min(top(d) - 8, sig * (top(d) - 13) + (1 - sig) * hermite(SEAT_BOT, y - d * n[1]))
+        zb = min(hermite(SEAT_BOT, y), Sp - 9)
+        prof = [(w, top(w) - 1.0), (w * 0.55, top(w * 0.55) + 1.0), (9, top(9) + 0.6), (3.5, top(3.5) - 2.0),
+                (0.8, Sp - 5), (0, Sp - 10), (0, zb + 5), (2.5, zb), (9, zb), (12, min(zb + 6, under(13))),
+                (13.5, under(13.5)), (w - 5, under(w - 5)), (w, top(w) - 9)]
+        if lite:
+            prof = [prof[i] for i in (0, 2, 5, 7, 8, 10, 12)]
+        rings.append([(x - d * n[0], y - d * n[1], z) for d, z in prof])
+    S.loft(rings, "mineral", closed=True)
+    obj = S.finish("chair_seat" + sfx, mp, coll, parent, smooth=38)      # no subdivision: it made the rim puffy
     names.append(obj.name)
-    # the seat mesh: dished into the frame, following the waterfall and the bolsters (kept in rough: filled silhouettes)
+    # the mesh: the same surface inside the frame, rings from the frame's inner edge to a centre point
     Mh = A()
-    ny, nx = (12, 10) if lite else (28, 20)
-    rows = []
-    yf, yb = SEAT_FRONT + 4, SEAT_BACK - SEAT_RAIL[0] / 2 - 2
-    L = yb - yf
-    for i in range(ny + 1):
-        t = i / ny
-        y = yf + L * t
-        hw = SEAT_HW_FRONT - 10 + 24 * math.sin(math.pi * min(t / 0.55, 1.0)) * (t < 0.55) \
-            - (SEAT_HW_FRONT - SEAT_HW_BACK + 2) * max(t - 0.35, 0) / 0.65 - SEAT_RAIL[0] * 0.75
-        if y < yf + 70:
-            hw -= 70 * (1 - math.sqrt(max(1 - ((yf + 70 - y) / 70) ** 2, 0)))
-        row = []
-        for j in range(nx + 1):
-            u = -1 + 2 * j / nx
-            dish = SEAT_DISH * (1 - u * u) * math.sin(math.pi * min(max((y - yf - 30) / (L - 30), 0), 1))
-            row.append(V(u * hw, y, waterfall_z(y) - 14 - dish + bolster_z(u * hw, y, hw) * 0.8))   # meets the tube from below
-        rows.append(row)
-    Mh.grid(rows, "weave")
+    inner = [(x - (w - 4) * n[0], y - (w - 4) * n[1]) for (x, y), n, w in st]
+    cx, cy = 0.0, -60.0
+    nr = 4 if lite else 14
+    vr = []
+    for j in range(nr):
+        rho = 1 - j / nr
+        vr.append(Mh.ring([(cx + (x - cx) * rho, cy + (y - cy) * rho,
+                            seat_S(cx + (x - cx) * rho, cy + (y - cy) * rho) - 1.5) for x, y in inner]))
+    for a, b in zip(vr, vr[1:]):
+        Mh.m.strip(a, b, "weave")
+    c = Mh.ring([(cx, cy, seat_S(cx, cy) - 1.5)])[0]
+    last = vr[-1]
+    for i in range(len(last)):
+        Mh.m.face([last[i], last[(i + 1) % len(last)], c], "weave")
     mesh = Mh.finish("chair_seat_mesh" + sfx, mp, coll, parent, smooth=80)
-    mesh.rotation_euler.x = math.radians(-SEAT_TILT)
     mesh.data.materials.clear()
     mesh.data.materials.append(mesh_material(lite))
-    uv = mesh.data.uv_layers.new(name="UVMap")
-    for poly in mesh.data.polygons:
-        for li in poly.loop_indices:
-            v = mesh.data.vertices[mesh.data.loops[li].vertex_index].co
-            uv.data[li].uv = (v.x / 0.55 + 0.5, v.y / 0.55 + 0.5)
+    planar_uv(mesh, 0, 1)
     names.append(mesh.name)
     return names
 
 
-def catmull(pts, n):
-    """A Catmull-Rom curve through pts (Vectors), n points along it."""
+def back_hw(z):
+    return lerp_table(_half_width("back", BACK_OUT, 1), z)
+
+
+def back_stations(n):
+    """Stations round the back frame: (x, z), the inward normal in the frame's plane, and the section's sizes:
+    front bezel width, rear flange width, depth."""
+    loop = spline(mirror_loop(BACK_OUT), n, closed=True)
     out = []
-    P = [pts[0]] + list(pts) + [pts[-1]]
-    segs = len(pts) - 1
-    for k in range(n + 1):
-        t = k / n * segs
-        i = min(int(t), segs - 1)
-        u = t - i
-        p0, p1, p2, p3 = P[i], P[i + 1], P[i + 2], P[i + 3]
-        out.append(0.5 * ((2 * p1) + (-p0 + p2) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u * u
-                          + (-p0 + 3 * p1 - 3 * p2 + p3) * u * u * u))
+    for i, p in enumerate(loop):
+        a, b = loop[i - 1], loop[(i + 1) % n]
+        t = Vector((b[0] - a[0], b[1] - a[1])).normalized()
+        m = (-t.y, t.x)                         # the loop runs counter-clockwise from the front
+        bar = m[1] ** 2                         # 1 on the top and bottom bars, 0 on the side rails
+        top = m[1] < 0
+        up = smooth((p[1] - 150) / 90)
+        wf = 15 + 4 * bar
+        wr = (34 + 12 * up) * (1 - bar) + bar * (76 if top else 58)
+        dep = (32 + 8 * up) * (1 - bar) + bar * (28 if top else 30)
+        out.append((p, m, wf, wr, dep, bar if top else 0.0))
     return out
+
+
+def back_y(x, z):
+    """The mesh surface: just behind the bezel at the rails, cupped back in the middle."""
+    u = min(abs(x) / max(back_hw(z) - 13, 1.0), 1.0)
+    return hermite(BACK_YF, z) + 5 + hermite(BACK_CUP, z) * (1 - u * u)
+
+
+def build_back(coll, mp, parent, rough=False, lite=False, sfx=""):
+    names = []
+    B = A()
+    st = back_stations(48 if lite else 112)
+    rings = []
+    for (x, z), m, wf, wr, D, hook in st:
+        y0 = hermite(BACK_YF, z)
+        # the inner face: a slant on the side rails (a wedge); on the top bar it steps back behind the bezel,
+        # leaving the rear flange as a lip that hangs down (the hook the side photo shows)
+        lip = 9.5 + 4.5 * hook                  # the hanging lip is a thick rounded edge
+        h5 = ((wf + 4 + wr - 2) / 2 * (1 - hook) + (wf + 9) * hook, (9 + D - lip) / 2 * (1 - hook) + (D - lip) * hook)
+        if lite:
+            prof = [(0, 0), (wf, 0), (wf + 3, 7), h5, (wr, D - 9), (wr, D), (0, D)]
+        else:                                   # with the groove the mesh is splined into, a dark line in front
+            prof = [(1.5, 0), (wf * 0.5, -1.0), (wf - 5.2, -0.3), (wf - 4.4, 3.0), (wf - 2.6, 3.0), (wf - 1.8, 0.3),
+                    (wf + 1.5, 4), (wf + 4, 9), h5, (wr - 2, D - lip), (wr, D - 6), (wr - 1.5, D - 1.5), (wr - 5, D),
+                    (4, D), (1, D - 2.5), (0, D - 6), (0, 5), (0.5, 1.5)]
+        # the top bar's upper face is not level: it carries on up the back's lean to a crown at the rear
+        rings.append([(x + (a + TOP_SKEW * hook * (D - b)) * m[0], y0 + b, z + (a + TOP_SKEW * hook * (D - b)) * m[1])
+                      for a, b in prof])
+    B.loft(rings, "mineral", closed=True)
+    obj = B.finish("chair_back" + sfx, mp, coll, parent, smooth=28)      # creased corners: the real frame is crisp
+    names.append(obj.name)
+    # the mesh, from the bezel's inner edge to a centre point
+    Mh = A()
+    inner = [(x + (wf - 5 + TOP_SKEW * hook * (D - 5)) * m[0], z + (wf - 5 + TOP_SKEW * hook * (D - 5)) * m[1])
+             for (x, z), m, wf, wr, D, hook in st]
+    cx, cz = 0.0, 190.0
+    nr = 4 if lite else 14
+    vr = []
+    for j in range(nr):
+        rho = 1 - j / nr
+        row = []
+        for x, z in inner:
+            px, pz = cx + (x - cx) * rho, cz + (z - cz) * rho
+            # at the boundary the mesh meets the bezel; inside it follows the cupped surface
+            row.append((px, back_y(px, pz) if j else hermite(BACK_YF, z) + 5, pz))
+        vr.append(Mh.ring(row))
+    for a, b in zip(vr, vr[1:]):
+        Mh.m.strip(a, b, "weave")
+    c = Mh.ring([(cx, back_y(cx, cz), cz)])[0]
+    last = vr[-1]
+    for i in range(len(last)):
+        Mh.m.face([last[i], last[(i + 1) % len(last)], c], "weave")
+    mesh = Mh.finish("chair_back_mesh" + sfx, mp, coll, parent, smooth=80)
+    mesh.data.materials.clear()
+    mesh.data.materials.append(mesh_material(lite))
+    planar_uv(mesh, 0, 2)
+    names.append(mesh.name)
+    if rough:
+        return names
+    # PostureFit SL: the Y behind the mesh. Two arms from the rails' rear flanges to a stem that stands 90 mm
+    # behind the lumbar; two pads press on the mesh; two small dials on the stem's rear, a larger one on its side
+    Yp = A()
+    k = 6 if lite else 12
+    stem_y = [(-78, 243), (-50, 250), (0, 257), (60, 258), (130, 255)]
+    for s in (-1, 1):
+        root_z = 222
+        ry = hermite(BACK_YF, root_z) + 36
+        ctrl = [(s * 156, ry, root_z + 4, 64), (s * 138, ry + 8, root_z - 8, 34), (s * 105, ry + 22, 192, 30),
+                (s * 55, 244, 158, 30), (0, 255, 128, 34)]
+        pts = spline(ctrl, 4 if lite else 16)
+        Yp.sweep([p[:3] for p in pts], [sup(16, p[3], 3.0, k) for p in pts], "mineral", across=(0, 1, 0))
+    stem = [(-80, 26), (-60, 36), (-30, 50), (10, 72), (50, 82), (90, 60), (120, 40), (138, 34)]
+    pts = spline(stem, 7 if lite else 24)
+    Yp.sweep([(0, hermite(stem_y, z), z) for z, w in pts], [sup(14, w, 3.0, k) for z, w in pts], "mineral",
+             across=(0, 1, 0), dome=6)
+    for zc, w, h in ((180, 112, 104), (36, 86, 150)):       # the upper (lumbar) and lower (sacral) pads
+        yc = back_y(0, zc) + 11
+        for i, (sc, dy) in enumerate(((0.6, -5), (1.0, 0), (0.6, 7)) if lite else
+                                     ((0.55, -6), (0.9, -3), (1.0, 2), (0.9, 6), (0.5, 8))):
+            ring = [(u * sc, yc + dy, zc + v * sc) for u, v in sup(w, h, 3.0, k + 2 if lite else k + 4)]
+            if i == 0:
+                prev = Yp.ring(ring)
+                Yp.m.face(list(reversed(prev)), "pad")
+            else:
+                cur = Yp.ring(ring)
+                Yp.m.strip(prev, cur, "pad")
+                prev = cur
+        Yp.m.face(prev, "pad")
+        y1 = hermite(stem_y, zc if zc < 130 else 128)
+        Yp.sweep([(0, yc + 6, zc if zc < 130 else 150), (0, y1, zc if zc < 130 else 128)], sup(30, 22, 3.0, k),
+                 "mineral", across=(1, 0, 0))                # the strut from the stem to the pad
+    for s in (-1, 1):
+        Yp.disc((s * 33, hermite(stem_y, -10) + 5, -10), (0, 1, 0), [(0, 0), (14, 0), (14, 9), (11, 12), (0, 12)],
+                8 if lite else 24, "mineral")
+    Yp.disc((34, 257, 0), (1, 0, 0), [(0, 0), (22, 0), (22, 10), (19, 13), (0, 13)], 10 if lite else 32, "dark")
+    if not lite:
+        # the frame's screws, where the back photo shows them: laid on the built rear face
+        bpy.context.view_layer.update()
+        oe = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        for sx, sz in SCREWS:
+            ok, loc, nrm, _ = oe.ray_cast(V(sx, 600, sz), Vector((0, -1, 0)))
+            if ok:
+                at = loc / MM
+                Yp.disc(at, (0, 1, 0), [(0, 0), (7, 0), (6.4, 0.7), (4.4, 0.7), (4.4, 0.2), (0, 0.2)], 20, "mineral")
+                Yp.disc(at + Vector((0, 0.2, 0)), (0, 1, 0), [(0, 0), (4.2, 0), (3.6, 0.9), (0, 0.9)], 16, "dark")
+    y = Yp.finish("chair_back_posturefit" + sfx, mp, coll, parent, smooth=50)
+    names.append(y.name)
+    return names
 
 
 def build_arm(side, coll, mp, parent, rough=False, lite=False, sfx=""):
     s = 1 if side == "r" else -1
     R = A()
-    zt = ARM_H - PAD[2]
-    yc = (PAD_Y[0] + PAD_Y[1]) / 2
-    # the cast polished support: from the pivot on the back frame's side, sweeping forward and up in one smooth
-    # curve to the pad's underside, the pad centred over its tip (side.jpg, detail-arms-1.jpg)
-    ctrl = [V(s * (ARM_X - 12), ARM_POST_Y + 6, -30), V(s * (ARM_X - 4), ARM_POST_Y - 2, 30),
-            V(s * (ARM_X + 16), ARM_POST_Y - 40, 95), V(s * (ARM_X + 36), ARM_POST_Y - 95, zt - 30),
-            V(s * (PAD_X - 4), ARM_POST_Y - 160, zt - 12), V(s * PAD_X, yc + 20, zt - 6), V(s * PAD_X, yc - 30, zt - 6)]
-    path = catmull(ctrl, 12 if lite else 30)
-    n = len(path)
+    k = 8 if lite else 16
+    # the polished post on the back frame's rear, with two dark slots on its outer face
+    path = [(s * POST_X, POST_Y + 6, POST_Z[0]), (s * POST_X, POST_Y + 2, POST_Z[0] + 40), (s * POST_X, POST_Y, 0),
+            (s * POST_X, POST_Y + 2, 80), (s * POST_X, POST_Y + 8, POST_Z[1])]
+    R.sweep(path, sup(34, 30, 4.0, k), "polished", across=(1, 0, 0), dome=8)
+    if not lite:
+        for z0, z1 in ((-80, -20), (20, 115)):
+            x = s * (POST_X + 17.4)
+            R.loft([[(x, POST_Y - 6, z0), (x, POST_Y + 6, z0), (x, POST_Y + 6, z1), (x, POST_Y - 6, z1)]], "black", caps=True)
+    # the yoke that slides on the post, with the pale latch on its rear
+    R.rbox((s * 226, POST_Y - 2, 22), (82, 52, 62), 16, 1 if lite else 4, "polished")
+    R.rbox((s * 232, POST_Y + 26, 20), (22, 10, 40), 4, 1 if lite else 2, "mineral")
+    # the cast horn (MEASURED side, zoomed): about 42 wide all the way, steep under the plate, flattening
+    # into the yoke, flaring to 72 where it meets the plate; thin across
+    ctrl = [(s * 258, 196, 18, 54), (s * 262, 180, 24, 52), (s * 266, 163, 30, 48), (s * 270, 138, 47, 44),
+            (s * 274, 121, 66, 42), (s * 277, 110, 86, 40), (s * 279, 100, 108, 46), (s * 280, 88, 130, 72)]
+    pts = spline(ctrl, 5 if lite else 24)
+    R.sweep([p[:3] for p in pts], [sup(20, p[3], 2.6, k) for p in pts], "polished", across=(1, 0, 0))
+    R.rbox((s * 281, 74, 136), (56, 110, 10), 4, 1 if lite else 3, "polished")           # the carrier plate
+    # the pad: a soft slab, thick and drooping at the nose
+    pst = PAD if lite else spline(PAD, 28)
     rings = []
-    for k, p in enumerate(path):
-        t = k / (n - 1)
-        w, h = 34 - 10 * t, 18 - 4 * t                  # 34 x 18 at the pivot, 24 x 14 at the pad: a cast blade
-        tng = (path[min(k + 1, n - 1)] - path[max(k - 1, 0)]).normalized()
-        n1 = tng.cross(Vector((s, 0, 0))).normalized()   # in the arm's plane (the blade's width)
-        n2 = n1.cross(tng).normalized()                  # sideways (its thickness)
-        prof = rprof(w, h, 6, 3 if lite else 6)
-        rings.append(R.m.verts([p + u * n1 + v * n2 for u, v in prof]))
-    for a_, b_ in zip(rings, rings[1:]):
-        R.m.strip(a_, b_, "polished")
-    R.m.face(list(reversed(rings[0])), "polished")
-    R.m.face(rings[-1], "polished")
-    # the pad: a rounded slab, slightly pivoted inward at the front, centred over the support's tip
-    pad = [V(s * (PAD_X + 5), PAD_Y[1], ARM_H - PAD[2] / 2), V(s * (PAD_X - 5), PAD_Y[0], ARM_H - PAD[2] / 2)]
-    R.sweep(pad, rprof(PAD[1], PAD[2], 11, 3 if lite else 6), "pad", ref=Vector((0, 0, 1)))
-    if not rough:
-        # the polished height-adjustment knob on the pivot's outer face, and the pivot boss on the back frame's side
-        R.lathe([(0, 0), (16, 0), (16, 8), (13, 11), (0, 11)], 8 if lite else 24, "polished",
-                Matrix.Translation(V(s * (ARM_X - 12 + 9), ARM_POST_Y + 6, -30)) @ Matrix.Rotation(s * math.pi / 2, 4, "Y"))
-        R.lathe([(0, 0), (14, 0), (14, 14), (0, 14)], 8 if lite else 20, "mineral",
-                Matrix.Translation(V(s * (ARM_X - 12 - 9 - 14), ARM_POST_Y + 6, -30)) @ Matrix.Rotation(s * math.pi / 2, 4, "Y"))
-    obj = R.finish(f"chair_arm_{side}" + sfx, mp, coll, parent, smooth=60)
+    for y, w, zt, th in pst:
+        rings.append([(s * ARM_X + u, y, zt - th / 2 + v) for u, v in sup(w, th, 3.4, k + 2)])
+    R.loft(rings, "pad", caps=True)
+    obj = R.finish(f"chair_arm_{side}" + sfx, mp, coll, parent, smooth=60, subsurf=0 if lite else 1)
     return [obj.name]
 
 
 def build_mech(coll, mp, parent, rough=False, lite=False, sfx=""):
     Mc = A()
-    seg = 1 if lite else 3
-    w, d, h = MECH
-    # the cast tilt housing: dark metal, rounded, with a polished cross link under the back's spine bars
-    Mc.P._rbox(Mc.m, w * MM, d * MM, h * MM, 45 * MM, 20 * MM, 30 * MM, seg, "cast", z0=MECH_Z * MM)
-    bmesh.ops.translate(Mc.m.bm, verts=Mc.m.bm.verts, vec=(0, MECH_Y * MM, 0))
-    Mc.sweep([V(-SPINE_X - 8, 150, MECH_Z + 36), V(SPINE_X + 8, 150, MECH_Z + 36)], rprof(28, 28, 8, 2 if lite else 4),
-             "polished", ref=Vector((0, 0, 1)))
-    # the two pivot ears the back's spine bars hinge on, and a polished front yoke
+    k = 6 if lite else 16
+    seg = 8 if lite else 32
+    # the tilt housing: a cast bowl, and the pale cover over its front half
+    pst = MECH if lite else spline(MECH, 24)
+    Mc.loft([[(u, y, (zt + zb) / 2 + v) for u, v in sup(w, zt - zb, 4.0, k + 4)] for y, w, zt, zb in pst], "cast")
+    cov = [(y, w + 5, zt + 3, zb + 8) for y, w, zt, zb in pst if y < -62]     # a wedge, taller toward the rear
+    Mc.loft([[(u, y - 3, (zt + zb) / 2 + v) for u, v in sup(w, zt - zb, 4.0, k + 4)] for y, w, zt, zb in cov], "mineral")
+    Mc.lathe([(0, MECH_BOTTOM - 24), (24, MECH_BOTTOM - 24), (36, MECH_BOTTOM + 4), (0, MECH_BOTTOM + 4)], seg, "cast")
     for sg in (-1, 1):
-        Mc.lathe([(0, -14), (22, -14), (22, 14), (0, 14)], 8 if lite else 20, "cast",
-                 Matrix.Translation(V(sg * (SPINE_X - 20), 150, MECH_Z + 36)) @ Matrix.Rotation(math.pi / 2, 4, "Y"))
-    Mc.sweep([V(-w / 2 + 10, MECH_Y - d / 2 + 12, MECH_Z + h - 10), V(w / 2 - 10, MECH_Y - d / 2 + 12, MECH_Z + h - 10)],
-             rprof(20, 20, 6, 2 if lite else 4), "polished", ref=Vector((0, 0, 1)))
+        # the polished link (MEASURED side, zoomed): a round 34 mm tube from the post's foot forward under the
+        # seat at -116, then in, round a tight bend and down beside the housing; on +X it ends in the ball
+        ctrl = [(sg * 181, 190, -70, 30), (sg * 184, 202, -98, 32), (sg * 192, 190, -112, 34), (sg * 205, 140, -114, 34),
+                (sg * 214, 70, -116, 34), (sg * 216, 10, -117, 34), (sg * 206, -35, -118, 34), (sg * 182, -60, -122, 32),
+                (sg * 160, -74, -140, 28), (sg * 151, -68, -166, 22), (sg * 150, -59, -186, 18)]
+        pts = spline(ctrl, 8 if lite else 44)
+        Mc.sweep([q[:3] for q in pts], [sup(q[3], q[3], 2.0, k) for q in pts], "polished", across=(0, 0, 1),
+                 dome=0 if lite else 4)
+        # the bracket up to the seat's side pivot, and the pivot's polished boss with its pale cap
+        px = seat_hw(SEAT_PIVOT[0]) + 4
+        bst = [(sg * 216, -106, 84), (sg * 232, -64, 66), (sg * 248, -30, 50), (sg * (px - 1), -4, 42)]
+        Mc.sweep([(x, SEAT_PIVOT[0] + 2, z) for x, z, w in bst], [sup(14, w, 3.0, k) for x, z, w in bst], "polished",
+                 across=(1, 0, 0))
+        R = SEAT_PIVOT[2]
+        Mc.disc((sg * (px - 6), SEAT_PIVOT[0], SEAT_PIVOT[1]), (sg, 0, 0),
+                [(0, 0), (R, 0), (R, 13), (0, 16)] if lite else
+                [(0, 0), (R, 0), (R, 12), (R - 5, 16), (15, 16), (13, 13), (0, 13)], seg, "polished")
+        if not lite:
+            Mc.disc((sg * (px + 7), SEAT_PIVOT[0], SEAT_PIVOT[1]), (sg, 0, 0), [(0, 0), (11, 0), (10, 2.5), (0, 2.5)],
+                    seg, "mineral")
+        # the lug the link ends in at the housing's side
+        Mc.disc((sg * 100, -78, -160), (sg, 0, 0),
+                [(0, 0), (16, 0), (16, 44), (0, 46)] if lite else [(0, 0), (16, 0), (16, 42), (13, 46), (0, 46)],
+                seg, "polished")
     if not rough:
-        # the two paddle levers on the sitter's right (seat height, tilt limiter), polished arms with pale paddles
-        zl = MECH_Z + 28
-        for y, length in ((-10, LEVER[0]), (50, LEVER[0] * 0.8)):
-            Mc.sweep([V(w / 2 - 20, y, zl), V(w / 2 + 40, y, zl), V(w / 2 + 40, y - length, zl + 4)],
-                     rprof(16, 12, 5, 2 if lite else 4), "polished", ref=Vector((0, 0, 1)))
-            Mc.sweep([V(w / 2 + 40, y - length + 10, zl + 4), V(w / 2 + 40, y - length - 40, zl + 8)],
-                     rprof(LEVER[1], 14, 6, 2 if lite else 4), "mineral", ref=Vector((0, 0, 1)))
-        # the tilt tension knob on the sitter's left, a ribbed dark drum on a polished axle
-        Mc.lathe([(0, 0), (8, 0), (8, 36), (19, 36), (21, 40), (21, 68), (18, 72), (0, 72)], 12 if lite else 36, "dark",
-                 Matrix.Translation(V(-(w / 2 - 10), MECH_Y + 50, MECH_Z + 50)) @ Matrix.Rotation(-math.pi / 2, 4, "Y"))
-    obj = Mc.finish("chair_mech" + sfx, mp, coll, parent)
+        y, z = STALK
+        # -X: the tilt-tension stalk and its fat knob. +X: the slimmer tilt-limiter stalk with a collar
+        Mc.disc((-98, y, z), (-1, 0, 0), [(0, 0), (10, 0), (10, 92), (20, 96), (21, 152), (0, 156)] if lite else
+                [(0, 0), (14, 0), (14, 22), (10, 24), (10, 92), (20, 96), (21, 150), (17, 156), (0, 156)], seg, "mineral")
+        Mc.disc((98, y, z), (1, 0, 0), [(0, 0), (8, 0), (8, 74), (13, 76), (13, 92), (8, 94), (9, 146), (0, 147)] if lite else
+                [(0, 0), (12, 0), (12, 18), (8, 20), (8, 74), (13, 76), (13, 92), (8, 94), (8, 122), (12, 126), (12, 144),
+                 (9, 147), (0, 147)], seg, "mineral")
+        # +X: the ball the link's lever ends in
+        n = 3 if lite else 10
+        Mc.disc((150, -55, -193 - 23), (0, 0, 1), [(0, 0)] + [(23 * math.sin(math.pi * i / n), 23 - 23 * math.cos(math.pi * i / n))
+                                                              for i in range(1, n)] + [(0, 46)], seg, "polished")
+    obj = Mc.finish("chair_mech" + sfx, mp, coll, parent, smooth=50)
     return [obj.name]
 
 
 def build_base(coll, mp, parent, rough=False, lite=False, sfx=""):
     """The hub, the five legs, the cylinder and the casters. Floor at z = 0, the cylinder's axis at the origin."""
     names = []
-    seg = 16 if lite else 48
+    seg = 12 if lite else 48
     Bs = A()
-    # hub: a polished dome with a collar
-    Bs.lathe([(0, 230), (70, 230), (62, 262), (48, HUB[1] - 4), (COLLAR[0], HUB[1]), (COLLAR[0], HUB[1] + COLLAR[1]),
-              (COLUMN_R + 3, HUB[1] + COLLAR[1] + 6), (0, HUB[1] + COLLAR[1] + 6)], seg, "polished")
+    Bs.lathe([(0, 98), (30, 98), (36, 104), (38, 118), (38, 150), (34, 166), (30, 172), (30, HUB_TOP - 4),
+              (27, HUB_TOP), (0, HUB_TOP)], seg, "polished")
+    Bs.lathe([(0, HUB_TOP), (21, HUB_TOP), (21, HUB_TOP + 4), (0, HUB_TOP + 4)], seg, "black")
+    br, rr, bz0, bz1 = BOSS
     for i in range(5):
         a = -math.pi / 2 + 2 * math.pi * i / 5        # one leg straight forward (-Y)
         dirv = Vector((math.cos(a), math.sin(a), 0))
-        path, refs = [], []
-        n = 4 if lite else 8
-        for k in range(n + 1):
-            t = k / n
-            r = 40 + (LEG_R - 40) * t
-            z = LEG_Z[0] + (LEG_Z[1] - LEG_Z[0]) * (1 - (1 - t) ** 1.6)
-            path.append(dirv * r * MM + Vector((0, 0, z * MM)))
-        # tapered section: sweep with per-station scaling (build rings by hand)
-        rings = []
-        for k, p in enumerate(path):
-            t = k / n
-            w = LEG_ROOT[0] + (LEG_TIP[0] - LEG_ROOT[0]) * t
-            h = LEG_ROOT[1] + (LEG_TIP[1] - LEG_ROOT[1]) * t
-            tng = (path[min(k + 1, n)] - path[max(k - 1, 0)]).normalized()
-            n1 = tng.cross(Vector((0, 0, 1))).normalized()
-            n2 = n1.cross(tng).normalized()
-            prof = rprof(w, h, min(w, h) * 0.35, 2 if lite else 4)
-            rings.append(Bs.m.verts([p + u * n1 + v * n2 for u, v in prof]))
-        for a_, b_ in zip(rings, rings[1:]):
-            Bs.m.strip(a_, b_, "polished")
-        Bs.m.face(list(reversed(rings[0])), "polished")
-        Bs.m.face(rings[-1], "polished")
-    base = Bs.finish("chair_base" + sfx, mp, coll, parent)
+        n = 4 if lite else 14
+        path, profs = [], []
+        for j in range(n + 1):
+            t = j / n
+            r = LEG_R[0] + (LEG_R[1] - LEG_R[0]) * t
+            w = LEG_SEC[0][0] + (LEG_SEC[1][0] - LEG_SEC[0][0]) * t
+            h = LEG_SEC[0][1] + (LEG_SEC[1][1] - LEG_SEC[0][1]) * t
+            path.append(dirv * r + Vector((0, 0, LEG_TOP[0] + (LEG_TOP[1] - LEG_TOP[0]) * t)))
+            if lite:
+                profs.append([(-0.15 * h, 0.5 * w), (0, 0.2 * w), (0, -0.2 * w), (-0.15 * h, -0.5 * w),
+                              (-0.92 * h, -0.2 * w), (-0.92 * h, 0.2 * w)])
+            else:                                     # a crowned top, shoulders, sides tucking under to a keel
+                profs.append([(-0.18 * h, 0.5 * w), (-0.04 * h, 0.38 * w), (0, 0.15 * w), (0, -0.15 * w),
+                              (-0.04 * h, -0.38 * w), (-0.18 * h, -0.5 * w), (-0.6 * h, -0.36 * w),
+                              (-0.95 * h, -0.16 * w), (-h, 0), (-0.95 * h, 0.16 * w), (-0.6 * h, 0.36 * w)])
+        # the leg runs on into the boss it turns down into
+        path.append(dirv * (br - 2) + Vector((0, 0, LEG_TOP[1] - 4)))
+        profs.append([(u * 0.9, v * 0.9) for u, v in profs[-1]])
+        Bs.sweep(path, profs, "polished", across=(0, 0, 1))
+        Bs.lathe([(0, bz0), (rr - 2, bz0), (rr, bz0 + 3), (rr, bz1 - 12), (rr - 3, bz1 - 4), (rr - 9, bz1), (0, bz1)],
+                 8 if lite else 32, "polished", Matrix.Translation(dirv * br * MM))
+    base = Bs.finish("chair_base" + sfx, mp, coll, parent, smooth=45)
     names.append(base.name)
-    # the cylinder: the black column from the collar up into the mechanism
+    # the cylinder: the black column from the hub up into the tilt housing (trimmed in build())
     Cy = A()
-    Cy.lathe([(0, HUB[1] + COLLAR[1]), (COLUMN_R, HUB[1] + COLLAR[1]), (COLUMN_R, 2000), (0, 2000)], 8 if lite else 24, "black")
+    Cy.lathe([(0, HUB_TOP + 4), (COLUMN_R, HUB_TOP + 4), (COLUMN_R, 2000), (0, 2000)], 8 if lite else 24, "black")
     cyl = Cy.finish("chair_cylinder" + sfx, mp, coll, parent)
     names.append(cyl.name)
-    # casters: twin black wheels on a polished stem under each leg tip, trailing outward
+    # casters: twin wheels under a black hood, on a stem in the boss; all trail toward +Y
+    wd, ww, gap = WHEEL
     for i in range(5):
         a = -math.pi / 2 + 2 * math.pi * i / 5
-        dirv = Vector((math.cos(a), math.sin(a), 0))
+        stem = Vector((math.cos(a), math.sin(a), 0)) * br
         Cs = A()
-        rot = Matrix.Rotation(a, 4, "Z")
-        stem_at = dirv * CASTER_R * MM
-        wd, ww, gap = CASTER
-        if True:
-            # the swivel stem and cap
-            Cs.lathe([(0, 24), (5.5, 24), (5.5, LEG_Z[1] + 10), (0, LEG_Z[1] + 10)], 8 if lite else 16, "polished",
-                     Matrix.Translation(stem_at))
-            Cs.lathe([(0, 26), (21, 26), (23, 30), (23, 66), (17, LEG_Z[1] - 12), (0, LEG_Z[1] - 12)], 8 if lite else 24, "black",
-                     Matrix.Translation(stem_at))
-            # the fork body (a block between the wheels) and the two wheels on an axle trailing 18 mm outward
-            axle = stem_at + dirv * 18 * MM + Vector((0, 0, wd / 2 * MM))
-            tr = Matrix.Translation(axle) @ rot @ Matrix.Rotation(math.pi / 2, 4, "X")
-            Cs.lathe([(0, -gap / 2 - 1), (14, -gap / 2 - 1), (14, gap / 2 + 1), (0, gap / 2 + 1)], 8 if lite else 16, "black", tr)
-            for sgn in (-1, 1):
-                z0 = sgn * gap / 2
-                z1 = sgn * (gap / 2 + ww)
-                pr = [(0, z0), (wd / 2 - 3, z0), (wd / 2, z0 + sgn * 2), (wd / 2, z1 - sgn * 2), (wd / 2 - 3, z1), (0, z1)]
-                if sgn < 0:
-                    pr = list(reversed(pr))
-                Cs.lathe(pr, 12 if lite else 32, "black", tr)
+        ws = 6 if lite else 32
+        Cs.lathe([(0, 44), (13, 44), (13, bz0 - 5), (15, bz0 - 3), (15, bz0), (0, bz0)], ws, "black",
+                 Matrix.Translation(stem * MM))                                  # the neck and its cap
+        hood = Vector((stem.x, stem.y + TRAIL * 0.5, 0))
+        Cs.lathe([(0, 30), (15, 33), (21, 42), (19, 52), (10, 58), (0, 59)], ws, "black", Matrix.Translation(hood * MM))
+        axle = Vector((stem.x, stem.y + TRAIL, wd / 2))
+        Cs.disc(axle - Vector((gap / 2 + 1, 0, 0)), (1, 0, 0), [(0, 0), (24, 0), (24, gap + 2), (0, gap + 2)], ws, "black")
+        r = wd / 2
+        for sg in (-1, 1):
+            prof = [(0, 0), (r - 4, 0), (r - 1, 2), (r, 5), (r, ww - 5), (r - 1.5, ww - 2), (r - 5, ww),
+                    (r - 9, ww - 1.5), (0, ww - 1.5)]
+            if lite:            # no inner face (it is against the hub disc): rounder wheels for fewer triangles
+                prof = [(r - 2, 0), (r, 3), (r, ww - 3), (0, ww - 1)]
+            Cs.disc(axle + Vector((sg * gap / 2, 0, 0)), (sg, 0, 0), prof, 14 if lite else 40, "black")
         c = Cs.finish(f"chair_caster_{i + 1:02d}" + sfx, mp, coll, parent)
         names.append(c.name)
     return names
@@ -659,7 +794,7 @@ def build_base(coll, mp, parent, rough=False, lite=False, sfx=""):
 # ---------------------------------------------------------------------------
 def build(rough=False, lite=False, collection=None, seat_h=None, parent=None):
     """Returns object names by role plus "all". The upper assembly (seat, back, arms, mechanism) is lifted to
-    seat_h (mm, seat top above the floor; default the photos' 600)."""
+    seat_h (mm, the seat datum above the floor; default the photos' 510)."""
     sfx = "_lite" if lite else ""
     coll = collection or bpy.context.scene.collection
     mp = mats()
@@ -672,23 +807,21 @@ def build(rough=False, lite=False, collection=None, seat_h=None, parent=None):
     names["arms"] = build_arm("l", coll, mp, upper, rough, lite, sfx) + build_arm("r", coll, mp, upper, rough, lite, sfx)
     names["mech"] = build_mech(coll, mp, upper, rough, lite, sfx)
     names["base"] = build_base(coll, mp, swivel, rough, lite, sfx)
-    # the column's top is hidden in the mechanism: trim it to the housing
+    # the column's top is hidden in the tilt housing: trim it there
     cyl = bpy.data.objects["chair_cylinder" + sfx]
-    top = (seat_h + MECH_Z + 20) * MM
+    top = (seat_h + MECH_BOTTOM + 15) * MM
     for v in cyl.data.vertices:
         if v.co.z > 1.0:
             v.co.z = top
+    bpy.context.view_layer.update()
     if not rough:
         from lib import brands
         back = bpy.data.objects["chair_back" + sfx]
-        # the top crossbar's rear face: the rail's section is tilted with the lean (normal (0, -0.94, 0.34) in
-        # back_loop), so the rear face sits 13.2 behind and 4.8 below the crown's centre line and faces back and
-        # a little down; the mark sits 1 mm proud of it, 7 mm under the crown
-        zcrown = BACK_TOP - BACK_RAIL[0] / 2
-        at = (0, (interp(BACK_YC, zcrown) + 13.2 + 1.0) * MM, (zcrown - 4.8 - 7.0) * MM)
-        d = brands.decal("chair", at=at, normal=(0, 0.94, -0.34), up=(0, 0.34, 0.94), height=LOGO[1] * MM,
-                         max_width=LOGO[0] * MM, finish="embossed", colour="#a2a6a6", parent=back, collection=coll,
-                         lite=lite, name="chair_brand" + sfx)
+        # where the real round mark sits: the top bar's rear face, centre. The decal is laid on the built surface
+        yr = hermite(BACK_YF, BACK_OUT[-1][1]) + 28
+        d = brands.decal("chair", at=(0, (yr + 2) * MM, LOGO_Z * MM), normal=(0, 1, 0), up=(0, 0, 1),
+                         height=LOGO[1] * MM, max_width=LOGO[0] * MM, finish="embossed", colour="#a2a6a6",
+                         parent=back, collection=coll, conform=back, lite=lite, name="chair_brand" + sfx)
         names["brand"] = [d.name] if d else []
     names["all"] = [n for k, v in names.items() if k not in ("swivel", "upper") for n in v]
     bpy.context.view_layer.update()
@@ -721,21 +854,24 @@ def turn_base(deg):
 
 
 def make_cutouts():
-    """Plain Python (Pillow, numpy): the three straight photos as alpha cutouts, the floor shadow under the base
-    removed (grey, lighter than 0.6, in the bottom 130 px where only the black casters stand). Written to CUT; the
-    photos are never touched."""
+    """Plain Python (Pillow, numpy): the four photos as alpha cutouts in CUT; the photos are never touched.
+    2026-11-12: the casters' floor reflections are cut away (below the far casters' feet only the black wheels are
+    kept: the reflections are grey), and the weave's speckle is closed (a 7 px closing) so the mesh counts as
+    solid, as it does in our silhouette."""
     import numpy as np
-    from PIL import Image
+    from PIL import Image, ImageFilter
     os.makedirs(CUT, exist_ok=True)
-    for n, floor in (("front", 2384), ("side", 2402), ("back", 2408)):
+    for n, zone in (("front", 2117), ("side", 2135), ("back", 2141), ("three-quarter-front", 2180)):
         im = Image.open(os.path.join(REF, n + ".jpg")).convert("RGB")
         a = np.asarray(im) / 255.0
         lum = a.mean(-1)
         k = lum < 0.93
         ys = np.arange(a.shape[0])[:, None]
-        k &= ~((ys > floor - 130) & (lum > 0.6))
-        k[floor + 2:] = False
-        Image.fromarray(np.dstack([a * 255, k * 255]).astype(np.uint8), "RGBA").save(os.path.join(CUT, n + "-cut.png"))
+        k &= ~((ys > zone) & (lum > 0.36))
+        m = Image.fromarray((k * 255).astype(np.uint8), "L").filter(ImageFilter.MaxFilter(7)).filter(ImageFilter.MinFilter(7))
+        m = np.asarray(m) > 127
+        m &= ~((ys > zone) & (lum > 0.5))
+        Image.fromarray(np.dstack([a * 255, m * 255]).astype(np.uint8), "RGBA").save(os.path.join(CUT, n + "-cut.png"))
     print("CUTOUTS", CUT)
 
 
@@ -794,9 +930,62 @@ def stage_build(out):
     return names
 
 
+def white_studio(strength=1.0):
+    """The photos' white studio: a bright, even world with a darker band at the horizon (what gives the polished
+    parts their dark streaks), a soft key from the front-left, a rim and a top light. The camera sees a plain pale
+    backdrop. Built once; lib/compare.ensure_studio() then leaves the scene's lights alone."""
+    sc = bpy.context.scene
+    if bpy.data.objects.get("chair_key"):
+        return
+    w = sc.world or bpy.data.worlds.new("World")
+    sc.world = w
+    try:
+        w.use_nodes = True
+    except AttributeError:
+        pass
+    nt = w.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputWorld")
+    bg = nt.nodes.new("ShaderNodeBackground")
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    mp = nt.nodes.new("ShaderNodeMapRange")
+    mp.inputs["From Min"].default_value, mp.inputs["From Max"].default_value = -1.0, 1.0
+    nt.links.new(geo.outputs["Incoming"], sep.inputs[0])
+    nt.links.new(sep.outputs["Z"], mp.inputs["Value"])
+    nt.links.new(mp.outputs[0], ramp.inputs["Fac"])
+    el = ramp.color_ramp.elements
+    el[0].position, el[0].color = 0.0, (0.55, 0.55, 0.57, 1)
+    el[1].position, el[1].color = 1.0, (1.0, 1.0, 1.0, 1)
+    for pos, c in ((0.44, 0.50), (0.5, 0.10), (0.56, 0.80)):
+        e = el.new(pos)
+        e.color = (c, c, c * 1.02, 1)
+    lp = nt.nodes.new("ShaderNodeLightPath")
+    cam = nt.nodes.new("ShaderNodeBackground")
+    cam.inputs["Color"].default_value = (0.86, 0.87, 0.90, 1)
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(lp.outputs["Is Camera Ray"], mix.inputs[0])
+    nt.links.new(ramp.outputs["Color"], bg.inputs["Color"])
+    bg.inputs["Strength"].default_value = 0.42 * strength
+    nt.links.new(bg.outputs[0], mix.inputs[1])
+    nt.links.new(cam.outputs[0], mix.inputs[2])
+    nt.links.new(mix.outputs[0], out.inputs[0])
+    coll = bpy.data.collections.get("cmp_studio") or bpy.data.collections.new("cmp_studio")
+    if coll.name not in sc.collection.children:
+        sc.collection.children.link(coll)
+    for nm, loc, e in (("chair_key", (-2.2, -2.8, 2.6), 300), ("chair_rim", (2.0, 2.6, 2.2), 180),
+                       ("chair_top", (0.0, 0.0, 3.4), 60)):
+        d = bpy.data.lights.new(nm, "AREA")
+        d.size, d.energy = 2.5, e * strength
+        o = bpy.data.objects.new(nm, d)
+        coll.objects.link(o)
+        o.location = loc
+        o.rotation_euler = (-Vector(loc) + Vector((0, 0, 0.6))).to_track_quat("-Z", "Y").to_euler()
+
+
 def _studio(sc, cycles, strength=1.0):
-    from lib import compare
-    compare.ensure_studio(strength)
+    white_studio(strength)
     sc.render.film_transparent = False
     sc.render.image_settings.file_format, sc.render.image_settings.color_mode = "PNG", "RGB"
     sc.view_settings.view_transform = "AgX"
@@ -845,10 +1034,10 @@ def look_cam(name, pos, target, lens=50, ortho=None):
 def stage_stills(out, names, cycles=False):
     from lib import backdrops, compare
     sc = bpy.context.scene
-    _studio(sc, cycles, 0.55)          # the pale chair blows out at full studio strength
+    _studio(sc, cycles, 1.0)
     lo, hi = compare.world_bbox(names["all"])
     c, size = (lo + hi) / 2, hi - lo
-    cams = {"hero": backdrops.three_quarter_camera(c, max(size) * 1.05, az=-35, el=14, name="still_hero"),
+    cams = {"hero": backdrops.three_quarter_camera(c, max(size) * 1.25, az=-35, el=14, name="still_hero"),
             "front": backdrops.view_camera("front", c, max(size.x, size.z * 16 / 9) * 1.1, name="still_front"),
             "side": backdrops.view_camera("right", c, max(size.y, size.z * 16 / 9) * 1.1, name="still_side"),
             "back": backdrops.view_camera("back", c, max(size.x, size.z * 16 / 9) * 1.1, name="still_back"),
@@ -872,28 +1061,31 @@ def stage_stills(out, names, cycles=False):
 
 def closeup_specs():
     s = PHOTO_SEAT_H * MM
-    yb = interp(BACK_YC, 200) * MM
+    yb = hermite(BACK_YF, 200) * MM
+    yr = (hermite(BACK_YF, BACK_OUT[-1][1]) + 28) * MM
     return [
+        ("seat-side", "Aeron: the seat from the side (the waterfall, the arched rail)", os.path.join(REF, "side.jpg"),
+         (2.2, -0.06, s + 0.02), (0.0, -0.06, s - 0.03), 110),
         ("back-frame", "Aeron: the back frame and the weave", os.path.join(REF, "three-quarter-back.jpg"),
-         (0.55, 0.85, s + 0.45), (0.12, yb, s + 0.30), 50),
+         (0.55, 0.95, s + 0.45), (0.12, yb, s + 0.30), 50),
         ("posturefit", "Aeron: the PostureFit SL Y", os.path.join(REF, "back.jpg"),
-         (0.05, 1.05, s + 0.25), (0.0, yb, s + 0.15), 50),
-        ("arm", "Aeron: an arm, pad, post and knob", os.path.join(REF, "detail-arms-1.jpg"),
-         (0.70, -0.30, s + 0.33), (0.27, 0.0, s + 0.12), 50),
-        ("seat-front", "Aeron: the seat's waterfall front edge", os.path.join(REF, "side.jpg"),
-         (-0.65, -0.55, s + 0.12), (-0.05, -0.20, s - 0.02), 50),
-        ("mech", "Aeron: the tilt mechanism and levers", os.path.join(REF, "three-quarter-back.jpg"),
-         (0.62, -0.25, s - 0.05), (0.08, 0.08, s - 0.14), 50),
+         (0.05, 1.10, s + 0.22), (0.0, yb, s + 0.10), 50),
+        ("arm", "Aeron: an arm: pad, blade, yoke and post", os.path.join(REF, "detail-arms-1.jpg"),
+         (0.85, -0.30, s + 0.30), (0.27, 0.05, s + 0.10), 50),
+        ("seat-front", "Aeron: the seat's waterfall front edge", os.path.join(REF, "three-quarter-front.jpg"),
+         (-0.65, -0.65, s + 0.18), (-0.05, -0.18, s - 0.03), 50),
+        ("mech", "Aeron: the tilt mechanism, link and levers", os.path.join(REF, "three-quarter-front.jpg"),
+         (0.62, -0.45, s - 0.05), (0.06, -0.02, s - 0.14), 50),
         ("base", "Aeron: the polished base and a caster", os.path.join(REF, "three-quarter-front.jpg"),
-         (0.45, -0.70, 0.30), (0.05, -0.12, 0.12), 50),
-        ("logo", "Aeron: the mark on the top crossbar (ours: kalder)", os.path.join(REF, "back.jpg"),
-         (0.0, 0.66, s + 0.40), (0.0, (interp(BACK_YC, BACK_TOP - 18) + 14) * MM, s + (BACK_TOP - 30) * MM), 85),
+         (0.50, -0.80, 0.32), (0.08, -0.14, 0.10), 50),
+        ("logo", "Aeron: the mark on the top bar (ours: the name from content)", os.path.join(REF, "back.jpg"),
+         (0.0, yr + 0.42, s + LOGO_Z * MM + 0.02), (0.0, yr, s + LOGO_Z * MM), 85),
     ]
 
 
 def stage_closeups(out, names, cycles=False, only=None):
     sc = bpy.context.scene
-    _studio(sc, cycles, 0.45)
+    _studio(sc, cycles, 1.0)
     sc.render.resolution_x, sc.render.resolution_y, sc.render.resolution_percentage = 960, 720, 100
     d = os.path.join(out, "closeups")
     os.makedirs(d, exist_ok=True)
@@ -941,9 +1133,39 @@ def pairs_sheet(jp, d):
     print("SHEETS", d)
 
 
+def before_after(out=None):
+    """Plain Python (Pillow): the 2026-10-28 chair's stills beside the rebuild's, same cameras, one sheet."""
+    from PIL import Image, ImageDraw, ImageFont
+    out = out or FOOT
+    old = os.path.join(REPO, "video-local", "footage", "2026-10-28-components", "chair")
+    try:
+        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 26)
+    except OSError:
+        font = ImageFont.load_default()
+    W, H, pad, head = 960, 540, 12, 44
+    views = [("side", "side"), ("hero", "three-quarter"), ("front", "front"), ("back", "back")]
+    sheet = Image.new("RGB", (2 * W + 3 * pad, head + len(views) * (H + pad)), (245, 244, 240))
+    d = ImageDraw.Draw(sheet)
+    d.text((pad, 8), "before: the chair of 2026-10-28", fill=(30, 30, 34), font=font)
+    d.text((W + 2 * pad, 8), "after: the rebuild of 2026-11-12 (same cameras)", fill=(30, 30, 34), font=font)
+    for r, (k, label) in enumerate(views):
+        for c, folder in enumerate((old, out)):
+            f = os.path.join(folder, f"{NAME}-{k}.png")
+            if not os.path.exists(f):
+                continue
+            im = Image.open(f).convert("RGB").resize((W, H), Image.LANCZOS)
+            sheet.paste(im, (pad + c * (W + pad), head + r * (H + pad)))
+        d.text((pad + 10, head + r * (H + pad) + 8), label, fill=(60, 60, 70), font=font)
+    path = os.path.join(out, "chair-before-after.jpg")
+    sheet.save(path, quality=88)
+    print("BEFORE-AFTER", path)
+    return path
+
+
 def stage_compare(out, names):
     from lib import compare
-    rep = compare.run(outline_views(names), os.path.join(out, "compare"), NAME, log=log)
+    white_studio(1.0)
+    rep = compare.run(outline_views(names), os.path.join(out, "compare"), NAME, look_samples=48, log=log)
     log(f"compare test {'PASSED' if rep['test']['passed'] else 'FAILED'}: {rep['paths']['md']}")
     progress(f"compare: {'PASS' if rep['test']['passed'] else 'FAIL'} " + ", ".join(
         f"{e['name']} {e['iou']:.3f}" for e in rep["views"]))
@@ -983,7 +1205,7 @@ def _ctx(obj, objs=None):
     return ctx()
 
 
-def bake_lite(objs, out, size=1024, orm_size=512):
+def bake_lite(objs, out, size=768, orm_size=512):     # 768: the chair is flat colours; 1024 put the lite over its byte ceiling
     """One base-colour atlas and an ORM map for the opaque lite meshes (desktop.bake_lite's pattern). The weave
     keeps its own small alpha-tested material; the brand its own."""
     import numpy as np
@@ -1012,12 +1234,7 @@ def bake_lite(objs, out, size=1024, orm_size=512):
         bpy.ops.object.mode_set(mode="OBJECT")
     prev = scene.render.engine
     scene.render.engine = "CYCLES"
-    prefs = bpy.context.preferences.addons["cycles"].preferences
-    prefs.compute_device_type = "METAL"
-    prefs.get_devices()
-    for d in prefs.devices:
-        d.use = d.type == "METAL"
-    scene.cycles.device = "GPU"
+    scene.cycles.device = "CPU"      # a small bake; the Metal device prefs crash under --factory-startup
     scene.cycles.use_denoising = False
     hidden = []
     for o in scene.objects:
@@ -1051,7 +1268,7 @@ def bake_lite(objs, out, size=1024, orm_size=512):
     for im in (rough, metal, ao):
         bpy.data.images.remove(im)
     kb = {}
-    for im, fn, q in ((base, "chair_atlas.jpg", 90), (orm, "chair_orm.jpg", 92)):
+    for im, fn, q in ((base, "chair_atlas.jpg", 80), (orm, "chair_orm.jpg", 85)):
         p = os.path.join(out, fn)
         im.filepath_raw = p
         im.file_format = "JPEG"
@@ -1137,3 +1354,5 @@ if __name__ == "__main__":
         pairs_sheet(sys.argv[i + 1], sys.argv[i + 2])
     elif "--cutouts" in sys.argv:
         make_cutouts()
+    elif "--beforeafter" in sys.argv:
+        before_after()
