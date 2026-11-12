@@ -1,0 +1,90 @@
+{
+  "title": "Credits",
+  "intro": "The 3D room uses these models by other people, under their licences.",
+  "footerLabel": "Credits",
+  "labels": {
+    "models": "3D models",
+    "inRoom": "In the room",
+    "model": "Model",
+    "author": "Author",
+    "licence": "Licence",
+    "changes": "Changes",
+    "fonts": "Fonts",
+    "software": "Software"
+  },
+  "licences": {
+    "CC BY 4.0": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "models": [
+    {
+      "use": "Monstera plant on the window sill",
+      "title": "Monstera Deliciosa Potted Mid-Century",
+      "author": "ChubbyPanda",
+      "source": "https://sketchfab.com/3d-models/1ab9bf841df04c07b1819be596327629",
+      "licence": "CC BY 4.0",
+      "changes": "Stand removed, pot recoloured terracotta, scaled, leaves split into parts, cut down for the web."
+    },
+    {
+      "use": "Headphones on the wall",
+      "title": "ATH-M50X Headphone",
+      "author": "tejay21",
+      "source": "https://sketchfab.com/3d-models/ada0fcae10a1403c8c5bae1745a738f0",
+      "licence": "CC BY 4.0",
+      "changes": "Cut down for the web."
+    },
+    {
+      "use": "Mouse on the desk",
+      "title": "Logitech MX Master 3S - Revopoint Mini 3D Scan",
+      "author": "Sircher",
+      "source": "https://sketchfab.com/3d-models/logitech-mx-master-3s-revopoint-mini-3d-scan-9a82df69ffee4c6faa28f75e65ba192c",
+      "licence": "CC BY 4.0",
+      "changes": "Used as a base only: our own shell is wrapped onto the scan and the buttons, wheels and ports are rebuilt. The scan itself is not shown."
+    },
+    {
+      "use": "Scale model car on the shelf",
+      "title": "2026 Mercedes W17",
+      "author": "Tyler_Dave",
+      "source": "https://sketchfab.com/3d-models/b806f1e70aa343219e7158169549b97b",
+      "licence": "CC BY 4.0",
+      "changes": "Scaled to 1:18, repainted, logos and sponsor marks removed, cut down for the web."
+    },
+    {
+      "use": "Scale model car on the shelf",
+      "title": "2024 Porsche 992 GT3 R",
+      "author": "Dave Love (Tyler_Dave)",
+      "source": "https://sketchfab.com/3d-models/2024-porsche-992-gt3-r-b76c9b2ae2d548c3869426eac4ab8a19",
+      "licence": "CC BY 4.0",
+      "changes": "Scaled to 1:18, repainted, logos and sponsor marks removed, cut down for the web."
+    },
+    {
+      "use": "Scale model car on the shelf",
+      "title": "Mercedes AMG GT3 Evo 2020",
+      "author": "vecarz (heynic)",
+      "source": "https://sketchfab.com/3d-models/mercedes-amg-gt3-evo-2020-wwwvecarzcom-39e77243109f4e5cb7134b6f31c8f619",
+      "licence": "CC BY 4.0",
+      "changes": "Scaled to 1:18, repainted, logos and sponsor marks removed, cut down for the web."
+    },
+    {
+      "use": "Scale model car on the shelf",
+      "title": "Mercedes AMG One",
+      "author": "GT Cars (Car2022)",
+      "source": "https://sketchfab.com/3d-models/mercedes-amg-one-3f22c626f5274455a90a14801e62527c",
+      "licence": "CC BY 4.0",
+      "changes": "Scaled to 1:18, repainted, logos and sponsor marks removed, cut down for the web."
+    }
+  ],
+  "fontsLicence": { "name": "SIL Open Font License 1.1", "href": "https://openfontlicense.org/" },
+  "fonts": [
+    { "name": "Montserrat", "href": "https://fonts.google.com/specimen/Montserrat" },
+    { "name": "Roboto Condensed", "href": "https://fonts.google.com/specimen/Roboto+Condensed" },
+    { "name": "Rokkitt", "href": "https://fonts.google.com/specimen/Rokkitt" },
+    { "name": "Rajdhani", "href": "https://fonts.google.com/specimen/Rajdhani" },
+    { "name": "Saira", "href": "https://fonts.google.com/specimen/Saira" },
+    { "name": "Libre Caslon Text", "href": "https://fonts.google.com/specimen/Libre+Caslon+Text" },
+    { "name": "Comfortaa", "href": "https://fonts.google.com/specimen/Comfortaa" }
+  ],
+  "software": [
+    { "name": "Three.js", "href": "https://threejs.org/", "licence": "MIT" },
+    { "name": "Astro", "href": "https://astro.build/", "licence": "MIT" }
+  ]
+}

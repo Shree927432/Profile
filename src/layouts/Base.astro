@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { getLinkList, getSite } from '../lib/content';
+import credits from '../../content/credits.json';
 
 interface Props {
   title: string;
@@ -68,7 +69,7 @@ const isCurrent = (href: string) => path === href || path.startsWith(href + '/')
             ))}
           </ul>
         )}
-        <p>© {new Date().getFullYear()} {siteName}</p>
+        <p>© {new Date().getFullYear()} {siteName} · <a href="/credits">{credits.footerLabel}</a></p>
       </div>
     </footer>
   </body>

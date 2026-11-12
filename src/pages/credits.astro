@@ -1,0 +1,63 @@
+---
+import Base from '../layouts/Base.astro';
+import credits from '../../content/credits.json';
+
+const L = credits.labels;
+const licenceHref = (name: string) => (credits.licences as Record<string, string>)[name];
+---
+
+<Base title={credits.title} description={credits.intro}>
+  <main id="main" class="wrap">
+    <h1>{credits.title}</h1>
+    <p class="intro">{credits.intro}</p>
+
+    <section class="section" aria-labelledby="h-models">
+      <h2 id="h-models">{L.models}</h2>
+      <ul class="credit-list">
+        {credits.models.map((m) => (
+          <li>
+            <h3><a href={m.source} rel="noopener">{m.title}</a></h3>
+            <dl>
+              <dt>{L.inRoom}</dt><dd>{m.use}</dd>
+              <dt>{L.author}</dt><dd>{m.author}</dd>
+              <dt>{L.licence}</dt><dd><a href={licenceHref(m.licence)} rel="noopener">{m.licence}</a></dd>
+              <dt>{L.changes}</dt><dd>{m.changes}</dd>
+            </dl>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="section" aria-labelledby="h-fonts">
+      <h2 id="h-fonts">{L.fonts}</h2>
+      <p>
+        {credits.fonts.map((f, i) => (
+          <>{i > 0 && ', '}<a href={f.href} rel="noopener">{f.name}</a></>
+        ))}
+        . <a href={credits.fontsLicence.href} rel="noopener">{credits.fontsLicence.name}</a>.
+      </p>
+    </section>
+
+    <section class="section" aria-labelledby="h-software">
+      <h2 id="h-software">{L.software}</h2>
+      <ul>
+        {credits.software.map((s) => (
+          <li><a href={s.href} rel="noopener">{s.name}</a>, {s.licence}</li>
+        ))}
+      </ul>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .credit-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.5rem; }
+  .credit-list li { border-top: 1px solid var(--line); padding-top: 1rem; }
+  .credit-list h3 { margin: 0 0 0.5rem; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; margin: 0; }
+  dt { color: var(--fg-muted); }
+  dd { margin: 0; }
+  @media (max-width: 30rem) {
+    dl { grid-template-columns: 1fr; gap: 0; }
+    dd { margin-bottom: 0.5rem; }
+  }
+</style>
