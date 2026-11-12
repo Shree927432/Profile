@@ -26,11 +26,13 @@ top screen, key lights, a camera and a mic on arms, a glass PC with an RTX 5090,
 window, a backlit pegboard with a neon sign of the owner's words, light panels, a shelf with frames
 and trailing plants. The music side (the upright piano, six era guitars, the DJ controller, the
 K-pop lightstick) is the secret the site reveals with About.
-**Time, weather, mood (2026-11-01):** dusk in Pune. Outside, golden light turning blue over the city, a little haze,
-the first windows and street lights coming on. Inside, the daylight fading, and the room's own lights just switched on: the
+**Time, weather, mood (2026-11-01; the view changed 2026-11-12):** dusk, by the sea. Outside, the sun low over the sea
+with its path of light on the water, a sea front curving away in the spirit of Mumbai's Marine Drive (Art Deco blocks,
+palms, the lamps of the Queen's Necklace coming on), a hazy far shore with its first lights. (Until 2026-11-12 it was
+golden light turning blue over the Pune city.) Inside, the daylight fading, and the room's own lights just switched on: the
 neon, the Nanoleaf, the key lights, the desk LED, the PC glow and the screens start to carry the room. Warm against cool,
-calm, the end of a working day. Sound: the city settling, distant traffic and birds, the PC's soft hum.
-**How the site opens:** on the sky and the city through the window; a click pulls the camera back
+calm, the end of a working day. Sound: the sea, distant traffic on the sea front and birds, the PC's soft hum.
+**How the site opens:** on the sky and the sea through the window; a click pulls the camera back
 into the room and turns it to the AI lab (the photo's angle). About turns the camera to the music side.
 **Layout and cameras:** plan v3, `blender/lib/plan_v3.py` (INTRO, HERO_V3, ABOUT, phone).
 **Objects:** ten, the limit: the posts screen (the 27-inch Studio Display), the training rig
