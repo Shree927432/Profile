@@ -96,7 +96,7 @@
       "name": "ARVELL",
       "font": "Montserrat-SemiBold.ttf",
       "letter_spacing_em": 0.08,
-      "status": "proposed 2026-10-29, owner to confirm"
+      "status": "confirmed by the owner 2026-11-13"
     },
     "nanoleaf": {
       "real_maker": "Nanoleaf",
@@ -122,13 +122,13 @@
       "name": "KORVA",
       "font": "RobotoCondensed-Bold.ttf",
       "letter_spacing_em": 0.06,
-      "status": "proposed 2026-10-31, owner to confirm"
+      "status": "confirmed by the owner 2026-11-13"
     }
   },
   "_fonts": "Fonts in blender/assets/fonts/ (Google Fonts, SIL Open Font License; owner picked column C on 2026-10-26). Letter spacing in em, as on the comparison page.",
   "neon": {
-    "text": "shrikant",
-    "note": "PLACEHOLDER 2026-10-29: the neon sign's words. The owner picks the final words (the decision rows say 'our words from content'); the builder reads this field and never types text into code.",
-    "status": "placeholder, owner to replace"
+    "text": "build. break. repeat.",
+    "note": "The neon sign's words, chosen by the owner 2026-11-13. The builder reads this field and never types text into code.",
+    "status": "chosen by the owner 2026-11-13; the wall group and the room are rebuilt to show it"
   }
 }
