@@ -17,6 +17,8 @@
 // keeps its own colours. The backdrop (city_static) is drawn unlit.
 
 const LIGHT_URL = "/scene/assets/dusk/room-light.json";
+// The window's layers, far to near (blender/lib/lighting_dusk.py backdrop_layers): drawn in this order.
+const BACKDROP_ORDER = { city_sky: -5, city_far: -4, city_sea: -3, city_prom: -2, city_near: -1 };
 
 export async function loadRoomLight(THREE) {
   const res = await fetch(LIGHT_URL);
@@ -54,6 +56,7 @@ export function applyRoomLight(THREE, { renderer, scene, room, light, exposure }
   pmrem.dispose();
 
   const baked = new Map(); // source material -> baked clone (one atlas, so clones can be shared)
+  const backdropMat = new Map(); // the backdrop's source material -> its unlit, blended stand-in (shared by the layers)
   const lmIntensity = Math.PI * json.lightmap.max * k;
   const emissiveGain = (json.emissiveGain ?? 1) * k;
   const seen = new Set();
@@ -61,10 +64,21 @@ export function applyRoomLight(THREE, { renderer, scene, room, light, exposure }
   room.traverse((o) => {
     if (!o.isMesh) return;
     if (o.name === "city_static" || o.parent?.name === "city_static") {
+      // The window's view (2026-11-12): the sea at sunset in planes at different distances (city_sky, city_far,
+      // city_sea, city_prom, city_near) under the city_static empty, one atlas with alpha. Drawn unlit, blended, far
+      // to near by renderOrder, all before the window's glass and curtains (renderOrder 0).
       const src = o.material;
-      o.material = new THREE.MeshBasicMaterial({ map: src.emissiveMap || src.map, fog: false, side: THREE.DoubleSide });
-      o.material.color.setScalar(json.backdropGain ?? 1);
-      src.dispose();
+      if (!backdropMat.has(src)) {
+        const m = new THREE.MeshBasicMaterial({
+          map: src.map || src.emissiveMap, fog: false, side: THREE.DoubleSide,
+          transparent: true, depthWrite: false, alphaTest: 0.004,
+        });
+        m.color.setScalar(json.backdropGain ?? 1);
+        backdropMat.set(src, m);
+        src.dispose(); // its texture lives on in m
+      }
+      o.material = backdropMat.get(src);
+      o.renderOrder = BACKDROP_ORDER[o.name] ?? -6;
       return;
     }
     if (o.geometry.attributes.uv1 && o.material.isMeshStandardMaterial) {

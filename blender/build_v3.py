@@ -606,7 +606,8 @@ def dusk():
     os.makedirs(DUSK_DIR, exist_ok=True)
     os.makedirs(DUSK_OUT, exist_ok=True)
     LD.lights(P)
-    LD.backdrop(os.path.join(HERE, "assets", "dusk", "pune-dusk.png"))
+    # the window's view (2026-11-12): the sea at sunset in layers; LD.backdrop(".../pune-dusk.png") was the city
+    LD.backdrop_layers(os.path.join(HERE, "assets", "dusk", "beach-dusk.json"))
     objs = LD.bake_targets()
     RES["dusk_baked"] = sorted(o.name for o in objs)
     LD.lightmap_uvs(objs)

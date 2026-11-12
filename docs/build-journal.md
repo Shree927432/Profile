@@ -1237,3 +1237,37 @@ site or the room. Keep each entry short. No polishing; the post does that.
   leg tips against the photo. `plan_v3.CHAIR_BASE_R` says 0.343; the new base reaches 0.352.
 - Footage: `video-local/footage/2026-11-12-chair/` (PROGRESS.md, photo-vs-model and before/after sheets,
   close-ups, `room/room-before-after.jpg` from the browser).
+
+
+## 2026-11-12/13: the view out of the window, from Pune to the sea
+
+- Why: since 11 November the site opens full screen on the window, and the view was its weakest picture: one flat
+  painting of Pune (square blocks, square window dots, a pink haze) on a single plane, so nothing moved against
+  anything when the camera pulled back.
+- First pass, Pune in layers (`blender/tools/paint_pune_dusk_v2.py`): sky, the Sahyadri ridge, the far city, the mid
+  city with Parvati, the near rooftops, each a plane at its own distance, painted from a small box model of the real
+  city at real distances. Three looks were painted; none were rendered as a sheet, because the brief changed.
+- The owner: "can we add beach view with sunny day", then chose "Beach at sunset" (references 29 to 31, Marine Drive).
+  A flat prototype with two looks (A, the sun above the sea; B, just set): "A, sun above sea", then "put it in the room".
+- A, in the room: five planes (sky 15 m from camera_intro, far shore and sun 14.5, sea 13, the curved promenade 9.5,
+  our own parapet 6), one 2048 x 1408 atlas with alpha (108 KB as WebP inside room.glb), 18 triangles, 5 draw calls
+  instead of 1. `lighting_dusk.backdrop_layers()` builds them under the `city_static` empty from
+  `blender/assets/dusk/beach-dusk.json`; `scene/room-light.js` draws them unlit, blended, far to near before the glass.
+  Relit from room_v3.blend (`STAGES=dusk,export FROM_BLEND=1`, bake 95 s) and encoded: room.glb 2.50 to 2.55 MB, no
+  console errors with bloom and without, 120 fps in the Browser pane, 118 draw calls at the hero.
+- What went wrong.
+  - Pillow draws a translucent colour on an RGBA canvas by replacing the pixel, not blending: the "monsoon stains" and
+    the haze bands punched see-through holes in the city layers (white stripes). Now only opaque strokes, haze in numpy.
+  - The first layered city read as a generic skyline: towers everywhere, the sun behind a near block, an empty dark
+    field in front. Fixed with fewer towers, a clear corridor for the sun, rows of low neighbours with roofs showing.
+  - The beach's Art Deco blocks first showed their end walls; on Marine Drive the fronts face the sea and the sunset.
+  - Far lamps and the far sea wall drew over the near blocks; the promenade is now drawn far part, blocks, near part.
+  - The sun first sat behind a glazing bar, then came out grey-white at 1:1 (AgX drains colour from near-white), then
+    darker than its own glow (an 8-bit texture cannot go above white). The glow round it was lowered instead.
+  - The far-plane check showed a sky plane 17 m out would put more of the view past the site's 30 m far plane from the
+    room's sides than today; every layer moved in about 3 m, the sky now where the old plane was.
+  - The Mac ran down to 2 % on battery mid-task; work stopped, the restart wiped the scratch scripts, rewritten.
+- Not done: the car shelf's own lightmap (`cars-lightmap.webp`, blender/components/cars.py) was baked with the city
+  outside; it was not rebaked. The browser's haze without bloom is explained in
+  `video-local/footage/2026-11-12-city/PROGRESS.md` (blending after tone mapping) but not changed.
+- Footage: `video-local/footage/2026-11-12-city/` (options sheet, pull-back strip, 1:1 crops, the prototype, PROGRESS.md).

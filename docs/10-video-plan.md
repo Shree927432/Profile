@@ -255,8 +255,9 @@ next to the clips it renders.
   screenshot, `video-local/scripts/camera-moves.mjs frames`, then ffmpeg). These are process records, not the final.
 - For the phone cut: the site's portrait intro looks through the right sash (35 cm right of camera_intro); the
   centred camera_intro frame is cut in half by the meeting stiles and handles. Use the same offset in the 9:16 cut.
-- Weak spots to fix before shooting these angles for real: the city through the window is the flat stand-in (it is
-  the whole first frame now), the About frame shows a lot of empty wall over flat stand-in guitars, and the pendant
+- Weak spots to fix before shooting these angles for real: (fixed 2026-11-13: the window now shows the sea at sunset in
+  five layers that shift during the pull-back, `video-local/footage/2026-11-12-city/`; the opening shot is now sky, sun
+  and sea, and the sound bed wants the sea in it), the About frame shows a lot of empty wall over flat stand-in guitars, and the pendant
   shade stand-in shows at the top of the phone's About frame.
 - 2026-11-11, stops: every component now has a computed close-up in the site (`scene/stops.js`), one frame
   per stop in `video-local/footage/2026-11-11-camera/stops/` and a tour MP4 (desk, PC, pegboard, car shelf,

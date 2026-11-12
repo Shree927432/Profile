@@ -8,7 +8,8 @@ Felix's method, fitted to our pipeline: Cycles lights the room, the light is bak
     emissive parts light the room through their own emission (Cycles samples emissive meshes).
   - backdrop(): the grey block city becomes one plane 22 m out with the painted Pune dusk
     (blender/tools/paint_pune_dusk.py), emissive, kept as `city_static`; it lights the room through the window
-    but never shadows the sun.
+    but never shadows the sun. Since 2026-11-12 backdrop_layers() is used instead: the sea at sunset in five planes
+    (blender/tools/paint_beach_dusk.py, blender/assets/dusk/beach-dusk.json), still emissive, still `city_static`.
   - bake(): ONE lightmap atlas for every static mesh that never moves (BAKE below): a second UV set `LM` (smart
     project over all of them at once, so texel density is even and the room shell gets the most room), a Cycles
     DIFFUSE bake without colour (direct + indirect: the sun streaks, soft shadows, bounce, the practicals' glow),
@@ -242,6 +243,71 @@ def backdrop(png):
     o.visible_shadow = False                        # never blocks the sun
     log("backdrop")
     return o
+
+
+def backdrop_layers(json_path):
+    """The window's view in layers (2026-11-12, the sea at sunset, blender/tools/paint_beach_dusk.py): replaces
+    city_static with an empty of the same name and one plane per layer under it (city_sky, city_far, city_sea,
+    city_prom, city_near, far to near), so the layers shift against each other as the camera moves. The json gives
+    each plane in the room's metres (plane_y, x0, x1, z0, z1), its UVs in the one atlas, and whether it gets a skirt:
+    a second quad from its bottom edge down below the street, sampling the atlas's bottom row, so the layer reaches
+    the ground from any camera. One material for all: the atlas as base and emission colour, its alpha as alpha
+    (the glTF export marks it BLEND; scene/room-light.js draws the layers unlit, far to near). Emissive, it lights the
+    room through the window; it never shadows the sun."""
+    import json
+    old = bpy.data.objects.get("city_static")
+    parent = old.parent if old else None
+    if old:
+        bpy.data.objects.remove(old, do_unlink=True)
+    meta = json.load(open(json_path))
+    root = bpy.data.objects.new("city_static", None)
+    bpy.context.scene.collection.objects.link(root)
+    if parent:
+        root.parent = parent
+        root.matrix_parent_inverse = parent.matrix_world.inverted()
+    m = bpy.data.materials.new("mat_city_layers")
+    m.use_nodes = True
+    nt = m.node_tree
+    pb = next(n for n in nt.nodes if n.bl_idname == "ShaderNodeBsdfPrincipled")
+    t = nt.nodes.new("ShaderNodeTexImage")
+    t.image = bpy.data.images.load(os.path.join(os.path.dirname(json_path), meta["atlas"]))
+    t.image.alpha_mode = "STRAIGHT"
+    t.image.pack()
+    nt.links.new(t.outputs["Color"], pb.inputs["Base Color"])
+    nt.links.new(t.outputs["Color"], pb.inputs["Emission Color"])
+    nt.links.new(t.outputs["Alpha"], pb.inputs["Alpha"])
+    pb.inputs["Emission Strength"].default_value = 1.0
+    pb.inputs["Roughness"].default_value = 1.0
+    pb.inputs["Specular IOR Level"].default_value = 0.0
+    try:
+        m.surface_render_method = "BLENDED"        # EEVEE and the glTF exporter: alpha blend, not dithered
+    except (AttributeError, TypeError):
+        pass
+    out = []
+    for L in meta["layers"]:
+        y = L["plane_y"]
+        u0, v0, u1, v1 = L["uv"]
+        verts = [(L["x0"], y, L["z0"]), (L["x1"], y, L["z0"]), (L["x1"], y, L["z1"]), (L["x0"], y, L["z1"])]
+        uvs = [(u0, v0), (u1, v0), (u1, v1), (u0, v1)]
+        faces = [(0, 1, 2, 3)]                        # faces -Y, towards the room
+        if L["skirt"]:
+            verts += [(L["x0"], y, meta["street_z"] - 2.0), (L["x1"], y, meta["street_z"] - 2.0)]
+            uvs += [(u0, v0), (u1, v0)]
+            faces.append((4, 5, 1, 0))
+        me = bpy.data.meshes.new(f"city_{L['name']}_mesh")
+        me.from_pydata(verts, [], faces)
+        uvl = me.uv_layers.new(name="UVMap")
+        for poly in me.polygons:
+            for li in poly.loop_indices:
+                uvl.data[li].uv = uvs[me.loops[li].vertex_index]
+        me.materials.append(m)
+        o = bpy.data.objects.new(f"city_{L['name']}", me)
+        bpy.context.scene.collection.objects.link(o)
+        o.parent = root
+        o.visible_shadow = False                      # never blocks the sun
+        out.append(o)
+    log(f"backdrop: {len(out)} layers from {os.path.basename(json_path)}")
+    return root
 
 
 def _cycles(samples, denoise):
