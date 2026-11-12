@@ -50,7 +50,7 @@ Plain markdown. Who you are, what you do, what you are into. First person.
       "intro": "Two or three sentences for the home page",
       "description": "One sentence for search engines and link previews",
       "screens": { "posts": { "title": "", "hint": "", "empty": "", "label": "" } },
-      "room": { "loading": "", "exit": "", "tryAnyway": "", "reducedMotionNote": "", "noWebglNote": "", "failedNote": "", "canvasLabel": "", "debug": { "fps": "", "full": "", "auto": "", "smooth": "" } },
+      "room": { "loading": "", "exit": "", "tryAnyway": "", "reducedMotionNote": "", "noWebglNote": "", "failedNote": "", "canvasLabel": "", "back": "", "stops": { "desk": "", "music": "", "pc": "", "...": "" }, "debug": { "fps": "", "full": "", "auto": "", "smooth": "" } },
       "notFound": { "title": "", "text": "", "link": "" }
     }
 
@@ -67,3 +67,11 @@ the plain page), `tryAnyway` (link shown next to `reducedMotionNote`), `reducedM
 `failedNote` (the room failed to load, so the plain page is shown), `canvasLabel`
 (accessible name of the room canvas), `debug` (labels for the `?debug` panel: `fps`, and
 the three quality levels `full`, `auto`, `smooth`).
+
+`room.back` and `room.stops` (2026-11-11, the room's stops, `scene/stops.js`): `back` labels the
+Back button shown away from the desk. `stops` names each place the camera can fly to, by the id in
+`scene/stops.js` (`pc`, `dashboard`, `gear`, `mic`, `pegboard`, `cars`, `frames`, `laptop`,
+`window`, `plant`, `chair`, `piano`, `guitars`, `rack`, `decks`), plus `desk` and `music`, which are
+only announced to screen readers on arrival (the desk view and the About view). The names show as the
+label beside the cursor, as the stop buttons for the keyboard, and in the screen reader's announcement.
+A stop without a name still works by click; it just has no button.

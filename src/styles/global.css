@@ -389,6 +389,83 @@ html.room-on #room { touch-action: none; }
   padding: 0.2rem 0;
   font-weight: 600;
 }
+/* About in the room (scene/desktop.js): the site nav's About, as a toggle. Pressed while the camera
+   shows the music side. */
+.room-about {
+  min-height: 2rem;
+  padding: 0.15rem 0.6rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.room-about[aria-pressed="true"] {
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.room-about:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Stops (scene/stops.js): Back, shown away from the desk, styled as About. */
+.room-back {
+  min-height: 2rem;
+  padding: 0.15rem 0.6rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.room-back[hidden] { display: none; }
+.room-back:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* The stops as buttons for the keyboard and screen readers: visually hidden until focus is inside, then a
+   wrapped row in the bar. */
+.room-stops:not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.room-stops:focus-within {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex-basis: 100%;
+}
+.room-stop {
+  min-height: 2rem;
+  padding: 0.15rem 0.6rem;
+  font: inherit;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.room-stop:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* The stop's name beside the cursor (desktop hover). Placed by transform from scene/desktop.js. */
+.room-tip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 6;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.85rem;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--bg-raised) 88%, transparent);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.room-tip[hidden] { display: none; }
 .room-loading { color: var(--fg-muted); }
 .room-loading[hidden] { display: none; }
 

@@ -243,3 +243,28 @@ next to the clips it renders.
   net curtains at both edges of the frame; the city reads in tall panes instead of between grill bars. The dawn section's
   "plant on the sill" now stands on a white window board. The left curtain glows when the low sun is behind it: a good
   close shot. Before/after stills: `video-local/footage/2026-11-01-window/sheet-intro.jpg`, `sheet-hero.jpg`.
+
+## Update 2026-11-11: the site's camera moves
+
+- The site now plays the opening the final cut shares (update 2026-10-25): camera_intro on the window, a still hold
+  of 1.8 s, then 5.2 s back and round to the hero along a curve, and About as a 3 s turn across the window to the
+  music side and back. Timings and waypoints are in `scene/desktop.js` (`MOVES`). The directed shoot can copy the
+  path (positions and look over time) instead of inventing a new one, so the film and the site open the same way.
+- Footage: `video-local/footage/2026-11-11-camera/` has contact sheets and 30 fps MP4s of both moves at 1440 x 900
+  and 375 x 812 (frame-exact captures: the page is stepped in 1/30 s ticks in headless Chromium and each frame is a
+  screenshot, `video-local/scripts/camera-moves.mjs frames`, then ffmpeg). These are process records, not the final.
+- For the phone cut: the site's portrait intro looks through the right sash (35 cm right of camera_intro); the
+  centred camera_intro frame is cut in half by the meeting stiles and handles. Use the same offset in the 9:16 cut.
+- Weak spots to fix before shooting these angles for real: the city through the window is the flat stand-in (it is
+  the whole first frame now), the About frame shows a lot of empty wall over flat stand-in guitars, and the pendant
+  shade stand-in shows at the top of the phone's About frame.
+- 2026-11-11, stops: every component now has a computed close-up in the site (`scene/stops.js`), one frame
+  per stop in `video-local/footage/2026-11-11-camera/stops/` and a tour MP4 (desk, PC, pegboard, car shelf,
+  About, piano, back). The directed shoot can start from these camera places for its close-ups. Close-ups
+  that need better models before they are filmed: the flat stand-in guitars (01, 03, 05, 06), the empty
+  picture frames, the stand-in rack, the chair's side.
+- 2026-11-12, the free camera: the site now lets the visitor walk, look and circle components. Footage in
+  `video-local/footage/2026-11-11-camera/free/` (wander MP4s desktop and phone, circling the PC and car shelf,
+  corner and edge stills). For the directed shoot this means any angle a visitor can reach should hold up: the
+  front wall, the door, the ceiling and the pendant need real models before wide or low shots.
+

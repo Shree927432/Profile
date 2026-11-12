@@ -1067,6 +1067,139 @@ site or the room. Keep each entry short. No polishing; the post does that.
   The AMG ONE's "blue side strip" from stage 1 was the room's blue light on its gloss black, not paint.
   Disk: free space fell from 3.7 to 1.4 GB during the day while my own outputs were about 100 MB; not found.
 
+## 2026-11-11
+
+- The camera moves, in the site (`?room&glb`): `scene/camera-moves.js` (new, timing only, like glide.js) and wiring in
+  `scene/desktop.js`; a style for the About toggle in `src/styles/global.css`. The orbit stays the home view and is
+  never moved by a move: each frame the move's pose is drawn and the orbit's pose put back, so zoom, limits, picking
+  and the glide work as before once the move ends.
+  - Intro: camera_intro (the window, the city), held 1.8 s, then 5.2 s back and round to the hero on a Catmull-Rom
+    curve through (0.52, 1.60, -0.45) and (0.86, 1.74, 0.25) (GLB metres); the look is yaw and pitch eased separately
+    and starts turning 14 % into the move, so it pulls straight back first; FOV 50 to 54; smootherstep on both. A tap
+    or Enter starts it at once (decision 2026-10-24: "a click" pulls back). Any drag, wheel, pinch or other key hands
+    over: the move runs down (280 ms) while the picture blends to the orbit over 1.1 s, and the orbit already follows
+    the input. Plays on the first visit in a browser session (sessionStorage, try/catch); `&intro` forces it.
+  - About: the header nav's About (its own words) goes into the overlay as a toggle button. Pressed, a 3 s turn through
+    (0.20, 1.74, 1.30) to camera_about (50 degrees, portrait 72); again, or Escape, back to wherever the orbit was.
+    Input during the turn does not cancel it (as the glide); a second press mid-turn reverses from where it is.
+  - Phone: the hero is now camera_phone's framing (60 degrees, its target centred by the lens shift) instead of
+    66 degrees centred on the screen; the intro looks out 35 cm right of camera_intro, through the right sash.
+  - Reduced motion (`?room=force`): no intro, About cuts, as the glide does.
+  - The car shelf: if it arrives during the hold it goes in at once, out of frame, without its fade; if it arrives
+    during a move it waits for the move to end, then fades in.
+- Measured in headless Chromium on the M2 Pro (120 Hz), stepping or real time: desktop 1440 x 900 with bloom, intro
+  move 120 fps, worst frame 9.4 ms, 52 to 152 draw calls (bloom passes included; 52 at the window); About turn 120 fps,
+  79 to 162. Phone 375 x 812 at 4x CPU throttle: 120 fps on all moves, 15 to 103 calls. Not a real phone: the GPU is
+  the Mac's. Nearest surface to the camera on every path 0.78 m (the ceiling) and 0.88 m (the pendant shade stand-in).
+  No console errors. Behaviour checks pass on both sizes (first visit, drag, wheel, key, tap, About, Escape, the glide
+  into a post after the intro, reduced motion). Frames and MP4s: video-local/footage/2026-11-11-camera/.
+- What went wrong.
+  - The first real-time run had a 65 ms frame 1.4 s into the move, when the pegboard came into view: three.js builds a
+    part's shader and buffers the first time it is drawn, and the intro's first frame shows only the window. Drawing
+    the hero and About once out of sight cut it to 35 ms; the rest was the bloom: shaders differ by render target, and
+    the warm-up had drawn to the screen, not through the bloom composer. Drawing the whole room once, culling off,
+    through the same path as a real frame, during the hold, left no frame over 10.4 ms. The cars arriving during the
+    hold set it off again (their buffers), so their arrival re-runs the warm-up.
+  - A crash that only showed under frame capture: smootherstep came out a hair over 1 (one input in a million in
+    floating point), the curve's arc-length lookup returned NaN past its end, and the loop threw. It would have
+    frozen the room for a visitor on an unlucky frame. Clamped.
+  - The Browser pane was hidden, so its requestAnimationFrame ran at about 7 fps and the first look said the move
+    never started. All timing and frames came from headless Chromium instead (`video-local/scripts/camera-moves.mjs`).
+  - Looks weak, not fixed here: on the phone the net curtain sweeps across the frame mid-move as a soft veil (not a
+    clip; it is a metre away); the About frame is a lot of dim empty wall over the flat stand-in guitars; the pendant
+    stand-in shows at the top of the phone's About; the stand-in city is the whole first frame now and reads as flat
+    blocks under a pink haze.
+- Open for the owner: phone hero A (66 degrees, before) or B (camera_phone, now), and phone intro P1 (camera_intro as
+  is) or P2 (through the right sash, now): `video-local/footage/2026-11-11-camera/phone/phone-options.jpg`. About in the
+  room turns the camera but shows no About text yet; whether it should, and where, is a design question.
+
+## 2026-11-12 (late on 11-11): stops, click a component to fly to it
+
+- The owner tried the room: "i not able to navigate through other components , interaction is set through one
+  camera movement". Asked how they want to move around, they chose "Click to fly there": click a component, the
+  camera glides to a close-up, look around a little, Escape or Back returns to the desk, as in Felix's room.
+- Built on top of the uncommitted camera moves: `scene/stops.js` (new: the table of stops, their boxes, which stop a
+  hit belongs to, the computed camera place, a safe waypoint), look-around added to `scene/camera-moves.js`, wiring
+  in `scene/desktop.js`, styles in `src/styles/global.css`, names in `content/site.json` (`room.back`, `room.stops`).
+  - 15 stops plus the About view as the music side's overview: PC, Dashboard (the G8), Desk gear (keyboard, mouse,
+    Apollo, Stream Deck), Mic and camera, Pegboard (headphones, neon, Nanoleaf as one), Car shelf (appears when the
+    cars load), Frames, Laptop, Window (the intro's view), Monstera, Chair; Piano, Guitar wall, Guitar rack, DJ decks
+    (Back from these goes to the About view, then the desk). The speakers, key lights and plants are not stops.
+  - Picking: every room mesh is in the pick map (nearer hides farther); a hit belongs to its mesh's stop, or to the
+    smallest stop box holding the hit point when the export merged parts into a shared mesh (the DJ stand and the
+    speakers are both in studio_static). Hover: pointer cursor and the stop's name beside it, a DOM label. No
+    material highlight: the shared palette materials would light unrelated parts.
+  - At a stop: drag orbits the stop's centre within 16 by 8 degrees, wheel or pinch zooms in to 72 % (never out);
+    the window and the About view turn in place instead. Flights 1.1 to 2.6 s by distance and turn, smootherstep.
+  - Back: Escape, the Back button (shown away from the desk), or a click on empty wall or floor. A click on the
+    posts screen from a stop flies back to the desk; at the desk the screen behaves as before.
+  - Keyboard: the stops as buttons in the bar, visually hidden until Tab reaches them; Enter flies; the live region
+    says the name on arrival. Reduced motion: cuts.
+- Measured (headless Chromium on the M2 Pro, 120 Hz): a tour of 12 flights at 4x CPU throttle, desktop and phone,
+  120 fps, worst frame 9.5 ms. Draw calls at rest: desktop 110 (unchanged), phone 92 (90 with the old 66-degree
+  phone frame; the +2 comes from camera_phone's framing, not the stops). A hover pick costs 2.4 ms at 4x throttle.
+  Nearest surface along every flight (all 32 from and to the desk, 16 around the list, 7 across the room): 0.37 m
+  (phone, desk to Dashboard, the chair). No console errors. All checks pass on both sizes: hover, click, stop to
+  stop, empty click, Escape, About to piano and Back twice, Tab and Enter, the glide into a post afterwards,
+  reduced motion. Footage: video-local/footage/2026-11-11-camera/stops/.
+- What went wrong.
+  - The first pass framed each stop from the union of its nodes' boxes: the mic's long arm made the mic a speck at
+    the far end of the desk, the piano included its bench and was framed from the About position, and the rack was
+    framed through the piano. Tighter framing boxes and new directions fixed them; the rack now looks down from over
+    the piano's end, the only clear view into that corner.
+  - Look-around limits first came within 4 to 16 cm of the pendant shade (wall guitars, phone), a key light (car
+    shelf) and the curtain (rack). The ranges were cut (16 by 8 degrees, zoom in only, 30 cm off the walls) and the
+    guitar wall and car shelf got their own smaller ranges.
+  - The safe-waypoint check lifted a blocked flight by only 45 cm, still inside the chair; it now tries 50 cm,
+    1 m, then the open middle. No stop-to-stop flight in the room needed one in the end.
+  - A headless key test sent Enter without its text, so the button never clicked and the test read "desk": the test
+    was wrong, not the page (checked by hand in the Browser pane).
+- Weak close-ups, worst first: the wall guitars 01 and 03 and rack guitars 05 and 06 are flat stand-in outlines and
+  read as cut-outs at a stop (guitar_01's black outline also cuts into the rack's frame); the three picture frames
+  are empty grey; the Mic and camera stop is small in a busy corner; the chair (approved for now) shows its weak
+  side; the city through the window is the flat stand-in. The PC, Dashboard, Desk gear, Pegboard, Car shelf,
+  Laptop and Monstera hold up close.
+
+## 2026-11-12: one free camera, and circling a component
+
+- The owner, after trying click-to-fly: "not able to move freely without clicking the component on the
+  components. Also, I was not able to zoom out when I beyond the camera movement". Then: "i want also want fly to
+  the component camera movement but i also want a camera movement on every component and everywhere", and, asked
+  what a drag should do at a component, "Circle the component".
+- Built: the GLB room no longer uses OrbitControls. `scene/camera-moves.js` became the camera: flights end in a
+  free camera (drag looks in place, wheel and pinch move along the look, WASD and the arrows walk); at a stop the
+  same camera circles the component (drag), with the wheel, pinch or up/down arrows for distance; leaving the
+  stop (walking, or pulling back past 1.8 times the framing distance or into a wall) turns the drag back to
+  looking with no jump. New `scene/room-space.js`: the room's free space as 8 cm cells grown 22 cm from every
+  surface, so walking slides along furniture and walls and circling stops at them. The glide into a post starts
+  from any pose and turns the look smoothly (`scene/glide.js`). The desk view is room_view looking at
+  room_view_target, without the old lens shift. Clicking empty wall no longer goes Back (it fought free movement).
+- Checked, headless on the M2 Pro: a scripted wander with real input on desktop and phone (a full turn at the
+  desk, backing out to each wall, walking into each corner, walking to the music side, pulling back from three
+  stops, a click from a free pose, Escape, the posts screen wheel and a post opened afterwards): nearest surface
+  0.28 m, no console errors. Circling every stop on both sizes: nearest surface 0.29 m; how far round each goes
+  is listed in video-local/footage/2026-11-11-camera/free/. Frame times: free walking and dragging 120 fps
+  (desktop, and phone at 4x CPU throttle), worst frame 9.4 ms; the intro, the About turn and a 12-flight tour
+  unchanged. Draw calls at rest unchanged (desktop 110, phone 91).
+- What went wrong.
+  - The session was cut off mid-way; the half-done work was on disk and picked up from the diff.
+  - The first frame-time runs said 44 fps and the quality ladder dropped to 0.75x. The code was not the cause:
+    the Browser pane (the owner trying the room), another tool's process and the system's ANE compiler were
+    loading the Mac. A forced-render probe showed the CPU side unchanged; rerun on a quieter machine, 120 fps.
+  - Setting a free pose from outside drew nothing until the next input: the free camera only reported a change
+    when it eased. Fixed with a "set from outside" flag.
+  - Pulling back at the piano, the mic and the rack never left orbit: a wall stopped the distance before 1.8x.
+    That was the owner's "zoom-out wall" again; pulling back into something now leaves orbit and keeps going.
+  - Backing out moves along the look, so from a downward look it climbs to the 2.4 m band (and from an upward
+    one sinks to 0.6 m). Left as asked ("along the view direction"); worth a look on a phone.
+  - The hover label followed the cursor during drags; now hidden while dragging.
+- Views that look bad now that the camera goes anywhere, worst first: the flat stand-in guitars (01, 03 on the
+  wall, 05, 06 in the rack) seen edge-on while circling; the pendant shade stand-in, a flat dark disc seen from
+  below, on a bare ceiling; the front wall and door wall, empty plaster with an outline stand-in door; the right
+  curtain blown out white by the low sun; the chair's side; the empty picture frames; the city through the
+  window, flat card blocks from the side; the room's corners (bare skirting, nothing in them).
+
+
 ## 2026-11-12: the chair, rebuilt and in the room
 
 - The 28 October Aeron was approved "for now" on 2 November: a flat tray for a seat, boxy arms, a thin base, and a

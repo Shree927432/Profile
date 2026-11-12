@@ -92,6 +92,41 @@ needed for the first picture ships as its own file and loads after the room is o
 - Draw calls: one mesh, one palette material where possible, as the room's statics.
 - The static site never depends on it; the room never waits for it.
 
+## The camera, moves and stops (2026-11-11, free camera 2026-11-12, the GLB room)
+
+The GLB room has one camera the visitor drives; OrbitControls are left to the placeholder `?room`.
+
+- `scene/camera-moves.js` owns the pose. Phases: `still` (the intro's hold on the window), `move` (an eased
+  flight along a Catmull-Rom curve, smootherstep, yaw and pitch eased apart from the position), `free` (the
+  visitor's camera; every flight ends in it) and `orbit` (nothing from here on screen: the glide into a post).
+  In free, a drag looks around in place (full yaw, pitch -60 to +50 degrees), the wheel, trackpad pinch and
+  two-finger pinch move along the look, WASD and the arrows walk (1.2 m/s). All damped (70 ms), reduce: none.
+  At a stop the free camera is in orbit: a drag circles the stop's centre (pitch -80 to +35), wheel, pinch and
+  the up/down arrows change the distance (never under half the framing distance), left/right arrows circle.
+  Dollying out past 1.8 times the framing distance, or into a wall behind, or walking, leaves orbit with the
+  same picture; flying to a stop turns it on again. An intro interrupted by any input becomes free at once and
+  the move's speed runs down over 280 ms.
+- `scene/room-space.js` is where the camera may be: the room's inside less 22 cm, heights 0.6 to 2.4 m, and
+  out of the furniture. Built once on a quiet tick (about 50 to 110 ms): every triangle's box marks 8 cm cells,
+  grown by 22 cm. Walking and dollying go through `constrain` (short sub-steps, sliding axis by axis); a circle
+  step into a blocked cell is refused (sliding on the other axis). No raycasts, no allocation per frame. The
+  car shelf adds its cells when it arrives.
+- `scene/stops.js` is the table of stops: per stop, the GLB nodes it owns, extra boxes for parts the export
+  merged into a shared `<root>_static` mesh, an optional tighter framing box, a direction to look from and a
+  fit. The camera's place is computed from the box, the aspect and the field of view, 25 cm inside the room
+  (portrait fits the height and 60 % of the width).
+- Picking: every visible room mesh is in the pick map, so nearer things hide farther ones; picks use the
+  picture's pose. A hit belongs to its mesh's stop, or else to the smallest stop box holding the hit point.
+  A click on a stop flies there; on the posts screen it opens the post (the glide starts from any pose and
+  turns the look smoothly); on a wall or the floor it does nothing. Drags never click (6 px, 500 ms).
+- Flights: 1.1 to 2.6 s by distance and turn, through a lifted or open-middle waypoint if the straight line
+  hits something (five rays, once per flight).
+- Back: Escape or the Back button (shown away from the desk pose): a music-side stop goes back to the About
+  view, everything else to the desk. Words from `content.site.room.stops` and `room.back`; the hover label is
+  a DOM element. Keyboard: a stop list in the bar, hidden until focused. Reduced motion: flights are cuts;
+  looking and moving stay (the visitor drives them).
+- The posts screen: the wheel over it is the list's, keys reach it when the canvas has focus at the desk pose.
+
 ## Build order dependency
 
     content  →  static site  →  hook  →  2D screen object (no 3D)

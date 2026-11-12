@@ -73,6 +73,9 @@ another checks. Numbers: 15 KB of room code, 120 fps on a Mac. Still hidden at
 actually wrong underneath (bloom passes, instant zoom, no feedback). What changed.
 The glide, in milliseconds. "It feels right." This is where "creative direction"
 stops being a slogan. CLIP: before and after on the phone. -->
+<!-- NOTE 2026-11-11: the opening I described on 24 October ("start with sky view or city view ... camera will zoom out and will move towards left wall") became code: a 1.8 s hold on the window, 5.2 s back and round to the desk, About a 3 s turn to the piano. On the phone the window's centre posts and both handles split the first frame in two, so the phone looks through one sash. The first run hitched 65 ms as the pegboard came into view: three.js builds each part's shader the first time it is drawn, so now the whole room is drawn once, out of sight, during the hold. -->
+<!-- NOTE 2026-11-11: the same evening I tried the room and wrote "i not able to navigate through other components , interaction is set through one camera movement". I picked "Click to fly there": every component is now a stop, sixteen of them, with Back to the desk, as in Felix's room. The close-ups show the web models' cut-down detail for the first time: the flat stand-in guitars and the empty picture frames look worst. -->
+<!-- NOTE 2026-11-12: then "not able to move freely without clicking the component" and "not able to zoom out". One free camera replaced the orbit: drag to look, scroll to move, WASD to walk, and at a component the drag circles it. Going anywhere shows what was never meant to be seen: the backs, the ceiling, an empty front wall. -->
 
 ## The video
 

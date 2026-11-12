@@ -29,6 +29,9 @@ export function createGlide({ THREE, camera, target, normal, closeUp, light, red
   const to = new THREE.Spherical();
   const now = new THREE.Spherical();
   const v = new THREE.Vector3();
+  // The look turns from where the camera looked when the glide began to the screen, so a glide may start
+  // from any pose (the free camera, 2026-11-12) without a jump.
+  const q0 = new THREE.Quaternion();
   const prefetched = new Set();
   let url = null; // the post being opened; null at rest
   let t = 0;
@@ -62,6 +65,7 @@ export function createGlide({ THREE, camera, target, normal, closeUp, light, red
       timer = setTimeout(leave, REDUCED_MS);
       return;
     }
+    q0.copy(camera.quaternion);
     from.setFromVector3(v.subVectors(camera.position, target));
     to.setFromVector3(v.copy(normal));
     // the short way round
@@ -83,6 +87,7 @@ export function createGlide({ THREE, camera, target, normal, closeUp, light, red
     now.theta = from.theta + (to.theta - from.theta) * e;
     camera.position.setFromSpherical(now).add(target);
     camera.lookAt(target);
+    camera.quaternion.slerpQuaternions(q0, camera.quaternion, easeInOut(clamp01(t / (HOLD_MS + GLIDE_MS * 0.7))));
     fade.style.opacity = String(smooth(clamp01((t - HOLD_MS - GLIDE_MS + FADE_MS) / FADE_MS)));
     if (t >= HOLD_MS + GLIDE_MS) leave();
     return true;
