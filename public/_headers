@@ -1,0 +1,13 @@
+# Cloudflare Pages response headers (public/ is copied to the site root). Checked 2026-11-13: without this file every
+# file is sent with "max-age=0, must-revalidate", so a returning visit still asks the server about every file.
+#
+# Astro's own files carry a content hash in their names: they never change under one name.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The vendored three.js (pinned in package.json): a day, so a returning visit skips about 40 revalidations. Not longer: a
+# three.js upgrade replaces files under the same names, and a visitor must not keep half of the old and half of the new.
+/scene/vendor/*
+  Cache-Control: public, max-age=86400
+
+# The room's own files (code, room.glb, the light files) keep the default: they change together and must stay together.

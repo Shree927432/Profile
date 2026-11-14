@@ -8,8 +8,9 @@
 //   /scene/vendor/three/three.module.js   <- three/build/three.module.js (+ three.core.js, which it imports)
 //   /scene/vendor/three/addons/<path>     <- three/examples/jsm/<path>   (only the folders in ADDON_DIRS
 //                                            and the single files in ADDON_FILES)
-import { cp, mkdir, stat } from 'node:fs/promises';
+import { cp, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
+import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -29,6 +30,11 @@ const MIME = {
   '.wav': 'audio/wav',
   '.md': 'text/markdown; charset=utf-8',
 };
+
+// The room's GLB also ships as room.glb.gz (2026-11-13). Cloudflare Pages sends .glb as it is (no gzip, no brotli, whatever
+// the browser asks for), and a gzipped copy is about 20% smaller. desktop.js fetches the .gz and unpacks it with the
+// browser's own DecompressionStream, and falls back to the plain .glb. Written at build; the dev server makes it on the fly.
+const GZIPPED = ['assets/room.glb'];
 
 const VENDOR = '/scene/vendor/three/';
 const BUILD_FILES = ['three.module.js', 'three.core.js'];
@@ -70,6 +76,16 @@ export default function sceneFiles() {
                   server.middlewares.use(async (req, res, next) => {
                     const url = (req.url || '').split('?')[0];
                     if (!url.startsWith('/scene/')) return next();
+                    if (GZIPPED.some((f) => url === '/scene/' + f + '.gz')) {
+                      try {
+                        const buf = gzipSync(await readFile(path.join(sceneDir, url.slice('/scene/'.length, -3))), { level: 6 });
+                        res.setHeader('Content-Type', 'application/gzip');
+                        res.end(buf);
+                      } catch {
+                        next();
+                      }
+                      return;
+                    }
                     let file;
                     if (url.startsWith(VENDOR)) {
                       file = vendorFile(threeDir, decodeURIComponent(url.slice(VENDOR.length)));
@@ -110,7 +126,10 @@ export default function sceneFiles() {
           await mkdir(path.dirname(path.join(vendorOut, 'addons', f)), { recursive: true });
           await cp(path.join(threeDir, 'examples', 'jsm', f), path.join(vendorOut, 'addons', f));
         }
-        logger.info('copied scene/ and three.js to dist/scene/');
+        for (const f of GZIPPED) {
+          await writeFile(path.join(out, f + '.gz'), gzipSync(await readFile(path.join(out, f)), { level: 9 }));
+        }
+        logger.info('copied scene/ and three.js to dist/scene/, wrote ' + GZIPPED.map((f) => f + '.gz').join(', '));
       },
     },
   };

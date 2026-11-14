@@ -17,6 +17,46 @@ const posts = (await getPosts()).slice(0, 3);
       }
     }
   </script>
+  <!-- The room's first load (2026-11-13). Only with ?room&glb, and not when boot.js will refuse the room (reduced
+       motion without room=force, no WebGL2): start every download the room needs right now, in parallel, instead
+       of finding each one a step at a time (boot.js -> content.json -> desktop.js -> three -> room.glb -> draco).
+       The module list is desktop.js's import graph; a file missing from it just loads later. The light files'
+       names are in room-light.json; the Draco decoder's in desktop.js (DRACO_DECODER). Bloom's modules are only
+       listed where desktop.js turns bloom on (BLOOM.minWidth, not a coarse pointer). docs/02-architecture.md. -->
+  <script slot="head" is:inline>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      if (!q.has('room') || !q.has('glb') || typeof WebGL2RenderingContext === 'undefined') return;
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches && q.get('room') !== 'force') return;
+      var head = document.head;
+      function add(rel, href, as, cross) {
+        var l = document.createElement('link');
+        l.rel = rel; l.href = href;
+        if (as) l.as = as;
+        if (cross) l.crossOrigin = 'anonymous';
+        head.appendChild(l);
+      }
+      var S = '/scene/', V = S + 'vendor/three/', A = V + 'addons/';
+      var code = [S + 'boot.js', S + 'desktop.js', V + 'three.module.js', V + 'three.core.js'];
+      ['pick', 'batch', 'quality', 'glide', 'camera-moves', 'stops', 'room-space', 'room-light', 'placeholder-room', 'objects/monitor-posts']
+        .forEach(function (m) { code.push(S + m + '.js'); });
+      ['controls/OrbitControls', 'loaders/GLTFLoader', 'loaders/DRACOLoader', 'utils/BufferGeometryUtils', 'utils/SkeletonUtils']
+        .forEach(function (m) { code.push(A + m + '.js'); });
+      if (innerWidth >= 768 && !matchMedia('(pointer: coarse)').matches) {
+        ['postprocessing/EffectComposer', 'postprocessing/RenderPass', 'postprocessing/OutputPass', 'postprocessing/UnrealBloomPass',
+          'postprocessing/ShaderPass', 'postprocessing/MaskPass', 'postprocessing/Pass', 'shaders/CopyShader', 'shaders/OutputShader',
+          'shaders/LuminosityHighPassShader'].forEach(function (m) { code.push(A + m + '.js'); });
+      }
+      code.forEach(function (u) { add('modulepreload', u); });
+      add('preload', '/content.json', 'fetch', true);
+      add('preload', S + 'assets/dusk/room-light.json', 'fetch', true);
+      add('preload', S + 'assets/dusk/lightmap.webp', 'image', true); // three.js loads textures with crossorigin=anonymous
+      add('preload', S + 'assets/dusk/env.webp', 'image', true);
+      add('preload', A + 'libs/draco/gltf/draco_wasm_wrapper.js', 'fetch', true);
+      add('preload', A + 'libs/draco/gltf/draco_decoder.wasm', 'fetch', true);
+      add('preload', S + 'assets/room.glb.gz', 'fetch', true);
+    })();
+  </script>
   <main id="main" class="wrap">
     <div id="static">
       <h1>{site.name}</h1>

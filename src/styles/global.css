@@ -390,38 +390,35 @@ html.room-on #room { touch-action: none; }
   font-weight: 600;
 }
 /* About in the room (scene/desktop.js): the site nav's About, as a toggle. Pressed while the camera
-   shows the music side. */
-.room-about {
+   shows the music side. Back (stops.js, shown away from the desk) is styled the same. Both are filled buttons
+   with a border at the text's own strength (2026-11-13): on the dark bar the old hairline border and clear
+   background made About read like plain text. The fill and border are mixes of the text colour, so they work
+   in both themes. */
+.room-about,
+.room-back {
   min-height: 2rem;
-  padding: 0.15rem 0.6rem;
+  padding: 0.15rem 0.8rem;
   font: inherit;
   font-weight: 600;
   color: var(--fg);
-  background: transparent;
-  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--fg) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg) 45%, transparent);
   border-radius: var(--radius);
   cursor: pointer;
+}
+.room-about:hover,
+.room-back:hover {
+  background: color-mix(in srgb, var(--fg) 24%, transparent);
+  border-color: color-mix(in srgb, var(--fg) 65%, transparent);
 }
 .room-about[aria-pressed="true"] {
   color: var(--accent-contrast);
   background: var(--accent);
   border-color: var(--accent);
 }
-.room-about:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-/* Stops (scene/stops.js): Back, shown away from the desk, styled as About. */
-.room-back {
-  min-height: 2rem;
-  padding: 0.15rem 0.6rem;
-  font: inherit;
-  font-weight: 600;
-  color: var(--fg);
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-.room-back[hidden] { display: none; }
+.room-about:focus-visible,
 .room-back:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.room-back[hidden] { display: none; }
 /* The stops as buttons for the keyboard and screen readers: visually hidden until focus is inside, then a
    wrapped row in the bar. */
 .room-stops:not(:focus-within) {

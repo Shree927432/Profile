@@ -127,6 +127,9 @@ async function startRoom() {
   let overlay = null;
   try {
     if (!canvas) throw new Error("no #room canvas");
+    // desktop.js (and three.js behind it) downloads while content.json does, not after it. A failure is thrown below.
+    const desktopLoad = import("./desktop.js");
+    desktopLoad.catch(() => {});
     const content = await loadContent();
     const text = content.site && content.site.room;
     if (!text || !text.exit || !text.loading) throw new Error("site.room text missing");
@@ -148,7 +151,7 @@ async function startRoom() {
     document.body.prepend(overlay); // before the canvas, so Tab goes: plain-page link, then canvas
     loading.textContent = text.loading; // after insertion, so screen readers announce it
 
-    const { start } = await import("./desktop.js");
+    const { start } = await desktopLoad;
     await start({ canvas, content, overlay, params, reduce });
     loading.hidden = true;
   } catch (err) {
