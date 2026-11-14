@@ -61,6 +61,7 @@ export function applyRoomLight(THREE, { renderer, scene, room, light, exposure }
   const emissiveGain = (json.emissiveGain ?? 1) * k;
   const seen = new Set();
   let nBaked = 0;
+  const layers = []; // the backdrop's planes, merged below
   room.traverse((o) => {
     if (!o.isMesh) return;
     if (o.name === "city_static" || o.parent?.name === "city_static") {
@@ -73,12 +74,14 @@ export function applyRoomLight(THREE, { renderer, scene, room, light, exposure }
           map: src.map || src.emissiveMap, fog: false, side: THREE.DoubleSide,
           transparent: true, depthWrite: false, alphaTest: 0.004,
         });
+        m.forceSinglePass = true; // flat cards: both faces in one draw (three.js draws a two-sided blend twice)
         m.color.setScalar(json.backdropGain ?? 1);
         backdropMat.set(src, m);
         src.dispose(); // its texture lives on in m
       }
       o.material = backdropMat.get(src);
       o.renderOrder = BACKDROP_ORDER[o.name] ?? -6;
+      layers.push(o);
       return;
     }
     if (o.geometry.attributes.uv1 && o.material.isMeshStandardMaterial) {
@@ -99,7 +102,40 @@ export function applyRoomLight(THREE, { renderer, scene, room, light, exposure }
     seen.add(m);
     if (m.emissive && (m.emissive.r || m.emissive.g || m.emissive.b)) m.emissiveIntensity *= emissiveGain;
   });
+  mergeBackdrop(THREE, layers);
   return { baked: nBaked };
+}
+
+// The backdrop's planes in one mesh (2026-11-15, draw calls): far to near in index order, so they blend as their
+// renderOrder did, in one draw instead of five. Only when they share a parent and a material (one atlas).
+function mergeBackdrop(THREE, layers) {
+  if (layers.length < 2) return;
+  const parent = layers[0].parent, mat = layers[0].material;
+  if (layers.some((o) => o.parent !== parent || o.material !== mat)) return;
+  layers.sort((a, b) => a.renderOrder - b.renderOrder);
+  const pos = [], uv = [], index = [];
+  const v = new THREE.Vector3();
+  for (const o of layers) {
+    o.updateMatrix();
+    const g = o.geometry, p = g.attributes.position, t = g.attributes.uv, base = pos.length / 3;
+    for (let i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i).applyMatrix4(o.matrix);
+      pos.push(v.x, v.y, v.z);
+      uv.push(t ? t.getX(i) : 0, t ? t.getY(i) : 0);
+    }
+    if (g.index) for (let i = 0; i < g.index.count; i++) index.push(base + g.index.getX(i));
+    else for (let i = 0; i < p.count; i++) index.push(base + i);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(index);
+  geo.computeBoundingSphere();
+  const merged = new THREE.Mesh(geo, mat);
+  merged.name = "city_layers";
+  merged.renderOrder = layers[0].renderOrder;
+  for (const o of layers) { parent.remove(o); o.geometry.dispose(); }
+  parent.add(merged);
 }
 
 // Deferred assets (docs/02-architecture.md): GLBs loaded after the room appears, in the room's own frame. The car display

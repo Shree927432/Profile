@@ -1411,3 +1411,15 @@ site or the room. Keep each entry short. No polishing; the post does that.
   blender/out/room_v3_rich.blend (304 MB, 16 s to build). No bake, no export: the site's files are untouched. The
   guitars land exactly where the web build puts them. `blender/tools/view_room.py` opens a room file through the desk
   camera in EEVEE's rendered view.
+
+## 2026-11-15: draw calls at the desk under target
+
+- Owner: "Draw calls next". The desk view drew 119 times (target about 112). A new lister
+  (video-local/scripts/draws-list.mjs: every visible mesh in the desk camera's frustum, its material, whether it
+  blends) found 10 of them were the sea view's five layers: each a see-through, two-sided card, which three.js draws
+  twice (back faces, then front).
+- Fix in scene/room-light.js, no change to any file the bake makes: the backdrop material draws both faces in one pass
+  (`forceSinglePass`), and the five planes merge into one mesh, `city_layers`, far to near in index order so they
+  blend exactly as their renderOrder did. 10 draws -> 1.
+- Result: desk 119 -> 110, About 89 -> 80 (desktop); phone desk 106 -> 97, About 40 -> 33. The desk view and the window
+  close-up rendered before and after are identical to the pixel. No errors on desktop or phone.
