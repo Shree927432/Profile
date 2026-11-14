@@ -65,7 +65,7 @@ the component's reference folder, an approved component as a pattern, and a time
 
 ## Next steps, in order
 
-00. Posts on the laptop (owner, 2026-10-31: "I want post on laptop screen", chose "Move to the laptop"; decision row
+00. DONE 2026-11-15. Posts on the laptop (owner, 2026-10-31: "I want post on laptop screen", chose "Move to the laptop"; decision row
     recorded). A builder started and was stopped by the owner ("stop for now") before changing any file. Resume: in
     scene/desktop.js's GLB path, use `laptop_screen` / `laptop_lid` instead of `monitor_screen` / `monitor_body`,
     check the screen's real facing (don't assume local +Z) for the glide and halo, match the canvas aspect (about

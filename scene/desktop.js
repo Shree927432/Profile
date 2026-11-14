@@ -275,20 +275,52 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   }
 
   // Phase 4: the screen and body come out of the GLB by name, never by held reference.
-  const screenMesh = room.getObjectByName("monitor_screen");
+  // monitor_screen is the desk's screen: the orbit's centre (lookAt) in both rooms. The posts are on it in the
+  // placeholder room; in the GLB room they are on the laptop (laptop_screen, decision 2026-10-31, built
+  // 2026-11-15) and the Studio Display keeps its own picture.
+  const deskScreen = room.getObjectByName("monitor_screen");
   const bodyMesh = room.getObjectByName("monitor_body");
-  if (!screenMesh || !bodyMesh) throw new Error("room has no monitor_screen / monitor_body");
-  const lookAt = screenMesh.getWorldPosition(new THREE.Vector3());
+  if (!deskScreen || !bodyMesh) throw new Error("room has no monitor_screen / monitor_body");
+  const lookAt = deskScreen.getWorldPosition(new THREE.Vector3());
   const bodySize = new THREE.Box3().setFromObject(bodyMesh).getSize(new THREE.Vector3());
-  // The screen in world space: size (metres), rotation, and the direction it faces.
+  const laptopScreen = useGlb ? room.getObjectByName("laptop_screen") : null;
+  const screenMesh = laptopScreen || deskScreen; // the posts screen
+  // Where the posts screen answers clicks, the wheel and keys: the desk view, or the laptop's stop.
+  const POSTS_AT = laptopScreen ? "laptop" : "desk";
+  // The posts screen in world space: centre, size (metres), rotation, the direction it faces, and which way its
+  // V runs. The monitor is a plane in its local XY facing +Z, V up. The laptop's lid is tilted and turned and its
+  // V runs down the screen (the export), so its frame comes from its four corners, found by their UVs.
   const screenQuat = new THREE.Quaternion();
   const screenSize = new THREE.Vector3();
-  {
+  const screenCentre = lookAt.clone();
+  const screenUp = new THREE.Vector3(0, 1, 0);
+  let screenVUp = true; // V = 1 at the top (the monitor); false: V = 0 at the top (the laptop)
+  if (!laptopScreen) {
     const geo = screenMesh.geometry;
     if (!geo.boundingBox) geo.computeBoundingBox();
     const scl = new THREE.Vector3();
     screenMesh.matrixWorld.decompose(new THREE.Vector3(), screenQuat, scl);
     geo.boundingBox.getSize(screenSize).multiply(scl);
+    screenUp.set(0, 1, 0).applyQuaternion(screenQuat);
+  } else {
+    screenMesh.updateWorldMatrix(true, false);
+    const pos = screenMesh.geometry.attributes.position, uv = screenMesh.geometry.attributes.uv;
+    const corner = (score) => {
+      let best = 0, bestS = -Infinity;
+      for (let i = 0; i < uv.count; i++) { const s = score(uv.getX(i), uv.getY(i)); if (s > bestS) { bestS = s; best = i; } }
+      return new THREE.Vector3().fromBufferAttribute(pos, best).applyMatrix4(screenMesh.matrixWorld);
+    };
+    const p00 = corner((u, v) => -u - v), p10 = corner((u, v) => u - v), p01 = corner((u, v) => v - u), p11 = corner((u, v) => u + v);
+    const right = p10.clone().sub(p00);
+    const vDir = p01.clone().sub(p00);
+    screenVUp = vDir.y > 0;
+    screenUp.copy(vDir).multiplyScalar(screenVUp ? 1 : -1);
+    screenSize.set(right.length(), vDir.length(), 0);
+    right.normalize();
+    screenUp.normalize();
+    const facing = new THREE.Vector3().crossVectors(right, screenUp).normalize();
+    screenQuat.setFromRotationMatrix(new THREE.Matrix4().makeBasis(right, screenUp, facing));
+    screenCentre.copy(p00).add(p10).add(p01).add(p11).multiplyScalar(0.25);
   }
   const screenNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(screenQuat);
   const SCREEN_W = Math.round((SCREEN_H * screenSize.x) / screenSize.y);
@@ -318,6 +350,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   const glbMap = uvtest ? screenMesh.material.map : null;
   const screenTexture = new THREE.CanvasTexture(screenCanvas);
   screenTexture.colorSpace = THREE.SRGBColorSpace;
+  screenTexture.flipY = screenVUp; // the canvas's top row at the screen's top, whichever way its V runs
   screenTexture.minFilter = THREE.LinearMipmapLinearFilter;
   screenTexture.magFilter = THREE.LinearFilter;
   screenTexture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
@@ -330,8 +363,11 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   // Alpha is exp(-(d/sigma)^2), d = distance outside the screen rectangle: no disc, no rim.
   let halo = null;
   {
-    const W = screenSize.x + GLOW.reach * 2;
-    const H = screenSize.y + GLOW.reach * 2;
+    // The glow's reach and softness scale with the screen (tuned on the 59.7 cm Studio Display).
+    const gs = laptopScreen ? screenSize.x / 0.597 : 1;
+    const reach = GLOW.reach * gs, sigma = GLOW.sigma * gs;
+    const W = screenSize.x + reach * 2;
+    const H = screenSize.y + reach * 2;
     const c = document.createElement("canvas");
     c.width = Math.round(W * GLOW.pxPerMetre);
     c.height = Math.round(H * GLOW.pxPerMetre);
@@ -344,7 +380,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
           const dy = Math.max(0, Math.abs((y + 0.5) / GLOW.pxPerMetre - H / 2) - screenSize.y / 2);
           const i = (y * c.width + x) * 4;
           img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
-          img.data[i + 3] = Math.round(255 * Math.exp(-(dx * dx + dy * dy) / (GLOW.sigma * GLOW.sigma)));
+          img.data[i + 3] = Math.round(255 * Math.exp(-(dx * dx + dy * dy) / (sigma * sigma)));
         }
       }
       g.putImageData(img, 0, 0);
@@ -359,7 +395,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
       );
       halo.name = "monitor_glow";
       halo.quaternion.copy(screenQuat);
-      halo.position.copy(lookAt).addScaledVector(screenNormal, -GLOW_BEHIND);
+      halo.position.copy(screenCentre).addScaledVector(screenNormal, -GLOW_BEHIND);
       halo.renderOrder = 1;
       scene.add(halo);
     }
@@ -547,7 +583,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
 
   // ---- glide (opening a post) ----
   const glide = createGlide({
-    THREE, camera, target: controls.target, normal: screenNormal,
+    THREE, camera, target: laptopScreen ? screenCentre : controls.target, normal: screenNormal,
     closeUp: closeUpDistance, light, reduce,
   });
   function startGlide(url) {
@@ -805,7 +841,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   // ---- picking and input ----
   // ctx.interact for Phase 5 room objects: they call interact.set(mesh, {kind, part, owner}).
   const interact = createPickMap(THREE, camera, canvas);
-  interact.set(screenMesh, { kind: "screen", part: "monitor_screen" });
+  interact.set(screenMesh, { kind: "screen", part: screenMesh.name });
   // Stops: every mesh in the room can be picked (so nearer things hide farther ones); stops.classify() says
   // which stop a hit belongs to, or none (a wall, the floor). Deferred assets register when they arrive.
   function registerRoom() {
@@ -840,7 +876,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   // The plane's UVs run left-to-right, bottom-to-top (see placeholder-room.js), hence 1 - v.
   function tapScreen(hit) {
     if (!hit.uv) return false;
-    return screenHandle.input({ type: "click", x: hit.uv.x * SCREEN_W, y: (1 - hit.uv.y) * SCREEN_H });
+    return screenHandle.input({ type: "click", x: hit.uv.x * SCREEN_W, y: (screenVUp ? 1 - hit.uv.y : hit.uv.y) * SCREEN_H });
   }
 
   // The one place a pick turns into an action. Phase 5 objects get click(part, hit).
@@ -855,6 +891,10 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   // Height of the screen on the display in CSS px, to turn finger movement into screen units.
   const _corner = new THREE.Vector3();
   function screenPixelHeight() {
+    if (laptopScreen) {
+      const yAt = (s) => _corner.copy(screenCentre).addScaledVector(screenUp, (s * screenSize.y) / 2).project(camera).y;
+      return Math.abs(yAt(1) - yAt(-1)) * 0.5 * canvas.clientHeight;
+    }
     const geo = screenMesh.geometry;
     if (!geo.boundingBox) geo.computeBoundingBox();
     const { min, max } = geo.boundingBox;
@@ -864,6 +904,9 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     };
     return Math.abs(yAt(max.y) - yAt(min.y)) * 0.5 * canvas.clientHeight;
   }
+  // The posts screen takes clicks, the wheel, a touch drag and keys only where it is read: at the desk (the
+  // placeholder room, or the GLB room's monitor) or at the laptop's stop. Elsewhere a click on it flies there.
+  const postsHere = () => !stops || currentId() === POSTS_AT;
   const scrollScreen = (dy) => screenHandle.input({ type: "scroll", dy });
 
   // Pointer state. A gesture is one primary pointer: tap, orbit (OrbitControls), or a touch
@@ -907,7 +950,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     }
     if (!e.isPrimary || (e.pointerType === "mouse" && e.button !== 0)) return;
     down = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), scrolling: false, lastY: e.clientY, lx: e.clientX, ly: e.clientY };
-    if (e.pointerType === "touch" && !moves.moving && isScreen(pickShown(e.clientX, e.clientY))) {
+    if (e.pointerType === "touch" && !moves.moving && postsHere() && isScreen(pickShown(e.clientX, e.clientY))) {
       down.scrolling = true;
       controls.enabled = false; // OrbitControls ignores this pointer entirely
       try { canvas.setPointerCapture(e.pointerId); } catch { /* pointerup still arrives on the canvas */ }
@@ -980,7 +1023,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     // flies there; a wall or the floor does nothing (Back and Escape go back).
     const picked = pickShown(e.clientX, e.clientY);
     const what = stopOf(picked);
-    if (what === "screen") { dispatchTap(picked); return; }
+    if (what === "screen") { if (postsHere()) dispatchTap(picked); else flyTo(POSTS_AT); return; }
     if (what && what.id !== currentId()) flyTo(what.id);
   }
   canvas.addEventListener("pointerup", onPointerEnd);
@@ -1013,7 +1056,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     if (!stops) { setHover(!!interact.pick(hoverX, hoverY), ""); return; }
     if (down && down.looking) { setHover(false, ""); return; } // no label while dragging
     const what = stopOf(pickShown(hoverX, hoverY));
-    if (what === "screen") setHover(true, "");
+    if (what === "screen") setHover(true, postsHere() ? "" : nameOf(POSTS_AT));
     else if (what && what.id !== currentId()) setHover(true, nameOf(what.id));
     else setHover(false, "");
   }
@@ -1029,7 +1072,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     handOver(); // during the intro: the wheel takes the room, and moves at once
     const k = e.deltaMode === 1 ? WHEEL_LINE_PX : 1;
     if (glide.active || moves.moving) { e.preventDefault(); e.stopImmediatePropagation(); return; }
-    if (!e.ctrlKey && isScreen(pickShown(e.clientX, e.clientY))) {
+    if (!e.ctrlKey && postsHere() && isScreen(pickShown(e.clientX, e.clientY))) {
       const px = screenPixelHeight();
       const used = px > 0 && scrollScreen((e.deltaY * k * SCREEN_H) / px);
       // The free camera: over the posts screen the wheel is the list's, even when the list is too short to scroll.
@@ -1056,7 +1099,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   canvas.tabIndex = 0;
   canvas.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (glide.active || moves.moving || (freeCam && currentId() !== "desk")) return; // keys reach the screen at the desk
+    if (glide.active || moves.moving || (freeCam && currentId() !== POSTS_AT)) return; // keys reach the posts where they are read
     if (screenHandle.input({ type: "key", key: e.key })) e.preventDefault();
   });
   // Keys anywhere on the page: during the intro's hold Enter or Space starts the move (the keyboard's
@@ -1076,7 +1119,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     if (!freeCam || e.ctrlKey || e.metaKey || e.altKey || !WALK_KEYS[e.code]) return;
     const el = document.activeElement;
     if (el && el !== canvas && el !== document.body) return;
-    if (e.code.startsWith("Arrow") && el === canvas && currentId() === "desk") return;
+    if (e.code.startsWith("Arrow") && el === canvas && currentId() === POSTS_AT) return;
     keys.add(e.code);
     e.preventDefault();
   }, { capture: true });

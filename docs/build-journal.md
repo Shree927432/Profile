@@ -1423,3 +1423,21 @@ site or the room. Keep each entry short. No polishing; the post does that.
   blend exactly as their renderOrder did. 10 draws -> 1.
 - Result: desk 119 -> 110, About 89 -> 80 (desktop); phone desk 106 -> 97, About 40 -> 33. The desk view and the window
   close-up rendered before and after are identical to the pixel. No errors on desktop or phone.
+
+## 2026-11-15: the posts on the laptop (Phase 5, the first object)
+
+- Owner: "Start the laptop". The 2026-10-31 decision (posts on the laptop) had never been built: a builder was stopped
+  before it changed a file, and the live room still showed the posts on the Studio Display.
+- scene/desktop.js: in the GLB room the posts canvas goes on `laptop_screen`; monitor_screen stays the orbit's centre
+  and keeps its own picture (blank, decision 2026-11-13). The laptop's lid is tilted and turned, and its V runs down the
+  screen in the GLB, so the screen's frame (centre, size, facing, up) comes from its four corners found by their UVs;
+  the canvas texture's flipY and the tap's row follow. Done the monitor's way it would have been upside down with taps
+  on the wrong rows. The glide aims at the laptop's centre and normal; the glow is scaled to the smaller screen.
+- Behaviour: from the desk (or anywhere) a click on the laptop flies to its stop instead of opening a post from across
+  the room; at the stop, clicks, the wheel, a touch drag and the arrows work the list (the arrows no longer walk
+  there), and a row glides in and opens the post.
+- Checked (video-local/scripts/laptop-check.mjs, desktop and phone): the first click flies to the laptop, ArrowDown
+  moves the selection and not the camera, a click on a row opens /posts/the-chair-that-wouldnt-come-out-right; no
+  errors. The plain `?room` placeholder still shows the posts on its monitor. Desk view still 110 draw calls.
+- Found: on the phone's desk view the laptop is just off the right edge (the framing made for the chair on
+  2026-11-13); phone visitors reach it from the stops list or by turning.
