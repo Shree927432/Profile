@@ -5,7 +5,7 @@
  "emissiveGain": 1.0,
  "lightmap": {
   "file": "lightmap.webp",
-  "max": 8.9733
+  "max": 9.1173
  },
  "env": {
   "file": "env.webp",

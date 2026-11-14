@@ -98,7 +98,10 @@ HOOK_WIRE = 5.0                                        # EST: SKADIS hook wire
 HOOK_REACH = 45.0                                      # EST: the hook's reach from the board face
 # ATH-M50x (2026-11-02): the downloaded model (blender/components/headphones.py), hanging in the hook's dip
 HP_CUP_CX, HP_CUP_Z = 40.0, -165.0                     # MEASURED on the model: a cup's centre from the hook point (close-ups)
-NEON_W, NEON_H = 700.0, 260.0                          # plan v3: 0.70 x 0.26
+# plan v3 NEON (2026-11-13, "build. break. repeat."): the plate in metres and how many lines the words are set on
+from lib.plan_v3 import NEON as _NEON  # noqa: E402
+NEON_W, NEON_H = _NEON["w"] * 1000.0, _NEON["h"] * 1000.0
+NEON_LINES = _NEON["lines"]
 NEON_PLATE_T = 4.0                                     # EST: clear acrylic 3 to 5
 NEON_TUBE = 8.0                                        # EST: LED neon flex 6 to 8 wide
 NEON_STANDOFF = (12.0, 10.0)                           # EST: standoff cap diameter, length off the wall
@@ -879,6 +882,22 @@ def _trace_skeleton(sk):
     return out
 
 
+def _neon_lines(text, n):
+    """The words split into n lines (whole words, the longest line as short as it can be); n = 1 keeps the text."""
+    words = text.split()
+    n = max(1, min(n, len(words)))
+    if n == 1:
+        return [text]
+    import itertools
+    best = None
+    for cuts in itertools.combinations(range(1, len(words)), n - 1):
+        parts = [" ".join(words[a:b]) for a, b in zip((0,) + cuts, cuts + (len(words),))]
+        score = max(len(p) for p in parts)
+        if best is None or score < best[0]:
+            best = (score, parts)
+    return best[1]
+
+
 def neon_raster(spec_path, out_dir):
     """Plain Python (PIL, numpy, scipy, skimage). Round 2: real LED neon is ONE round tube per stroke, so the words
     (from content, in the rounded font) are drawn, skeletonised to their centre lines (the medial axis), traced into
@@ -893,19 +912,29 @@ def neon_raster(spec_path, out_dir):
     spec = json.load(open(spec_path))
     text, w_mm, h_mm, tube_mm, ppm = spec["text"], spec["w_mm"], spec["h_mm"], spec["tube_mm"], spec["ppm"]
     W, H = int(round(w_mm * ppm)), int(round(h_mm * ppm))
+    lines = _neon_lines(text, int(spec.get("lines", 1)))
     target_w = 0.80 * W
+    # every line centred, one baseline step apart; the block fits 80 % of the width and 66 % (one line) to 80 % of the height
     size = 200
-    font = ImageFont.truetype(spec["font"], size)
-    bb = font.getbbox(text)
-    size = int(size * target_w / max(bb[2] - bb[0], 1))
-    font = ImageFont.truetype(spec["font"], size)
-    bb = font.getbbox(text)
-    if (bb[3] - bb[1]) > 0.66 * H:
-        size = int(size * 0.66 * H / (bb[3] - bb[1]))
+    for _ in range(2):
         font = ImageFont.truetype(spec["font"], size)
-        bb = font.getbbox(text)
+        asc, desc = font.getmetrics()
+        step = 1.08 * (asc + desc)
+        bbs = [font.getbbox(t) for t in lines]
+        bw = max(b[2] - b[0] for b in bbs)
+        top, bot = min(bbs[0][1], asc), (len(lines) - 1) * step + max(b[3] for b in bbs[-1:])
+        k = min(target_w / max(bw, 1), (0.66 if len(lines) == 1 else 0.80) * H / max(bot - top, 1))
+        size = int(size * k)
+    font = ImageFont.truetype(spec["font"], size)
+    asc, desc = font.getmetrics()
+    step = 1.08 * (asc + desc)
+    bbs = [font.getbbox(t) for t in lines]
+    top, bot = min(b[1] for b in bbs[:1]), (len(lines) - 1) * step + bbs[-1][3]
+    y0 = (H - (bot - top)) / 2 - top
     im = Image.new("L", (W, H), 0)
-    ImageDraw.Draw(im).text(((W - (bb[2] - bb[0])) / 2 - bb[0], (H - (bb[3] - bb[1])) / 2 - bb[1]), text, font=font, fill=255)
+    dr = ImageDraw.Draw(im)
+    for i, (t, bb) in enumerate(zip(lines, bbs)):
+        dr.text(((W - (bb[2] - bb[0])) / 2 - bb[0], y0 + i * step), t, font=font, fill=255)
     ink = ndimage.gaussian_filter(np.array(im).astype(np.float32), 1.5) > 127
     edt = ndimage.distance_transform_edt(ink)
     half = float(np.percentile(edt[ink], 96))                  # the stroke's half-width in px (a monoline font)
@@ -1077,7 +1106,7 @@ def build_neon(coll, mp, lite=False, rough=False, sfx=""):
     os.makedirs(FOOT, exist_ok=True)
     spec = os.path.join(FOOT, "neon_spec.json")
     with open(spec, "w") as f:
-        json.dump(dict(text=neon_text(), w_mm=NEON_W, h_mm=NEON_H, tube_mm=NEON_TUBE, ppm=NEON_PX_PER_MM,
+        json.dump(dict(text=neon_text(), lines=NEON_LINES, w_mm=NEON_W, h_mm=NEON_H, tube_mm=NEON_TUBE, ppm=NEON_PX_PER_MM,
                        font=os.path.join(FONTS, "Comfortaa-Bold.ttf")), f)
     cj = os.path.join(FOOT, "neon_strokes.json")
     if os.path.exists(cj):

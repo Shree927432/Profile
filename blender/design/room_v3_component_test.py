@@ -326,7 +326,9 @@ def music_side():
         out["guitar_04_box_local"] = [list(map(lambda v: round(v, 3), lo)), list(map(lambda v: round(v, 3), hi))]
         sl = (0 - (rk["slots"] - 1) / 2) * rk["pitch"]
         RM = M_at(rk["x"], rk["y"], 0, rk["yaw"])
-        Mg = RM @ Matrix.Translation((-0.08, sl, rk["cradle"])) @ Matrix.Rotation(math.radians(rk["lean"]), 4, "Y")
+        # the front out of the rack's +Y, towards the room (2026-11-13), as lib/guitars_room.place_rack
+        Mg = (RM @ Matrix.Translation((-0.08, sl, rk["cradle"])) @ Matrix.Rotation(math.pi, 4, "Z")
+              @ Matrix.Rotation(-math.radians(rk["lean"]), 4, "Y"))
         root.matrix_world = Mg @ Matrix.Translation((-(lo.x + hi.x) / 2, -(lo.y + hi.y) / 2, -lo.z))
         bpy.context.view_layer.update()
         out["ok"] = True

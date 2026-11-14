@@ -211,12 +211,22 @@ CARS_SHELF = dict(x0=-1.93, x1=-1.29, d=0.14, t=0.025, under=(2.03, 2.26),
 # ---------------------------------------------------------------------------
 PIANO_V3 = dict(x=RX - 0.05, y=0.25, yaw=-90, bench_in=0.22)   # case back 5 cm off the wall
 PIANO_LID_MAX_DEG = 60                           # the site's code stops the top lid here (decision 2026-10-24)
-WG_LEN = (1.07, 0.977, 1.10)                     # Lucille, Woodstock Strat, double-neck (as plan_v2)
-WG_WID = (0.41, 0.323, 0.43)
-WG_GAP = 0.12
+# Lucille, the Explorer, double-neck: tail (strap button) to head tip and the widest point, measured on the built
+# lite models (2026-11-13; plan_v2 had 1.07 / 0.977 / 1.10 and 0.41 / 0.323 / 0.43 before 01 and 03 were built).
+# The middle slot held the Woodstock Strat (0.987 x 0.323) until the owner swapped it for the Explorer, 2026-11-13:
+# "white stratt guitar should go on rack and other white should be hanged on the wall". Part keys stay by slot.
+WG_LEN = (1.058, 1.052, 1.037)
+WG_WID = (0.405, 0.432, 0.401)
+WG_GAP = 0.12                                    # the same gap between every two bodies (evenly spaced)
 WG_SPAN = sum(WG_WID) + 2 * WG_GAP
 WG_BACK = PIANO_V3["y"] + WG_SPAN / 2            # the group centred over the piano
-WG_BODY_BAND = (C.WALL_GUITARS["off_wall"] - 0.025, C.WALL_GUITARS["off_wall"] + 0.045)
+# Wall to the bodies' centre plane, one value for all three (their fronts line up seen from the side). 0.10 (constants)
+# let the double-neck's 12-string head touch the wall: its tip is 101 mm behind the centre plane (the neck set back and
+# the head turned 17 degrees more); Lucille's 71 mm, the Strat's flat head 24 mm (WG_HEAD_BACK). At 0.125 the
+# double-neck's head clears the wall by 2.4 cm.
+WG_OFF = 0.125
+WG_HEAD_BACK = (0.071, 0.075, 0.101)       # the Explorer's head tip 74 mm back (lite GLB box)
+WG_BODY_BAND = (WG_OFF - 0.025, WG_OFF + 0.045)
 
 
 def lid_reach(deg_max, band=WG_BODY_BAND, steps=15):
@@ -239,7 +249,7 @@ _ys, _y = [], WG_BACK
 for _w in WG_WID:
     _ys.append(_y - _w / 2)
     _y -= _w + WG_GAP
-WALL_GUITARS_V3 = dict(C.WALL_GUITARS, y=tuple(round(v, 4) for v in _ys), length=WG_LEN, width=WG_WID,
+WALL_GUITARS_V3 = dict(C.WALL_GUITARS, off_wall=WG_OFF, y=tuple(round(v, 4) for v in _ys), length=WG_LEN, width=WG_WID,
                        bottom=WG_BOTTOM, hooks=(1, 1, 2), hook_from_top=(0.18, 0.18, 0.18))
 # Floor rack (approved shape), in the back-right corner between the window's ledge and the piano.
 # Its guitars face the About camera, 30 deg off, so all three bodies show.
@@ -352,12 +362,19 @@ part("desk_plant", "Small plant", "small fern in a white pot", (0.10, 0.10, 0.20
 part("mstand", "Laptop stand", "Rain Design mStand, silver", (0.253, 0.262, 0.15), (*LAPTOP_AT, TOP), LAPTOP_YAW, col=G_)
 part("laptop", "Laptop", "MacBook Pro 16, silver, open", (0.356, 0.248, 0.24), (*LAPTOP_AT, TOP + 0.15), LAPTOP_YAW, col=G_,
      glow="#cfe0ff", note="355.7 x 248.1 (Apple)")
+# The neon (2026-11-13): the words from content/room-brands.json "neon" -> "text" ("build. break. repeat.", nearly three
+# times "shrikant"), white LED neon on clear acrylic, the plate centred over the pegboard, its bottom 11 cm over it.
+# lines = how many lines the words are set on (blender/components/wall.py splits at spaces); w, h the plate in metres.
+# Was 0.70 x 0.26, one line. Three stacked words on 0.50 x 0.40 (top at 2.35, level with the top car shelf) chosen over one
+# line on 0.76 x 0.15, whose 35 mm letters read as a thin strip from the hero view
+# (video-local/footage/2026-11-13-guitars-in-room/neon-options.jpg).
+NEON = dict(w=0.50, h=0.40, lines=3)
 # --- the back wall above the return
 part("pegboard", "Pegboard, backlit", "IKEA SKADIS 76 x 56, white", (PEG["w"], 0.02, PEG["h"]),
      (PEG["x"], RY - PEG["off"] + 0.01, PEG["z"]), 0, shape="slab", glow="#9fc8ff", note="LED behind it, 4 cm off the wall")
 part("headphones", "Headphones on the pegboard", "Audio-Technica ATH-M50x, white", (0.19, 0.08, 0.21),
      (PEG["x"] + 0.20, RY - PEG["off"] - 0.04, PEG["z"] + 0.22), 0)
-part("neon", "Neon sign (our words)", "custom white LED neon on clear acrylic", (0.70, 0.02, 0.26),
+part("neon", "Neon sign (our words)", "custom white LED neon on clear acrylic", (NEON["w"], 0.02, NEON["h"]),
      (PEG["x"], RY - 0.01, PEG["z"] + PEG["h"] + 0.11), 0, shape="slab", col="#ffffff", glow="#ffffff",
      note="text read from content/")
 part("nanoleaf", "Light panels", "Nanoleaf Shapes Triangles, 7 panels", (0.58, 0.01, 0.52),
@@ -377,12 +394,12 @@ part("piano", "Upright piano", "our approved black upright (constants.PIANO)", (
 part("bench", "Piano bench", "constants.BENCH", (C.BENCH["w"], C.BENCH["d"], C.BENCH["h"]),
      (PIANO_V3["x"] + C.BENCH["cy"] + PIANO_V3["bench_in"], PIANO_V3["y"], 0), -90, col="#0a0a0a", side="music")
 for i in range(3):
-    part(f"guitar_0{i + 1}", ["Lucille", "Woodstock Strat", "Double-neck"][i],
-         ["B.B. King's ES-355 shape, black", "Hendrix's white Strat (built)", "Jimmy Page's cherry double-neck"][i],
-         (WG_WID[i], 0.07, WG_LEN[i]), (RX - C.WALL_GUITARS["off_wall"] + 0.01, WALL_GUITARS_V3["y"][i], WG_BOTTOM), -90,
+    part(f"guitar_0{i + 1}", ["Lucille", "Explorer", "Double-neck"][i],
+         ["B.B. King's ES-355 shape, black", "Hetfield's white Explorer (guitar_05)", "Jimmy Page's cherry double-neck"][i],
+         (WG_WID[i], 0.07, WG_LEN[i]), (RX - WG_OFF + 0.01, WALL_GUITARS_V3["y"][i], WG_BOTTOM), -90,
          role="obj_guitars", shape="special", col=["#141414", "#ece8dc", "#8b1e22"][i], side="music")
 part("rack", "Guitar rack (3)", "floor rack, approved shape", (0.50, 0.50, 1.06), (RACK_V3["x"], RACK_V3["y"], 0), 0,
-     role="obj_guitars", shape="special", col="#232326", side="music", note="04 Number One (built), 05 Explorer, 06 TOD10")
+     role="obj_guitars", shape="special", col="#232326", side="music", note="04 Number One, 02 Woodstock Strat, 06 TOD10")
 part("dj_stand", "DJ stand", "slim steel stand, black, 70 x 40, top at 90", (DJ_STAND["w"], DJ_STAND["d"], DJ_STAND["top"]),
      (DJ_STAND["x"], DJ_STAND["y"], 0), DJ_STAND["yaw"], col=DJ_STAND["colour"], side="music")
 _dx, _dy = rot(-0.05, 0.0, DJ_STAND["yaw"])
@@ -741,6 +758,8 @@ def run_checks():
     chk(f"lid's swing to {PIANO_LID_MAX_DEG} deg to the guitar bottoms", WG_BOTTOM - LID_REACH, 0.05)
     for i in range(3):
         chk(f"guitar_0{i + 1} top to the ceiling", H - (WG_BOTTOM + WG_LEN[i]), 0.10)
+    for i in range(3):
+        chk(f"guitar_0{i + 1} head clear of the wall", WG_OFF - WG_HEAD_BACK[i], 0.02)
     py = [y for _, y in PIANO_FOOT]
     chk("wall guitars inside the piano's width", min(max(py) - (WG["y"][0] + WG_WID[0] / 2),
                                                      (WG["y"][2] - WG_WID[2] / 2) - min(py)), 0.0)

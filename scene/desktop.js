@@ -62,7 +62,7 @@ import { createGlide } from "./glide.js";
 import { createMoves } from "./camera-moves.js";
 import { createStops } from "./stops.js";
 import { createRoomSpace } from "./room-space.js";
-import { loadRoomLight, applyRoomLight, createBloom, loadCarsLight, applyCarsLight } from "./room-light.js";
+import { loadRoomLight, applyRoomLight, createBloom, loadDeferredLight, applyDeferredLight } from "./room-light.js";
 
 const deg = THREE.MathUtils.degToRad;
 
@@ -109,11 +109,18 @@ const ROOM_FOV_PORTRAIT = 66;
 // The dusk light (2026-11-01, scene/room-light.js): bloom on desktop only (not on touch or narrow screens), and only
 // the top quality rung. threshold is in the scene's linear light after EXPOSURE (room-light.json).
 const BLOOM = { strength: 0.3, radius: 0.45, threshold: 1.0, minWidth: 768 };
-// The car display (2026-11-08): the first deferred asset. cars.glb (blender/components/cars.py) loads only after the
-// room is on screen and has drawn its first frames, when the browser is idle, so it costs the first load nothing. It
-// fades in over FADE_MS (reduced motion: it just appears). Not on the quality ladder's bottom rung (quality.lowest):
-// never loaded there, hidden if the ladder steps down to it later. &nocars leaves it out (measuring).
-const CARS = { url: "/scene/assets/cars.glb", fadeMs: 700, afterFrames: 3, idleTimeout: 1500 };
+// Deferred assets (docs/02-architecture.md): GLBs in the room's frame that load only after the room is on screen and
+// has drawn its first frames, one after another, each when the browser is idle, so they cost the first load nothing.
+// Each fades in over fadeMs (reduced motion: it just appears). Not on the quality ladder's bottom rung (quality.lowest):
+// never loaded there, hidden if the ladder steps down to it later. &no<id> leaves one out (&nocars, &noguitars).
+//   cars      the car display (2026-11-08, blender/components/cars.py), its own lightmap (light) and shadow card
+//   guitars   guitars 01, 03, 05 and 06 (2026-11-13, blender/build_v3.py export_guitars), lit by the environment
+//             like 02 and 04 in the room; the Guitar wall and Guitar rack stops already exist (02 and 04)
+const DEFERRED = [
+  { id: "cars", url: "/scene/assets/cars.glb", light: "/scene/assets/dusk/cars-light.json" },
+  { id: "guitars", url: "/scene/assets/guitars.glb", light: null },
+];
+const DEFER = { fadeMs: 700, afterFrames: 3, idleTimeout: 1500 };
 // Camera moves (2026-11-11, scene/camera-moves.js), the GLB room only. Positions and targets come from the GLB's
 // empties (camera_intro, camera_about, camera_phone and their _target); field of view from plan v3 (INTRO, ABOUT,
 // PHONE_V3), with portrait values of our own where plan v3 has none. Waypoints are in the GLB's metres (Y up,
@@ -126,6 +133,7 @@ const MOVES = {
   introPortraitShiftX: 0.35,
   aboutFov: 50, aboutFovPortrait: 72,
   phoneFov: 60,
+  phoneDeskShift: 0.27, // the phone's desk view slid right by this fraction of the frame's half width (the chair fits)
   holdMs: 1800, // the window, still, before the move starts by itself (a tap starts it sooner)
   introMs: 5200, // back from the window and round to the desk
   introLookDelay: 0.14, // the camera pulls straight back first, then turns
@@ -148,8 +156,48 @@ const MOVES = {
   circleKeys: 1.2, // rad/s, the arrow keys circling a stop
 };
 
+// Fetches and builds the room (2026-11-13, the first load). Called first thing in start(), so the download runs while the
+// renderer and the rest are set up. room.glb.gz is the GLB gzipped at build (scene-files.mjs): Cloudflare Pages does
+// not compress .glb, and the gzip is about 20% smaller. If the .gz is missing or the browser has no DecompressionStream
+// the plain .glb is fetched instead. The Draco decoder is fetched (and its worker made) while the file downloads.
+async function fetchRoomGlb() {
+  try {
+    const res = await fetch(ROOM_GLB + ".gz");
+    if (!res.ok) throw new Error(res.status + " " + res.url);
+    let buf = await res.arrayBuffer();
+    const head = new Uint8Array(buf, 0, 2);
+    if (head[0] === 0x1f && head[1] === 0x8b) { // gzip magic; a host that already unpacked it sends a plain GLB
+      buf = await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
+    }
+    return buf;
+  } catch (e) {
+    console.warn("room.glb.gz not used, fetching room.glb:", e);
+    const res = await fetch(ROOM_GLB);
+    if (!res.ok) throw new Error("room.glb " + res.status);
+    return res.arrayBuffer();
+  }
+}
+
+async function loadRoomGlb() {
+  const [{ GLTFLoader }, { DRACOLoader }] = await Promise.all([
+    import("three/addons/loaders/GLTFLoader.js"),
+    import("three/addons/loaders/DRACOLoader.js"),
+  ]);
+  const draco = new DRACOLoader().setDecoderPath(DRACO_DECODER);
+  draco.preload();
+  const buf = await fetchRoomGlb();
+  const gltf = await new GLTFLoader().setDRACOLoader(draco).parseAsync(buf, ROOM_GLB.slice(0, ROOM_GLB.lastIndexOf("/") + 1));
+  draco.dispose(); // frees the decoder worker; the geometry is decoded
+  return gltf.scene;
+}
+
 export async function start({ canvas, content, overlay, params, reduce }) {
   const text = content.site.room;
+  const useGlb = params.has("glb");
+  // The network first: the room's file, the dusk light's files and (desktop) the bloom's modules start downloading
+  // now, while the renderer and everything below are set up.
+  const glbLoad = useGlb ? loadRoomGlb() : null;
+  const lightLoad = useGlb ? loadRoomLight(THREE) : null;
   const SCREEN_H = window.innerWidth < NARROW_BELOW ? SCREEN_NARROW_H : SCREEN_WIDE_H;
 
   // ---- renderer ----
@@ -161,10 +209,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(BACKGROUND);
 
-  const useGlb = params.has("glb");
   const uvtest = useGlb && params.has("uvtest");
-  // The dusk light files load while the GLB does (the GLB room only).
-  const lightLoad = useGlb ? loadRoomLight(THREE) : null;
   const bloomAllowed = useGlb && !params.has("nobloom") && window.innerWidth >= BLOOM.minWidth &&
     !window.matchMedia("(pointer: coarse)").matches;
   let post = null; // the bloom composer, once made (createBloom)
@@ -180,13 +225,16 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     needsRender = true;
   }
   // Called by the quality ladder at start and on every change.
-  let carsRoot = null; // the car display once loaded (see loadCars)
+  const deferredRoots = []; // the deferred assets once added (see loadDeferred)
   function applyQuality({ pixelRatio, bloom }) {
     bloomOn = !!bloom;
     setPixelRatio(pixelRatio);
-    if (carsRoot) carsRoot.visible = !quality.lowest; // quality exists by the time the cars do
+    for (const r of deferredRoots) r.visible = !quality.lowest; // quality exists by the time they do
   }
   const quality = createQuality({ dpr: window.devicePixelRatio || 1, reduce, apply: applyQuality, bloom: bloomAllowed });
+  // The bloom's modules load and its composer is made while the room downloads (used below once the light is in).
+  const bloomLoad = bloomAllowed ? createBloom(THREE, { renderer, scene, camera, ...BLOOM }) : null;
+  if (bloomLoad) bloomLoad.catch(() => {}); // a failure is thrown where it is awaited
 
   // ---- scene ----
   // The placeholder room is lit live; the GLB room by its bake (scene/room-light.js), no live lights.
@@ -198,15 +246,9 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   }
 
   let room;
-  let roomExposure = null; // the dusk light's exposure, for the deferred cars
+  let roomExposure = null; // the dusk light's exposure, for the deferred assets
   if (useGlb) {
-    const [{ GLTFLoader }, { DRACOLoader }] = await Promise.all([
-      import("three/addons/loaders/GLTFLoader.js"),
-      import("three/addons/loaders/DRACOLoader.js"),
-    ]);
-    const draco = new DRACOLoader().setDecoderPath(DRACO_DECODER);
-    room = (await new GLTFLoader().setDRACOLoader(draco).loadAsync(ROOM_GLB)).scene;
-    draco.dispose(); // frees the decoder worker; the geometry is decoded
+    room = await glbLoad;
   } else {
     room = buildPlaceholderRoom(THREE);
   }
@@ -221,7 +263,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     if (light) roomExposure = Number.isFinite(exp) ? exp : light.json.exposure;
     else scene.add(new THREE.HemisphereLight(0xcdd5e6, 0x8c8a86, 1.1)); // the bake files missing: plain light, still usable
     if (light && bloomAllowed) {
-      post = await createBloom(THREE, { renderer, scene, camera, ...BLOOM });
+      post = await bloomLoad;
       post.setPixelRatio(renderer.getPixelRatio());
     }
   }
@@ -541,16 +583,29 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   const aboutPose = () => moves.makePose(cams.about, cams.aboutTarget, portrait() ? MOVES.aboutFovPortrait : MOVES.aboutFov);
   // The desk: room_view looking at room_view_target (portrait: camera_phone at its target), no lens shift.
   const freeFov = () => (camera.aspect >= 1 ? ROOM_FOV : hasPhone ? MOVES.phoneFov : ROOM_FOV_PORTRAIT);
+  const _heroPos = new THREE.Vector3();
+  const _heroTarget = new THREE.Vector3();
+  const _heroRight = new THREE.Vector3();
   function heroPose() {
     const ph = portrait() && hasPhone;
-    return moves.makePose(ph ? cams.phone : viewPos, ph ? cams.phoneTarget : viewTarget, freeFov());
+    if (!ph) return moves.makePose(viewPos, viewTarget, freeFov());
+    // Phone (2026-11-13): camera_phone looks straight at the desk, which cut the chair off at the right edge on a
+    // 375 x 812 screen. The pose is slid to the right, parallel to the view, by MOVES.phoneDeskShift of the frame's
+    // half width (at the target's distance): the chair comes in, the screens and the posts text keep their size.
+    _heroPos.copy(cams.phone);
+    _heroTarget.copy(cams.phoneTarget);
+    const fov = freeFov();
+    const dist = _heroPos.distanceTo(_heroTarget);
+    const halfWidth = dist * Math.tan(THREE.MathUtils.degToRad(fov / 2)) * camera.aspect;
+    _heroRight.subVectors(_heroTarget, _heroPos).cross(THREE.Object3D.DEFAULT_UP).normalize().multiplyScalar(MOVES.phoneDeskShift * halfWidth);
+    return moves.makePose(_heroPos.add(_heroRight), _heroTarget.add(_heroRight), fov);
   }
   let aboutOn = false;
   let aboutButton = null; // made with the overlay below, when the site's nav has an About link
   const introRunning = () => moves.tag === "intro" && (moves.phase === "still" || moves.phase === "move");
   const holding = () => moves.tag === "intro" && moves.phase === "still";
   let holdLeft = 0; // ms of the intro's hold still to go
-  let carsWaiting = null; // the cars, loaded during a move, are added when it ends (no hitch mid-move)
+  const deferredWaiting = []; // deferred assets loaded during a move are added when it ends (no hitch mid-move)
 
   function playIntro() {
     if (!holding()) return;
@@ -746,7 +801,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   const interact = createPickMap(THREE, camera, canvas);
   interact.set(screenMesh, { kind: "screen", part: "monitor_screen" });
   // Stops: every mesh in the room can be picked (so nearer things hide farther ones); stops.classify() says
-  // which stop a hit belongs to, or none (a wall, the floor). The cars register when they arrive.
+  // which stop a hit belongs to, or none (a wall, the floor). Deferred assets register when they arrive.
   function registerRoom() {
     collectObstacles();
     for (const m of obstacles) if (m !== screenMesh) interact.set(m, { kind: "room" });
@@ -771,7 +826,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     if (!picked || !stops) return null;
     if (picked.info.kind === "screen") return "screen";
     const st = stops.classify(picked.mesh, picked.hit.point);
-    if (!st || (st.late && carsRoot && !carsRoot.visible)) return null;
+    if (!st || (st.late && quality.lowest)) return null; // a late stop's asset is hidden on the bottom rung
     return st;
   }
 
@@ -1095,7 +1150,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   // the screen's frame() returning true, a resize, a quality change. Otherwise the tick is free.
   // The ladder is fed only with the gap between two consecutive drawn ticks, i.e. during motion.
   // Gaps around idle draws (the cursor blink) are not frame times and never reach it.
-  let carsFade = null; // { mats, t0 } while the cars fade in
+  const fades = []; // { mats, t0 } while a deferred asset fades in
   let last = 0; // time of the previous loop tick
   let lastDrew = false; // did the previous tick draw?
   function renderFrame(t) {
@@ -1112,10 +1167,10 @@ export async function start({ canvas, content, overlay, params, reduce }) {
       stepWalk(dt);
       if (moves.step(dt)) needsRender = true;
       if (freeCam) updateNav();
-      if (carsWaiting && !moves.moving) { const add = carsWaiting; carsWaiting = null; add(); }
+      if (deferredWaiting.length && !moves.moving) for (const add of deferredWaiting.splice(0)) add();
     }
     if (screenHandle.frame(t, dt)) { screenTexture.needsUpdate = true; needsRender = true; }
-    if (carsFade) stepCarsFade(t);
+    if (fades.length) stepFades(t);
     const drew = needsRender;
     if (drew) {
       if (moves.showing && !glide.active) drawShown();
@@ -1167,75 +1222,92 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   function stop() { renderer.setAnimationLoop(null); quality.pause(); }
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : run()));
 
-  // ---- the car display (deferred) ----
-  // Fade: opacity 0 -> 1 with the materials briefly transparent; then opaque again (the shadow card stays blended).
-  function stepCarsFade(t) {
-    const k = Math.min(1, (t - carsFade.t0) / CARS.fadeMs);
-    const e = k * k * (3 - 2 * k);
-    for (const m of carsFade.mats) m.opacity = e;
-    if (k >= 1) {
-      for (const m of carsFade.mats) {
-        if (m.isMeshStandardMaterial) { m.transparent = false; m.needsUpdate = true; }
+  // ---- deferred assets (the car display, the guitars) ----
+  // Fade: opacity 0 -> 1 with the materials briefly transparent; then opaque again (a shadow card stays blended).
+  function stepFades(t) {
+    for (let i = fades.length - 1; i >= 0; i--) {
+      const f = fades[i];
+      const k = Math.min(1, (t - f.t0) / DEFER.fadeMs);
+      const e = k * k * (3 - 2 * k);
+      for (const m of f.mats) m.opacity = e;
+      if (k >= 1) {
+        for (const m of f.mats) {
+          if (m.isMeshStandardMaterial) { m.transparent = false; m.needsUpdate = true; }
+        }
+        fades.splice(i, 1);
       }
-      carsFade = null;
     }
     needsRender = true;
   }
-  const carsTiming = { roomShown: 0, requested: 0, shown: 0, skipped: "" };
-  async function loadCars() {
-    if (quality.lowest) { carsTiming.skipped = "lowest rung"; return; }
-    carsTiming.requested = performance.now();
+  // Timings per asset (performance.now(), ms): requested, shown (after its fade), skipped (why).
+  const deferredTiming = { roomShown: 0 };
+  for (const a of DEFERRED) deferredTiming[a.id] = { requested: 0, loaded: 0, shown: 0, skipped: "" };
+  async function loadDeferred(asset) {
+    const timing = deferredTiming[asset.id];
+    timing.roomShown = deferredTiming.roomShown;
+    if (quality.lowest) { timing.skipped = "lowest rung"; return; }
+    timing.requested = performance.now();
     const [{ GLTFLoader }, { DRACOLoader }] = await Promise.all([
       import("three/addons/loaders/GLTFLoader.js"),
       import("three/addons/loaders/DRACOLoader.js"),
     ]);
     const draco = new DRACOLoader().setDecoderPath(DRACO_DECODER);
-    const [gltf, carLight] = await Promise.all([
-      new GLTFLoader().setDRACOLoader(draco).loadAsync(CARS.url),
-      loadCarsLight(THREE).catch((e) => { console.warn("cars light:", e); return null; }),
+    const [gltf, light] = await Promise.all([
+      new GLTFLoader().setDRACOLoader(draco).loadAsync(asset.url),
+      asset.light ? loadDeferredLight(THREE, asset.light).catch((e) => { console.warn(asset.id + " light:", e); return null; }) : null,
     ]);
     draco.dispose();
+    timing.loaded = performance.now();
     const root = gltf.scene;
-    const mats = applyCarsLight(THREE, { root, light: carLight, exposure: roomExposure ?? 1 });
+    const mats = applyDeferredLight(THREE, { root, light, exposure: roomExposure ?? 1 });
     // Not while the camera travels: a shader compile or a buffer or texture upload mid-move is a visible hitch.
-    // During the intro's hold the window fills the view and the shelf is out of frame: the cars go in at
-    // once, without the fade, and are made ready (drawn once out of sight) while nothing moves.
+    // During the intro's hold the window fills the view and the asset is out of frame: it goes in at once, without
+    // the fade, and is made ready (drawn once out of sight) while nothing moves.
     const add = () => {
       const quiet = holding();
       if (!reduce && !quiet) {
         for (const m of mats) { m.transparent = true; m.opacity = 0; }
-        carsFade = { mats, t0: performance.now() };
+        fades.push({ mats, t0: performance.now() });
       }
       scene.add(root);
-      carsRoot = root;
+      deferredRoots.push(root);
       root.visible = !quality.lowest;
-      if (quiet) warm = false; // the next tick draws the hero once more, out of sight (warmUp), with the cars in
-      if (stops && stops.build(root).length) registerRoom(); // the car shelf's stop appears now
+      if (quiet) warm = false; // the next tick draws the hero once more, out of sight (warmUp), with the asset in
+      if (stops) { stops.build(root); registerRoom(); } // a new stop (the car shelf), or more meshes for one (the guitars)
       if (space && space.ready) { const ms = []; root.traverseVisible((o) => { if (o.isMesh) ms.push(o); }); space.build(ms); }
       needsRender = true;
-      carsTiming.shown = performance.now() + (reduce || quiet ? 0 : CARS.fadeMs);
-      carsTiming.during = moves.tag || "orbit";
+      timing.shown = performance.now() + (reduce || quiet ? 0 : DEFER.fadeMs);
+      timing.during = moves.tag || "orbit";
     };
-    if (moves.moving) carsWaiting = add;
+    if (moves.moving) deferredWaiting.push(add);
     else add();
   }
-  function scheduleCars() {
+  // After afterFrames drawn frames: each asset in turn, each on an idle callback, the next once the one before is in.
+  function scheduleDeferred() {
+    const list = DEFERRED.filter((a) => !params.has("no" + a.id));
+    if (!list.length) return;
     let frames = 0;
     const idle = window.requestIdleCallback || ((f) => setTimeout(f, 200));
+    const next = (i) => {
+      if (i >= list.length) return;
+      idle(() => loadDeferred(list[i]).catch((e) => console.warn(list[i].id + ":", e)).then(() => next(i + 1)),
+        { timeout: DEFER.idleTimeout });
+    };
     const wait = () => {
-      if (++frames < CARS.afterFrames) { requestAnimationFrame(wait); return; }
-      idle(() => loadCars().catch((e) => console.warn("cars:", e)), { timeout: CARS.idleTimeout });
+      if (++frames < DEFER.afterFrames) { requestAnimationFrame(wait); return; }
+      next(0);
     };
     requestAnimationFrame(wait);
   }
   if (window.roomDebug) {
-    window.roomDebug.cars = carsTiming;
+    window.roomDebug.deferred = deferredTiming;
+    for (const a of DEFERRED) window.roomDebug[a.id] = deferredTiming[a.id]; // roomDebug.cars, roomDebug.guitars
     // Moves, for measuring and frame capture: stop() the loop, then tick(t) with fixed steps.
     Object.assign(window.roomDebug, { moves, controls, setAbout, playIntro, tick: renderFrame, stop, run, stops, flyTo, back, currentId, pickShown, stopOf, poseFor, space, spaceTiming, heroPose, walkBy, keys });
   }
 
   renderFrame(performance.now()); // first frame, drawn before start() resolves
-  carsTiming.roomShown = performance.now();
+  deferredTiming.roomShown = performance.now();
   if (!document.hidden) run();
-  if (useGlb && roomExposure !== null && !params.has("nocars")) scheduleCars();
+  if (useGlb && roomExposure !== null) scheduleDeferred();
 }

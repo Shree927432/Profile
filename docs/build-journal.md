@@ -1271,3 +1271,108 @@ site or the room. Keep each entry short. No polishing; the post does that.
   outside; it was not rebaked. The browser's haze without bloom is explained in
   `video-local/footage/2026-11-12-city/PROGRESS.md` (blending after tone mapping) but not changed.
 - Footage: `video-local/footage/2026-11-12-city/` (options sheet, pull-back strip, 1:1 crops, the prototype, PROGRESS.md).
+
+
+## 2026-11-13: the first load, found in a waterfall
+
+- Why: a check of the live site on 12 November found the first cold visit took more than 9 s to show the room, and
+  Cloudflare was known to send `.glb` uncompressed. The roadmap's target is under 3 s on 4G.
+- Measured first (headless Chromium over the DevTools protocol, 9 Mbps down, 1.5 Mbps up, 60 ms RTT, CPU 4x, cache off,
+  fresh profile, `video-local/footage/2026-11-13-load/`): the first room frame came at 4.65 s locally (3.40 MB on the
+  wire) and 7.5 s live (runs 5.9 to 8.5 s; live adds about 125 ms per request).
+- What was slow, and why. Nothing was big, everything was late. The waterfall was a staircase: `boot.js`, then
+  `content.json`, then `desktop.js`, then three.js (`three.module.js` first, `three.core.js` only after it), then the
+  light JSON, then `GLTFLoader`, then `room.glb`, and only after the 2.5 MB arrived the Draco decoder (a second
+  download, then its compile), and after the first draw the bloom's ten modules. Each step waited for the one before,
+  so the 2.5 MB file started at 1.0 s locally and 2.5 s live, and 6 requests followed it. The "4 s" in the old check
+  was this staircase on a real network.
+- What fixed it, cheapest first (no new tool, no new dependency):
+  - `src/pages/index.astro`: with `?room&glb` an inline script in the head starts every download at once
+    (modulepreload for the whole import graph, preload for content.json, the light JSON, lightmap, env map, the Draco
+    decoder and `room.glb.gz`). Not for the plain site, not when the room will refuse (reduced motion, no WebGL2). The
+    textures need `crossorigin` to match three.js's own request: without it the first try fetched both twice.
+  - `scene/desktop.js`: `start()` begins the GLB, the light files and the bloom's modules first thing, before the
+    renderer is made; the Draco decoder is fetched and set up while the file downloads (`draco.preload()`).
+  - `scene/boot.js`: `desktop.js` is imported while `content.json` is fetched, not after.
+  - `room.glb.gz`: Cloudflare Pages does not compress `.glb` (no gzip, no brotli, whatever the browser asks). The build
+    now also writes a gzipped copy (`src/integrations/scene-files.mjs`, node's own zlib: 2.55 to 2.03 MB), and
+    `desktop.js` unpacks it with the browser's DecompressionStream, falling back to the plain `.glb`. The dev server
+    makes the `.gz` on the fly.
+  - `public/_headers`: one year, immutable, for Astro's hashed files; one day for the vendored three.js.
+- Result (same conditions): the first room frame at 3.64 s locally (2.88 MB on the wire), 4.5 s with live's 185 ms
+  RTT simulated, where the old build gives 6.1 s. The target of 3 s is not reached. The room's file is now done at
+  2.8 s, which is the floor for 2.9 MB at 9 Mbps; after it come 0.8 s of main-thread work at 4x CPU, most of it three.js
+  making and linking shader programs (97 once the room is warm) for the first frame.
+- What went wrong.
+  - My timing server cached compressed files by name and then by size: after a rebuild it served the old page and a
+    404 for the new stylesheet, and I measured the old code twice before I saw it (aspect 2.0, "no CSS" in the probe).
+    Now keyed on the file's modification time.
+  - The metric moved. "Ready" in the first runs counted two animation frames after the loading line hid, which
+    includes the warm-up draw (0.65 s at 4x) that runs after the first picture. A screencast showed the room on screen
+    22 ms after the line hid, so the first room frame is the line hiding; "ready" is kept as the second number.
+  - Tried and dropped: `renderer.compileAsync` to link the shaders in parallel before the first frame. It made the
+    first frame 100 ms later, not earlier.
+  - The headless machine is shared with the Blender session: one run in five was 12 s. Medians of 3 to 5 runs.
+- Two camera fixes in the same sitting. About and Back in the room's bar were a hairline border on a clear background:
+  on the dark bar they read as plain text. Now a fill and a border at 14 and 45 % of the text colour (hover darker,
+  pressed still the accent), both themes. On a 375 x 812 phone the desk view cut the chair off at the right edge:
+  camera_phone's pose is slid right by 27 % of the frame's half width (about 14 cm), parallel to the view, so the chair
+  (right edge 1.17 to 0.81 of the frame half width) and the screens fit and the posts text keeps its size.
+  Tested at 360 x 640, 414 x 896 and 768 x 1024 as well.
+- Not done, needs a yes: the bytes that remain are the GLB's textures (1.05 MB, WebP), its Draco geometry (1.16 MB),
+  the lightmap (0.2 MB) and three.js (0.4 MB on the wire). meshopt would mainly change decode time, not size. See the report.
+- Footage: `video-local/footage/2026-11-13-load/` (waterfalls as JSON and charts, the throttled-load and screencast
+  scripts, before and after stills, check results).
+
+
+
+## 2026-11-13: the four new guitars go in (stopped before the bake), and the neon's new words
+
+- Why: the owner, after approving Lucille, the double-neck and the Explorer and seeing the TOD10: "put the guitars in
+  the room". The neon's words had changed the same night ("build. break. repeat.").
+- Plan v3: the double-neck's 12-string head reaches 101 mm behind the body's centre plane, so at 10 cm off the wall it
+  touched it. All three wall guitars now hang 12.5 cm off the wall (one value, so their fronts line up from the side),
+  with the measured lengths and widths, the same 12 cm between bodies, bottoms level. Heads clear the wall by 5.4,
+  10.1 and 2.4 cm (a new plan check). 96 checks pass.
+- The guitars (`blender/lib/guitars_room.py`, `blender/build_v3.py`): each lite GLB placed by its pivot, the Strat
+  re-hung by the same rule, the blockout's flat outlines and hooks gone, a real hanger under every head (two for the
+  double-neck). The four ship in `scene/assets/guitars.glb`, loaded after the cars, lit by the environment like the
+  two guitars already in the room; they stay in the Blender scene for the bake, so their shadows land in the room's
+  lightmap. Web cut: no decimation, the atlas 1024 to 512: 436 KB for all four (83 to 162 KB each, 7,000 to 14,200
+  triangles). 1024 was 719 KB and looked the same at the stops except the double-neck's inlays.
+- The site: one loader for every deferred file now (the cars and the guitars), and a late file can add meshes to a
+  stop that already exists, so clicking a new guitar flies to the Guitar wall or the Guitar rack.
+- The neon: one line (0.76 x 0.15) or three stacked words (0.50 x 0.40), rendered in the dusk room. In the hero view one
+  line was a thin strip of 35 mm letters; stacked reads as a sign and its top lines up with the car shelf. Stacked.
+- What went wrong.
+  - The battery: 51 % at 02:35, 25 % at 02:55 with Blender busy. The rule is no bake below 30 % on battery, so the
+    rebuild and bake did not run; guitars.glb waits in blender/out until they do.
+  - The camera script's stop stills called a function the free camera removed; the dev server predated the
+    `room.glb.gz` change and logged a 404 on every load. Patched and restarted.
+  - The first neon still glowed "shrikant" behind the new words: the new halo card reused the old one's material from
+    the opened .blend.
+  - Comfortaa's "a" thins to a ring with a stub: up close the sign reads "breok. repeot." (the old one read "shrikont").
+- Footage: `video-local/footage/2026-11-13-guitars-in-room/` (before stills, the neon options, the atlas comparison,
+  PROGRESS.md).
+
+## 2026-11-13 (late): the rack guitars turned to face the room
+
+- Owner: "can you turn the face of guitar toward main side on the rack". The rack's three guitars showed their backs
+  from every view: `_rack_yaw` turns the rack's +Y 30 deg off the About camera, but the guitars' fronts (-Y in their own
+  frame) pointed out of the rack's -Y, into the back corner. Miss: nobody looked at the rack from the front side since
+  the Number One went in; the before/after sheets showed it plainly.
+- Fix: each guitar turned half round in its slot (lib/guitars_room.place_rack, design/room_v3_component_test for the
+  Number One), the lean flipped so the necks still tip onto the bar. Rebaked (9 min).
+- Miss: the Explorer and the TOD10 then sank 2 and 4.5 cm into the cradle, because their pivots were the lowest point
+  for the other lean. Found from the build log (`lowest` 0.081 and 0.055 against the cradle at 0.10). Fixed in code by
+  sliding each up its lean line until the lowest point is on the cradle; needs one more rebake, held at 33% battery.
+- Then the owner: "i think white stratt guitar should go on rack and other white should be hanged on the wall". The
+  Woodstock Strat (guitar_02) goes to the rack's middle slot, the Explorer (guitar_05) to the wall's middle slot.
+  The Explorer's pivot is its rack contact, so its head contact for the hanger was measured by slicing the lite GLB's
+  neck (the nut at 0.885 m up the neck, past the hanger's 46 mm gap at 0.8875). Wall slot widths updated (the Explorer
+  is 43 cm wide against the Strat's 32); all 96 plan checks pass. Stops: the guitar wall now names 01, 05, 03 and the
+  rack 04, 02, 06. The rebake waits for power (battery 30%).
+- 2026-11-14: rebaked on power (9 min, the charger "not charging" at 9% at first, then charging). Both rack guitars
+  now sit on the cradle (lowest 0.10), the Explorer's head 5 cm off the wall on its own hanger; guitars-check on
+  desktop and phone: no errors, the Explorer opens the guitar wall, the Strat the rack. Draw calls unchanged (hero
+  119, About 89). Sheet: video-local/footage/2026-11-13-rack-faces/sheet-swap.jpg.

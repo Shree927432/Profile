@@ -102,18 +102,19 @@ export function applyRoomLight(THREE, { renderer, scene, room, light, exposure }
   return { baked: nBaked };
 }
 
-// The car display (2026-11-08, scene/assets/cars.glb): the first deferred asset. Its own lightmap from the same dusk
-// rig (blender/components/cars.py), written next to the room's as cars-light.json + cars-lightmap.webp, decoded the
-// same way (light = texel * max, times the room's exposure). cars_static is one mesh with one palette material (one
-// draw call) and a second UV set for the lightmap; cars_shadow is a card 1 mm off the wall whose alpha is how much
-// the shelves darken the wall (baked as a ratio, so the room's own lightmap stays as it is): drawn black, unlit.
-const CARS_LIGHT_URL = "/scene/assets/dusk/cars-light.json";
+// Deferred assets (docs/02-architecture.md): GLBs loaded after the room appears, in the room's own frame. The car display
+// (2026-11-08, scene/assets/cars.glb) carries its own lightmap from the same dusk rig (blender/components/cars.py),
+// written next to the room's as cars-light.json + cars-lightmap.webp, decoded the same way (light = texel * max, times the
+// room's exposure). cars_static is one mesh with one palette material (one draw call) and a second UV set for the
+// lightmap; a `*_shadow` mesh is a card 1 mm off the wall whose alpha is how much the asset darkens the wall (baked as a
+// ratio, so the room's own lightmap stays as it is): drawn black, unlit. The guitars (2026-11-13, scene/assets/guitars.glb)
+// have no light file: like guitars 02 and 04 in the room they are lit by the environment only (they lift off later).
 
-export async function loadCarsLight(THREE) {
-  const res = await fetch(CARS_LIGHT_URL);
-  if (!res.ok) throw new Error("no " + CARS_LIGHT_URL);
+export async function loadDeferredLight(THREE, url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("no " + url);
   const json = await res.json();
-  const base = CARS_LIGHT_URL.slice(0, CARS_LIGHT_URL.lastIndexOf("/") + 1);
+  const base = url.slice(0, url.lastIndexOf("/") + 1);
   const lightMap = await new THREE.TextureLoader().loadAsync(base + json.lightmap.file);
   lightMap.flipY = false;
   lightMap.channel = 1;
@@ -121,14 +122,14 @@ export async function loadCarsLight(THREE) {
   return { json, lightMap };
 }
 
-// root: the loaded cars.glb scene. exposure: the room's (room-light.json, or the &exp override). Returns the
-// materials to fade in.
-export function applyCarsLight(THREE, { root, light, exposure }) {
+// root: the loaded GLB's scene. light: loadDeferredLight's result, or null (environment light only). exposure: the room's
+// (room-light.json, or the &exp override). Returns the materials to fade in.
+export function applyDeferredLight(THREE, { root, light, exposure }) {
   const mats = [];
   root.traverse((o) => {
     if (!o.isMesh) return;
     const src = o.material;
-    if (o.name === "cars_shadow") {
+    if (/_shadow$/.test(o.name)) {
       o.material = new THREE.MeshBasicMaterial({
         color: 0x000000, map: src.map, transparent: true, depthWrite: false,
         polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
@@ -143,7 +144,7 @@ export function applyCarsLight(THREE, { root, light, exposure }) {
       o.material = m;
     }
     if (o.material !== src) src.dispose();
-    mats.push(o.material);
+    if (!mats.includes(o.material)) mats.push(o.material);
   });
   return mats;
 }

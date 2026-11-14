@@ -2,6 +2,8 @@
 
     /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup --python blender/build_v3.py
     STAGES=build,export,stills (default build,export)   ONLY=hero,intro,...   DUMP=1 prints the object tree
+    FROM_BLEND=1 STAGES=guitars   only scene/assets/guitars.glb, from the saved room_v3.blend (GUITARS_ATLAS=1024 at build
+                                  time keeps the atlases at 1024; default 512, lib/guitars_room.py)
 
 blender/build.py (the v1 room) stays for history. This script reuses the room test
 (blender/design/room_v3_component_test.py, its source exec'd without its final main() call, so that file
@@ -18,8 +20,12 @@ the city and the stand-ins. Then:
     camera_phone (each with _target), under set_room;
   - saves blender/out/room_v3.blend (pack_and_save) and exports scene/assets/room.glb with Draco and WebP;
   - stills (EEVEE) into video-local/footage/2026-10-31-room-v3/.
-Stand-ins still from the blockout (no component yet): guitars 01, 03, 05, 06 (flat outlines), the guitar
-rack and hooks, the city, the ceiling light (obj_light), the felt desk mat, the rug, the door.
+Stand-ins still from the blockout (no component yet): the guitar rack, the city, the ceiling light (obj_light), the felt
+desk mat, the rug, the door.
+2026-11-13: guitars 01, 03, 05 and 06 (their lite GLBs, cut for the web by lib/guitars_room.py) replace the blockout's flat
+outlines, and the wall hangers are built under every head (lib/guitars_room.py hangers). The four are in the scene for
+the bake (their shadows land in the room's lightmap) but not in room.glb: they ship in scene/assets/guitars.glb, loaded
+after the room (export_guitars below, the deferred-asset pattern in docs/02-architecture.md).
 """
 import json
 import math
@@ -36,6 +42,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from lib import plan_v3 as P  # noqa: E402
 from lib.blendfile import pack_and_save  # noqa: E402
+from lib import guitars_room as GR  # noqa: E402
 
 T0 = time.time()
 STAGES = set(os.environ.get("STAGES", "build,export").split(","))
@@ -43,6 +50,7 @@ C = P.C
 OUT = os.path.join(C.FOOTAGE, "2026-10-31-room-v3")
 BLEND = os.path.join(HERE, "out", "room_v3.blend")
 GLB = os.path.join(C.REPO, "scene", "assets", "room.glb")
+GUITARS_GLB = os.path.join(C.REPO, "scene", "assets", "guitars.glb")
 GLB_RAW = os.path.join(OUT, "room-v3-raw.glb")
 REPORT = os.path.join(OUT, "build-report.json")
 PY = "/opt/anaconda3/bin/python3"
@@ -96,6 +104,8 @@ def build():
     RT.import_lite()
     RES["music"] = RT.music_side()
     log(f"lite GLBs, music side {RES['music'].get('ok')}")
+    RES["guitars"] = guitars()
+    log("guitars " + json.dumps(RES["guitars"]))
     BO.lights()
 
 
@@ -127,12 +137,13 @@ TOP_ROOT = {
     "chair_swivel": "set_chair", "shelf_root": "set_wall", "vine_pot_1_root": "set_wall", "vine_pot_2_root": "set_wall",
     "pegboard_root": "set_wall", "neon_root": "set_wall", "nanoleaf_root": "set_wall", "mstand_root": "set_laptop",
     "guitar_02": "obj_guitars", "guitar_04": "obj_guitars", "rug": "set_rug",
+    "guitar_01": "obj_guitars", "guitar_03": "obj_guitars", "guitar_05": "obj_guitars", "guitar_06": "obj_guitars",
     "floor": "set_room", "ceiling": "set_room", "door": "set_room", "wall_front": "set_room", "wall_right": "set_room",
     "sky": "set_city", "ground": "set_city",
     "pendant_cord": "obj_light", "pendant_shade": "obj_light",
 }
 TOP_PREFIX = [("wall_l_", "set_room"), ("wb_", "set_room"), ("sk_", "set_room"),
-              ("city_", "set_city"), ("hook", "obj_guitars"), ("rack_", "obj_guitars")]
+              ("city_", "set_city"), ("guitars_hook_", "obj_guitars"), ("rack_", "obj_guitars")]
 RENAME = {"pendant_shade": "light_shade", "pendant_cord": "light_cord"}
 
 
@@ -184,27 +195,23 @@ def outside_city():
         o.matrix_world = Matrix.Identity(4)
 
 
-def guitar_standins():
-    """Guitars 01, 03, 05, 06: the blockout's flat outlines, one material each, as guitar_NN / guitar_NN_body."""
-    g = root("obj_guitars")
-    for src, nn in (("wall_g0", "01"), ("wall_g2", "03"), ("rack_g1", "05"), ("rack_g2", "06")):
-        parts = [o for o in bpy.data.objects if o.name.startswith(src + "_")]
-        body = next(o for o in parts if o.name == src + "_body")
-        m = body.data.materials[0]
-        for o in parts:
-            o.data = o.data.copy()
-            o.data.materials.clear()
-            o.data.materials.append(m)
-        lo = min((o.matrix_world @ Vector(c)).z for o in parts for c in o.bound_box)
-        cx = sum((o.matrix_world @ Vector(c)).x for c in body.bound_box) / 8
-        cy = sum((o.matrix_world @ Vector(c)).y for c in body.bound_box) / 8
-        e = root(f"guitar_{nn}")
-        e.matrix_world = Matrix.Translation((cx, cy, lo))
-        reparent(e, g)
-        for o in [body] + [o for o in parts if o is not body]:
-            reparent(o, e)
-        from lib import geo
-        geo.join([body] + [o for o in parts if o is not body], f"guitar_{nn}_body")
+def guitars():
+    """Guitars 01, 03, 05, 06 from their lite GLBs (cut for the web) in place of the blockout's flat outlines, guitar_02
+    re-hung by the same rule, the blockout's hooks replaced by a hanger under every head (lib/guitars_room.py)."""
+    for o in list(bpy.data.objects):
+        if o.name.startswith(("wall_g0_", "wall_g2_", "rack_g1_", "rack_g2_")) or re.match(r"^hook(\.\d+)?$", o.name):
+            bpy.data.objects.remove(o, do_unlink=True)
+    out = {}
+    for key in ("01", "03", "05", "06"):
+        root, objs, info = GR.import_cut(key)
+        out[key] = info
+    for i, key in enumerate(GR.WALL):          # the Explorer on the wall, the Woodstock Strat in the rack (2026-11-13)
+        out.setdefault(key, {})["wall"] = GR.place_wall(key, i, out.get(key, {}).get("centre_y"))
+    for slot, key in GR.RACK:
+        out.setdefault(key, {})["rack"] = GR.place_rack(key, slot)
+    hooks, pts = GR.hangers(BO.mat("#232326", rough=0.45, metal=0.5), None)
+    out["hangers"] = pts
+    return out
 
 
 def plants():
@@ -248,7 +255,6 @@ def organise():
         if o.name.endswith("_lite"):          # a second pass: names freed by the first
             o.name = o.name[:-5]
     outside_city()
-    guitar_standins()
     plants()
     window()
     # flatten the component roots that MESHES.md does not have
@@ -540,7 +546,7 @@ def check_names():
 def export(path, draco, image_format):
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:
-        if o.type in ("MESH", "EMPTY"):
+        if o.type in ("MESH", "EMPTY") and not o.get(GR.DEFERRED):
             o.select_set(True)
     kw = dict(filepath=path, export_format="GLB", use_selection=True, export_yup=True, export_apply=True,
               export_cameras=False, export_lights=False, export_extras=False, export_image_format=image_format,
@@ -552,6 +558,53 @@ def export(path, draco, image_format):
     bpy.ops.export_scene.gltf(**kw)
     log(f"exported {path}: {os.path.getsize(path) / 1e6:.2f} MB")
     return os.path.getsize(path)
+
+
+DRACO = dict(export_draco_mesh_compression_enable=True, export_draco_mesh_compression_level=7,
+             export_draco_position_quantization=14, export_draco_normal_quantization=10,
+             export_draco_texcoord_quantization=12)
+
+
+def _export_sel(objs, path):
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in objs:
+        o.select_set(True)
+    bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", use_selection=True, export_yup=True, export_apply=True,
+                              export_cameras=False, export_lights=False, export_extras=False, export_image_format="WEBP",
+                              export_image_quality=80, **DRACO)
+    return os.path.getsize(path)
+
+
+def export_guitars():
+    """scene/assets/guitars.glb (2026-11-13): guitars 01, 03, 05 and 06 under one root, obj_guitars_late, at their
+    places in the room (the room's frame, so the site adds it as it is). Env-lit like guitars 02 and 04 (no lightmap:
+    they lift off their hooks later, MESHES.md). Each guitar's share is measured by exporting it alone."""
+    keys = ("01", "03", "05", "06")
+    roots = [bpy.data.objects[f"guitar_{k}"] for k in keys]
+    late = bpy.data.objects.new("obj_guitars_late", None)
+    bpy.context.scene.collection.objects.link(late)
+    parents = [(r, r.parent) for r in roots]
+    for r in roots:
+        reparent(r, late)
+    each = {}
+    tmp = os.path.join(HERE, "out", "dusk", "enc")
+    os.makedirs(tmp, exist_ok=True)
+    for k, r in zip(keys, roots):
+        objs = [r] + list(r.children)
+        tris = 0
+        for o in objs:
+            if o.type == "MESH":
+                o.data.calc_loop_triangles()
+                tris += len(o.data.loop_triangles)
+        f = os.path.join(tmp, f"guitar_{k}-web.glb")
+        each[k] = dict(kb=round(_export_sel(objs, f) / 1000), tris=tris)
+        os.remove(f)
+    size = _export_sel([late] + [o for r in roots for o in [r] + list(r.children)], GUITARS_GLB)
+    for r, p in parents:
+        reparent(r, p)
+    bpy.data.objects.remove(late, do_unlink=True)
+    log(f"exported {GUITARS_GLB}: {size / 1e3:.0f} KB {json.dumps(each)}")
+    return dict(bytes=size, each=each)
 
 
 # ---------------------------------------------------------------------------
@@ -648,6 +701,10 @@ def main():
 
 
 def relight_and_export():
+    if "guitars" in STAGES and "export" not in STAGES:      # guitars.glb alone (FROM_BLEND=1 STAGES=guitars)
+        RES["guitars_glb"] = export_guitars()
+        log("done " + json.dumps(RES["guitars_glb"]))
+        return
     if "dusk" in STAGES:
         dusk()
         pack_and_save(BLEND_DUSK)
@@ -655,6 +712,7 @@ def relight_and_export():
     if "export" in STAGES:
         RES["raw_bytes"] = export(os.path.join(DUSK_OUT, "room-dusk-raw.glb") if "dusk" in STAGES else GLB_RAW, False, "AUTO")
         RES["glb_bytes"] = export(GLB, True, "WEBP")
+        RES["guitars_glb"] = export_guitars()
     RES["total_s"] = round(time.time() - T0, 1)
     rep = os.path.join(DUSK_OUT, "build-report.json") if "dusk" in STAGES else REPORT
     os.makedirs(os.path.dirname(rep), exist_ok=True)

@@ -74,18 +74,54 @@ Mechanics, copied on purpose from the reference:
 - Quality ladder: full / auto / smooth, auto drops resolution when fps drags.
 - Audio: Web Audio graph with one gain bus per source.
 
-## Deferred assets (2026-11-08, the car display first)
+## The room's first load (2026-11-13)
+
+Everything the first picture needs starts downloading at once, from the page's head, not one step at a time:
+
+1. `src/pages/index.astro`: with `?room&glb` (and not when `boot.js` will refuse the room) an inline script adds
+   `modulepreload` for `boot.js`, `desktop.js`, three.js and the rest of `desktop.js`'s import graph (plus the bloom's
+   modules where bloom is on), and `preload` for `/content.json`, the light JSON, `lightmap.webp`, `env.webp`, the Draco
+   decoder and `room.glb.gz`. A file missing from the list only loads later. The plain site and plain `?room` get none.
+2. `boot.js` imports `desktop.js` while it fetches `content.json`.
+3. `desktop.js` `start()` begins the room (`loadRoomGlb()`), the light (`loadRoomLight()`) and the bloom's composer
+   before anything else, then builds the renderer while they download. The Draco decoder is set up during the download.
+4. `room.glb.gz` is the GLB gzipped at build (`scene-files.mjs`): Cloudflare Pages sends `.glb` uncompressed. It is
+   unpacked with DecompressionStream; if that fails the plain `.glb` is fetched. Add any other big GLB to `GZIPPED`.
+5. The first frame draws at the end of `start()`; the warm-up (draw the whole room once, out of sight) comes after it.
+   The cars load after that (below).
+
+Measured 2026-11-13 at 9 Mbps, 60 ms RTT, CPU 4x, cold: first room frame 4.65 s before, 3.64 s after (2.88 MB on the
+wire). The floor is the bytes: the room's file is done at about 2.8 s and 0.8 s of main-thread work follows. Anything
+new in the first picture adds its bytes to that. `public/_headers` sets long caching on `/_astro/*` and a day on the
+vendored three.js; the room's own files keep Cloudflare's default (they must change together).
+
+## Deferred assets (2026-11-08, the car display first; the guitars 2026-11-13)
 
 The room's first load has a budget (about 3 MB, about 3 s on 4G). Anything that is not
 needed for the first picture ships as its own file and loads after the room is on screen:
 
-- Its own GLB in `scene/assets/` (Draco, WebP), with its own baked light next to the room's
+- Its own GLB in `scene/assets/` (Draco, WebP), in the room's own frame, listed in `DEFERRED`
+  in `scene/desktop.js` (one loader for all: `loadDeferred`, `scene/room-light.js`
+  `loadDeferredLight` / `applyDeferredLight`). Today: `cars.glb` (the car display,
+  `blender/components/cars.py`) and `guitars.glb` (guitars 01, 03, 05 and 06 under
+  `obj_guitars_late`, written by `blender/build_v3.py` `export_guitars`).
+- Its light, one of two kinds. Baked: its own lightmap next to the room's
   (`scene/assets/dusk/<name>-light.json` + `<name>-lightmap.webp`, the same dusk rig and the
-  same decoding, the room's exposure applies). It never changes `room.glb` or its lightmap;
-  a contact shadow it casts on the room is a card in its own file (black, alpha = 1 - baked
-  ratio of the light with and without it), not a room rebake.
-- `desktop.js` asks for it only after the first frames have drawn (a few animation frames,
-  then `requestIdleCallback`), so the first load pays nothing.
+  same decoding, the room's exposure applies); it never changes `room.glb` or its lightmap, and
+  a contact shadow it casts on the room is a `*_shadow` card in its own file (black, alpha =
+  1 - baked ratio of the light with and without it), not a room rebake (the cars). Or the
+  environment only, like every part that moves (the guitars lift off their hooks): no light
+  file. The guitars are in the room's Blender scene when the room is baked, so their shadows
+  on the wall and the rack are in the room's lightmap; on the bottom quality rung, where the
+  guitars are skipped, those soft shadows stay without them.
+- `desktop.js` asks for them only after the first frames have drawn (a few animation frames,
+  then `requestIdleCallback`), one after another (the cars, then the guitars, each on its own
+  idle callback), so the first load pays nothing. `&nocars` / `&noguitars` leave one out.
+- A deferred asset can bring a new stop (`late: true` in `scene/stops.js`, the car shelf) or
+  more meshes for a stop that exists (the guitars: 02 and 04 are in `room.glb`, so the Guitar
+  wall and Guitar rack stops are there from the start; the late guitars join them and grow
+  their click boxes, the framing stays). Either way the room's picking and the free camera's
+  room space take its meshes when it arrives.
 - It fades in (opacity, under a second); under `prefers-reduced-motion` it just appears.
 - It is skipped on the quality ladder's bottom rung (`quality.lowest`) and hidden if the
   ladder steps down to it later; never loaded for the placeholder room or the static site.

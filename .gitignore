@@ -38,3 +38,7 @@ blender/assets/headphones/*.glb
 
 # Downloaded car models (2026-11-02): full originals stay local; README lists sources.
 blender/assets/cars/*/
+
+# Downloaded guitar models (2026-11-12): reference only, the originals stay local; each folder's README lists the source.
+blender/assets/guitars/*/*
+!blender/assets/guitars/*/README.md
