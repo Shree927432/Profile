@@ -46,6 +46,12 @@ from lib import guitars_room as GR  # noqa: E402
 
 T0 = time.time()
 STAGES = set(os.environ.get("STAGES", "build,export").split(","))
+# RICH=1 (2026-11-15, owner: "i want to see room in full resolution in blender"): the same room from the full-detail
+# components (rich builds, *-rich.glb, plants.blend, the guitars' and piano's rich GLBs at full texture size), lit by
+# the dusk rig, saved as blender/out/room_v3_rich.blend for viewing. No bake, no export: the site's files are untouched.
+RICH = os.environ.get("RICH") == "1"
+LITE = not RICH
+BLEND_RICH = os.path.join(HERE, "out", "room_v3_rich.blend")
 C = P.C
 OUT = os.path.join(C.FOOTAGE, "2026-10-31-room-v3")
 BLEND = os.path.join(HERE, "out", "room_v3.blend")
@@ -94,14 +100,22 @@ def build():
         if o.name.startswith(gone):
             bpy.data.objects.remove(o, do_unlink=True)
     log("shell and stand-ins")
-    RT.build_arms(lite=True)
-    RT.build_desktop(lite=True)
-    RT.build_chair(lite=True)
-    RT.build_wall(lite=True)
-    RT.build_returndesk(lite=True)
-    RT.build_plants(lite=True)
-    RES["window"] = RT.build_window(lite=True)
-    log("live components (lite), plants, window")
+    RT.build_arms(lite=LITE)
+    RT.build_desktop(lite=LITE)
+    RT.build_chair(lite=LITE)
+    RT.build_wall(lite=LITE)
+    RT.build_returndesk(lite=LITE)
+    RT.build_plants(lite=LITE)
+    RES["window"] = RT.build_window(lite=LITE)
+    log(f"live components ({'lite' if LITE else 'rich'}), plants, window")
+    if RICH:                                     # desk, screens, speakers, PC, piano, guitars 02 and 04: the rich GLBs
+        _imp = RT.import_glb
+
+        def _rich(path):
+            r = path.replace("-lite.glb", "-rich.glb")
+            return _imp(r if os.path.exists(r) else path)
+        RT.import_glb = _rich
+        GR.LOD = "rich"
     RT.import_lite()
     RES["music"] = RT.music_side()
     log(f"lite GLBs, music side {RES['music'].get('ok')}")
@@ -703,7 +717,31 @@ def dusk():
         LD.stills(cams, DUSK_OUT, int(os.environ.get("DUSK_STILL_SPP", "64")), want)
 
 
+def main_rich():
+    """RICH=1: build the room from the full-detail components, light it with the dusk rig, save it. Nothing exported."""
+    from lib import lighting_dusk as LD
+    build()
+    cars = os.path.join(HERE, "out", "components", "cars.blend")      # the car shelf, rich, in the room's frame
+    if os.path.exists(cars):
+        with bpy.data.libraries.load(cars, link=False) as (src, dst):
+            dst.collections = [c for c in src.collections if c == "cars"]
+        for c in dst.collections:
+            bpy.context.scene.collection.children.link(c)
+        log("car shelf appended from cars.blend")
+    LD.lights(P)
+    LD.backdrop_layers(os.path.join(HERE, "assets", "dusk", "beach-dusk.json"))
+    cams = RT.cameras()
+    for name, c in cams.items():
+        c.name = "still_" + name.lower()
+    bpy.context.scene.camera = bpy.data.objects.get("still_hero_v3")
+    pack_and_save(BLEND_RICH)
+    log(f"saved {BLEND_RICH}")
+
+
 def main():
+    if RICH:
+        main_rich()
+        return
     if os.environ.get("FROM_BLEND"):
         bpy.ops.wm.open_mainfile(filepath=BLEND)
         log(f"opened {BLEND}")

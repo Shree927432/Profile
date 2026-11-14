@@ -1401,3 +1401,13 @@ site or the room. Keep each entry short. No polishing; the post does that.
   failed light file would have left the room without a piano. They now load either way.
 - Checked: desktop and phone, no errors, clicks on the guitars fly to their stops, the About and desk stills match the
   day before (mean difference 0.3 and 0.5 of 255). Sheet: video-local/footage/2026-11-15-load/.
+
+## 2026-11-15: the full-detail room in Blender
+
+- Owner: "i want to see room in full resolution in blender". No such file existed: room_v3.blend and room_v3_dusk.blend
+  are built from the lite components. build_v3.py now has `RICH=1`: the same build with every component's rich version
+  (live builds with lite=False, the *-rich.glb files, plants.blend, the guitars' and piano's rich GLBs at full texture
+  size, the car shelf appended from cars.blend), the dusk lights and the sea at sunset, saved as
+  blender/out/room_v3_rich.blend (304 MB, 16 s to build). No bake, no export: the site's files are untouched. The
+  guitars land exactly where the web build puts them. `blender/tools/view_room.py` opens a room file through the desk
+  camera in EEVEE's rendered view.

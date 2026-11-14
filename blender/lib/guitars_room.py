@@ -50,9 +50,12 @@ def _objs(key):
     return root, [root] + list(root.children)
 
 
+LOD = "lite"                                            # "rich" for the full-detail room (build_v3.py RICH=1)
+
+
 def import_cut(key):
     before = set(bpy.data.objects)
-    bpy.ops.import_scene.gltf(filepath=os.path.join(OUT, f"guitar_{key}-lite.glb"))
+    bpy.ops.import_scene.gltf(filepath=os.path.join(OUT, f"guitar_{key}-{LOD}.glb"))
     new = [o for o in bpy.data.objects if o not in before]
     root = next(o for o in new if o.parent is None)
     assert root.name == f"guitar_{key}", root.name
@@ -66,7 +69,7 @@ def import_cut(key):
                 if n.bl_idname == "ShaderNodeTexImage" and n.image and n.image.size[0] > 0:
                     im = n.image
                     px = ORM_PX if "orm" in im.name else ATLAS_PX
-                    if im.size[0] > px:
+                    if LOD == "lite" and im.size[0] > px:
                         im.scale(px, px)
                         im.pack()                       # the scaled pixels, so a saved .blend keeps them
     for o in new:
