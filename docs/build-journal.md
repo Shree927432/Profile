@@ -1376,3 +1376,11 @@ site or the room. Keep each entry short. No polishing; the post does that.
   now sit on the cradle (lowest 0.10), the Explorer's head 5 cm off the wall on its own hanger; guitars-check on
   desktop and phone: no errors, the Explorer opens the guitar wall, the Strat the rack. Draw calls unchanged (hero
   119, About 89). Sheet: video-local/footage/2026-11-13-rack-faces/sheet-swap.jpg.
+
+## 2026-11-14: the neon font, compared and kept
+
+- The open worry: Comfortaa's "a" makes the neon read "breok. repeot." up close. Traced the words into tubes in nine
+  fonts with wall.py's own neon_raster (six downloaded from Google Fonts for the test, kept in the scratchpad only).
+  Montserrat, Nunito and Varela Round read cleanly; Rajdhani, Quicksand and Poppins still read "o"; Roboto Condensed's
+  "t" became an "l" ("repeal"); the scripts (Pacifico, Sacramento) blurred where strokes cross. Owner: "use current
+  font". No change to the room.
