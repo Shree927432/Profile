@@ -114,10 +114,14 @@ const BLOOM = { strength: 0.3, radius: 0.45, threshold: 1.0, minWidth: 768 };
 // Each fades in over fadeMs (reduced motion: it just appears). Not on the quality ladder's bottom rung (quality.lowest):
 // never loaded there, hidden if the ladder steps down to it later. &no<id> leaves one out (&nocars, &noguitars).
 //   cars      the car display (2026-11-08, blender/components/cars.py), its own lightmap (light) and shadow card
-//   guitars   guitars 01, 03, 05 and 06 (2026-11-13, blender/build_v3.py export_guitars), lit by the environment
-//             like 02 and 04 in the room; the Guitar wall and Guitar rack stops already exist (02 and 04)
+//   piano     the upright piano (2026-11-14, blender/build_v3.py export_piano), out of room.glb for the first load's
+//             sake. light "room": its lightmap UVs point into the room's own atlas, so it takes the room's light.
+//             always: an object you can visit, so it loads on the bottom rung too. Its keys are merged (batchRoom).
+//   guitars   all six guitars (2026-11-13; 02 and 04 since 2026-11-14, blender/build_v3.py export_guitars), lit by
+//             the environment; their stops (Guitar wall, Guitar rack) are made when they arrive
 const DEFERRED = [
   { id: "cars", url: "/scene/assets/cars.glb", light: "/scene/assets/dusk/cars-light.json" },
+  { id: "piano", url: "/scene/assets/piano.glb", light: "room", always: true },
   { id: "guitars", url: "/scene/assets/guitars.glb", light: null },
 ];
 const DEFER = { fadeMs: 700, afterFrames: 3, idleTimeout: 1500 };
@@ -229,7 +233,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   function applyQuality({ pixelRatio, bloom }) {
     bloomOn = !!bloom;
     setPixelRatio(pixelRatio);
-    for (const r of deferredRoots) r.visible = !quality.lowest; // quality exists by the time they do
+    for (const r of deferredRoots) r.visible = r.userData.always || !quality.lowest; // quality exists by the time they do
   }
   const quality = createQuality({ dpr: window.devicePixelRatio || 1, reduce, apply: applyQuality, bloom: bloomAllowed });
   // The bloom's modules load and its composer is made while the room downloads (used below once the light is in).
@@ -247,6 +251,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
 
   let room;
   let roomExposure = null; // the dusk light's exposure, for the deferred assets
+  let roomLight = null; // the room's lightmap and its JSON, for a deferred asset baked into the room's atlas (the piano)
   if (useGlb) {
     room = await glbLoad;
   } else {
@@ -261,6 +266,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     const light = await lightLoad.catch((e) => { console.warn("room light:", e); return null; });
     if (light) applyRoomLight(THREE, { renderer, scene, room, light, exposure: Number.isFinite(exp) ? exp : undefined });
     if (light) roomExposure = Number.isFinite(exp) ? exp : light.json.exposure;
+    if (light) roomLight = { json: light.json, lightMap: light.lightMap };
     else scene.add(new THREE.HemisphereLight(0xcdd5e6, 0x8c8a86, 1.1)); // the bake files missing: plain light, still usable
     if (light && bloomAllowed) {
       post = await bloomLoad;
@@ -1245,7 +1251,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   async function loadDeferred(asset) {
     const timing = deferredTiming[asset.id];
     timing.roomShown = deferredTiming.roomShown;
-    if (quality.lowest) { timing.skipped = "lowest rung"; return; }
+    if (quality.lowest && !asset.always) { timing.skipped = "lowest rung"; return; }
     timing.requested = performance.now();
     const [{ GLTFLoader }, { DRACOLoader }] = await Promise.all([
       import("three/addons/loaders/GLTFLoader.js"),
@@ -1254,11 +1260,14 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     const draco = new DRACOLoader().setDecoderPath(DRACO_DECODER);
     const [gltf, light] = await Promise.all([
       new GLTFLoader().setDRACOLoader(draco).loadAsync(asset.url),
-      asset.light ? loadDeferredLight(THREE, asset.light).catch((e) => { console.warn(asset.id + " light:", e); return null; }) : null,
+      asset.light === "room" ? roomLight
+        : asset.light ? loadDeferredLight(THREE, asset.light).catch((e) => { console.warn(asset.id + " light:", e); return null; }) : null,
     ]);
     draco.dispose();
     timing.loaded = performance.now();
     const root = gltf.scene;
+    root.userData.always = !!asset.always;
+    batchRoom(root); // the piano's 88 keys: one draw call, as they were in the room
     const mats = applyDeferredLight(THREE, { root, light, exposure: roomExposure ?? 1 });
     // Not while the camera travels: a shader compile or a buffer or texture upload mid-move is a visible hitch.
     // During the intro's hold the window fills the view and the asset is out of frame: it goes in at once, without
@@ -1271,7 +1280,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
       }
       scene.add(root);
       deferredRoots.push(root);
-      root.visible = !quality.lowest;
+      root.visible = asset.always || !quality.lowest;
       if (quiet) warm = false; // the next tick draws the hero once more, out of sight (warmUp), with the asset in
       if (stops) { stops.build(root); registerRoom(); } // a new stop (the car shelf), or more meshes for one (the guitars)
       if (space && space.ready) { const ms = []; root.traverseVisible((o) => { if (o.isMesh) ms.push(o); }); space.build(ms); }
@@ -1309,5 +1318,5 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   renderFrame(performance.now()); // first frame, drawn before start() resolves
   deferredTiming.roomShown = performance.now();
   if (!document.hidden) run();
-  if (useGlb && roomExposure !== null) scheduleDeferred();
+  if (useGlb) scheduleDeferred(); // also without the light files (environment only), or the piano would be missing
 }

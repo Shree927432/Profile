@@ -51,6 +51,7 @@ OUT = os.path.join(C.FOOTAGE, "2026-10-31-room-v3")
 BLEND = os.path.join(HERE, "out", "room_v3.blend")
 GLB = os.path.join(C.REPO, "scene", "assets", "room.glb")
 GUITARS_GLB = os.path.join(C.REPO, "scene", "assets", "guitars.glb")
+PIANO_GLB = os.path.join(C.REPO, "scene", "assets", "piano.glb")       # 2026-11-14: loaded after the room (load time)
 GLB_RAW = os.path.join(OUT, "room-v3-raw.glb")
 REPORT = os.path.join(OUT, "build-report.json")
 PY = "/opt/anaconda3/bin/python3"
@@ -209,6 +210,11 @@ def guitars():
         out.setdefault(key, {})["wall"] = GR.place_wall(key, i, out.get(key, {}).get("centre_y"))
     for slot, key in GR.RACK:
         out.setdefault(key, {})["rack"] = GR.place_rack(key, slot)
+    # 02 and 04 ship in guitars.glb too (2026-11-14, load time): all six come after the room, none is in the first view
+    for key in ("02", "04"):
+        r = bpy.data.objects[f"guitar_{key}"]
+        for o in [r] + list(r.children_recursive):
+            o[GR.DEFERRED] = "guitars"
     hooks, pts = GR.hangers(BO.mat("#232326", rough=0.45, metal=0.5), None)
     out["hangers"] = pts
     return out
@@ -576,10 +582,11 @@ def _export_sel(objs, path):
 
 
 def export_guitars():
-    """scene/assets/guitars.glb (2026-11-13): guitars 01, 03, 05 and 06 under one root, obj_guitars_late, at their
-    places in the room (the room's frame, so the site adds it as it is). Env-lit like guitars 02 and 04 (no lightmap:
-    they lift off their hooks later, MESHES.md). Each guitar's share is measured by exporting it alone."""
-    keys = ("01", "03", "05", "06")
+    """scene/assets/guitars.glb (2026-11-13): all six guitars (01, 03, 05, 06 from 2026-11-13; 02 and 04 joined them
+    2026-11-14 to shorten the first load) under one root, obj_guitars_late, at their places in the room (the room's
+    frame, so the site adds it as it is). Env-lit (no lightmap: they lift off their hooks later, MESHES.md). Each
+    guitar's share is measured by exporting it alone."""
+    keys = ("01", "02", "03", "04", "05", "06")
     roots = [bpy.data.objects[f"guitar_{k}"] for k in keys]
     late = bpy.data.objects.new("obj_guitars_late", None)
     bpy.context.scene.collection.objects.link(late)
@@ -605,6 +612,24 @@ def export_guitars():
     bpy.data.objects.remove(late, do_unlink=True)
     log(f"exported {GUITARS_GLB}: {size / 1e3:.0f} KB {json.dumps(each)}")
     return dict(bytes=size, each=each)
+
+
+def mark_piano_deferred():
+    """2026-11-14 (load time): the piano leaves room.glb for scene/assets/piano.glb, loaded after the room appears. It is
+    out of the first view (the desk), and at 0.41 MB it is the largest part of the room the first picture does not
+    need. It keeps its place in the bake and its lightmap UVs (TEXCOORD_1 into the room's own atlas): the site lights it
+    with the room's lightmap (desktop.js DEFERRED, light "room"). Marked only after the bake and the raw review export."""
+    root = bpy.data.objects["obj_piano"]
+    for o in [root] + list(root.children_recursive):
+        o[GR.DEFERRED] = "piano"
+
+
+def export_piano():
+    """scene/assets/piano.glb: obj_piano and everything under it, in the room's frame (the site adds it as it is)."""
+    root = bpy.data.objects["obj_piano"]
+    size = _export_sel([root] + list(root.children_recursive), PIANO_GLB)
+    log(f"exported {PIANO_GLB}: {size / 1e3:.0f} KB")
+    return dict(bytes=size)
 
 
 # ---------------------------------------------------------------------------
@@ -711,8 +736,10 @@ def relight_and_export():
         log(f"saved {BLEND_DUSK}")
     if "export" in STAGES:
         RES["raw_bytes"] = export(os.path.join(DUSK_OUT, "room-dusk-raw.glb") if "dusk" in STAGES else GLB_RAW, False, "AUTO")
+        mark_piano_deferred()
         RES["glb_bytes"] = export(GLB, True, "WEBP")
         RES["guitars_glb"] = export_guitars()
+        RES["piano_glb"] = export_piano()
     RES["total_s"] = round(time.time() - T0, 1)
     rep = os.path.join(DUSK_OUT, "build-report.json") if "dusk" in STAGES else REPORT
     os.makedirs(os.path.dirname(rep), exist_ok=True)

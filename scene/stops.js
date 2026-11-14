@@ -42,9 +42,9 @@ export const STOPS = [
   // The music side (Back: its overview, the About view)
   { id: "piano", parent: "about", nodes: ["obj_piano"], frame: [[1.55, 0.0, -0.95], [2.15, 1.3, 0.45]],
     dir: [-1, 0.28, 0.05], fit: 1.0 },
-  { id: "guitars", parent: "about", nodes: ["guitar_01", "guitar_05", "guitar_03"], add: [[[2.0, 1.4, -1.0], [2.2, 2.55, 0.5]]],
+  { id: "guitars", parent: "about", late: true, nodes: ["guitar_01", "guitar_05", "guitar_03"], add: [[[2.0, 1.4, -1.0], [2.2, 2.55, 0.5]]],
     dir: [-1, -0.05, 0], fit: 1.1 },
-  { id: "rack", parent: "about", nodes: ["guitar_04", "guitar_02", "guitar_06"], add: [[[1.3, 0, -2.1], [2.0, 1.15, -1.4]]],
+  { id: "rack", parent: "about", late: true, nodes: ["guitar_04", "guitar_02", "guitar_06"], add: [[[1.3, 0, -2.1], [2.0, 1.15, -1.4]]],
     frame: [[1.38, 0.0, -2.1], [1.95, 1.15, -1.42]], dir: [-0.3, 1.0, 1.0], fit: 1.0 }, // from over the piano's end: the curtain and the piano close the corner from the room
   { id: "decks", parent: "about", nodes: ["dj_stand_root", "lightstick_root"], add: [[[1.72, 0, 0.88], [2.2, 1.2, 1.56]]],
     frame: [[1.75, 0.85, 0.9], [2.2, 1.2, 1.56]], dir: [-1, 0.75, 0.12], fit: 1.15 },
@@ -70,7 +70,7 @@ export function createStops({ THREE, root, bounds }) {
   }
 
   // Builds every stop whose nodes are in scope (the room, or a deferred asset's root when it arrives). A deferred asset
-  // can also bring more of a stop that exists (the guitars: 02 and 04 are in the room, 01, 03, 05, 06 come later):
+  // can also bring more of a stop that exists (the guitars came in two parts until 2026-11-14; all six are in guitars.glb now):
   // its meshes join the stop and its click box grows; where the camera frames the stop does not change.
   function build(scope) {
     const made = [];

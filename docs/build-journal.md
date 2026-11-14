@@ -1384,3 +1384,20 @@ site or the room. Keep each entry short. No polishing; the post does that.
   Montserrat, Nunito and Varela Round read cleanly; Rajdhani, Quicksand and Poppins still read "o"; Roboto Condensed's
   "t" became an "l" ("repeal"); the scripts (Pacifico, Sacramento) blurred where strokes cross. Owner: "use current
   font". No change to the room.
+
+## 2026-11-14/15: the first load under 3 s
+
+- Owner: "Load time next". Baseline the same evening (load-timing.mjs, 9 Mbps, 60 ms RTT, CPU 4x, 5 runs, served
+  like Cloudflare by serve-dist.mjs): the room's first frame at 3.57 s, 2.92 MB on the wire.
+- Measured what room.glb carried that the first picture (the desk) does not show: guitars 02 and 04 (0.34 MB with
+  their 1024 atlases) and the piano (0.41 MB). No new tool, no look change:
+  - guitars 02 and 04 joined the other four in guitars.glb (now 793 KB, all six; their stops made on arrival,
+    `late: true`). 3.57 -> 3.28 s.
+  - the piano moved to its own piano.glb (475 KB), loaded after the room. It keeps its lightmap UVs into the room's
+    atlas, so the site lights it with the room's own lightmap (`light: "room"`); `always: true` loads it on the
+    bottom quality rung too; batchRoom merges its 88 keys as before, so the About view stays at 89 draw calls.
+    3.28 -> 2.94 s, 2.25 MB on the wire (room.glb 2.61 -> 1.79 MB, gzipped 2.09 -> 1.42 MB).
+- Caught on the way: the late files were only scheduled once the room's light had loaded; with the piano late, a
+  failed light file would have left the room without a piano. They now load either way.
+- Checked: desktop and phone, no errors, clicks on the guitars fly to their stops, the About and desk stills match the
+  day before (mean difference 0.3 and 0.5 of 255). Sheet: video-local/footage/2026-11-15-load/.

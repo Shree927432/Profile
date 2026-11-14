@@ -95,7 +95,7 @@ wire). The floor is the bytes: the room's file is done at about 2.8 s and 0.8 s 
 new in the first picture adds its bytes to that. `public/_headers` sets long caching on `/_astro/*` and a day on the
 vendored three.js; the room's own files keep Cloudflare's default (they must change together).
 
-## Deferred assets (2026-11-08, the car display first; the guitars 2026-11-13)
+## Deferred assets (2026-11-08, the car display first; the guitars 2026-11-13; the piano 2026-11-14)
 
 The room's first load has a budget (about 3 MB, about 3 s on 4G). Anything that is not
 needed for the first picture ships as its own file and loads after the room is on screen:
@@ -103,24 +103,28 @@ needed for the first picture ships as its own file and loads after the room is o
 - Its own GLB in `scene/assets/` (Draco, WebP), in the room's own frame, listed in `DEFERRED`
   in `scene/desktop.js` (one loader for all: `loadDeferred`, `scene/room-light.js`
   `loadDeferredLight` / `applyDeferredLight`). Today: `cars.glb` (the car display,
-  `blender/components/cars.py`) and `guitars.glb` (guitars 01, 03, 05 and 06 under
-  `obj_guitars_late`, written by `blender/build_v3.py` `export_guitars`).
+  `blender/components/cars.py`), `piano.glb` (`obj_piano`, `export_piano`) and `guitars.glb`
+  (all six guitars under `obj_guitars_late`, written by `blender/build_v3.py` `export_guitars`;
+  02 and 04 joined 2026-11-14).
 - Its light, one of two kinds. Baked: its own lightmap next to the room's
   (`scene/assets/dusk/<name>-light.json` + `<name>-lightmap.webp`, the same dusk rig and the
   same decoding, the room's exposure applies); it never changes `room.glb` or its lightmap, and
   a contact shadow it casts on the room is a `*_shadow` card in its own file (black, alpha =
   1 - baked ratio of the light with and without it), not a room rebake (the cars). Or the
+  room's own lightmap (`light: "room"`): a part baked with the room keeps its TEXCOORD_1 into
+  the room's atlas and takes the room's loaded lightmap (the piano). Or the
   environment only, like every part that moves (the guitars lift off their hooks): no light
   file. The guitars are in the room's Blender scene when the room is baked, so their shadows
   on the wall and the rack are in the room's lightmap; on the bottom quality rung, where the
   guitars are skipped, those soft shadows stay without them.
 - `desktop.js` asks for them only after the first frames have drawn (a few animation frames,
   then `requestIdleCallback`), one after another (the cars, then the guitars, each on its own
-  idle callback), so the first load pays nothing. `&nocars` / `&noguitars` leave one out.
+  idle callback), so the first load pays nothing. `&nocars` / `&nopiano` / `&noguitars` leave one
+  out. `always: true` loads it on the bottom quality rung too (the piano, a stop you can visit);
+  its key meshes are merged with `batchRoom` as the room's are.
 - A deferred asset can bring a new stop (`late: true` in `scene/stops.js`, the car shelf) or
-  more meshes for a stop that exists (the guitars: 02 and 04 are in `room.glb`, so the Guitar
-  wall and Guitar rack stops are there from the start; the late guitars join them and grow
-  their click boxes, the framing stays). Either way the room's picking and the free camera's
+  more meshes for a stop that exists (the guitars came in two parts until 2026-11-14; now the
+  Guitar wall, Guitar rack and Piano stops are made when their files arrive). Either way the room's picking and the free camera's
   room space take its meshes when it arrives.
 - It fades in (opacity, under a second); under `prefers-reduced-motion` it just appears.
 - It is skipped on the quality ladder's bottom rung (`quality.lowest`) and hidden if the
