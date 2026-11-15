@@ -78,6 +78,14 @@
       "write": "Write an email",
       "close": "Close"
     },
+    "plant": {
+      "tip": "Water the monstera",
+      "tipDone": "Watered today",
+      "hint": "Thirsty. Click the plant, or press Enter, to water it.",
+      "grew": "A new leaf: {n} of {total}. Come back tomorrow for the next one.",
+      "watered": "Watered. Come back tomorrow for a new leaf.",
+      "full": "Fully grown: all {total} leaves. Thank you for coming back."
+    },
     "compose": {
       "idle": "Write to me",
       "hint": "click the screen",

@@ -1505,3 +1505,23 @@ site or the room. Keep each entry short. No polishing; the post does that.
   camera looked away). Now every flight (Back, Escape, a stop, ctx.go) first calls the room objects' away(): the form,
   the mic card or a tilted frame closes, then the camera moves. Checked: one frame after Back the form is closed and
   the camera is moving; mic and frames checks pass.
+
+## 2026-11-15: the plant on the sill (Phase 5, object 4)
+
+- Owner: "i'll handitover later, just remind me, till then start next task" (the Web3Forms key). Next was the plant.
+- A sheet of the monstera with 8, 14, 20 and 25 leaves; the owner chose "14 leaves", "A small watering can",
+  "When they water it" and "Yes, add ctx.store". The first sheet showed all four the same: hiding leaves did not
+  redraw the paused test page; a forced redraw fixed the sheet, not the site.
+- scene/objects/plant.js: 14 of 25 leaves on a first visit. A click or Enter waters it: a white can (built in code, two
+  draw calls only while pouring) comes in, tips, pours a thin stream; the soil darkens, the leaves sway, and once a
+  day a new leaf unfurls from its stem. A short note above the plant says what happened ("A new leaf: 15 of 25").
+  ctx.store keeps the count and the days in the visitor's browser.
+- Misses, found by video-local/scripts/plant-check.mjs:
+  - Enter at the plant opened the mic's card: the plant stop is 2.3 m from the mic, inside the mic's 2.4 m key range,
+    and the mic is asked first. Keys at a stop now go only to the objects with a part in that stop (desktop.js);
+  - the first can sat inside the leaves with its spout hidden and read as a mug. It now comes in front of the pot,
+    placed from where the camera is, below the leaves, its longer spout across the view;
+  - the check's reduced-motion run waited forever: `?room&glb&room=force` reads the first `room` (empty).
+- Checked on desktop, phone and reduced motion: first visit 14 leaves; the hint at the stop; watering grows leaf 15;
+  a second watering the same day grows none; a return visit the next day grows leaf 16 with Enter; Back. No errors.
+  Mic, frames and compose checks still pass (their keys too).

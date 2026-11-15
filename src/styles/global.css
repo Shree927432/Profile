@@ -542,6 +542,30 @@ html.room-on #room { touch-action: none; }
 .room-mic-write:focus-visible,
 .room-mic-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .room-mic-card { transition: none; } }
+
+/* The plant's note (scene/objects/plant.js): one line above the monstera, placed by the object. */
+.room-plant-note {
+  position: fixed;
+  z-index: 7;
+  max-width: min(19rem, calc(100vw - 1.5rem));
+  margin: 0;
+  padding: 0.45rem 0.8rem;
+  color: var(--fg);
+  font-size: 0.9rem;
+  line-height: 1.35;
+  text-align: center;
+  background: color-mix(in srgb, var(--bg-raised) 94%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: calc(var(--radius) * 2);
+  box-shadow: 0 0.4rem 1.4rem rgb(0 0 0 / 0.3);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(0.25rem);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.room-plant-note.is-open { opacity: 1; transform: none; }
+.room-plant-note[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .room-plant-note { transition: none; } }
 /* The Studio Display's form (scene/objects/compose.js, 2026-11-15): laid over the glass's rectangle on screen, in the
    posts screen's colours so it reads as the monitor's own app; font-size is set from the glass's height. A sheet on
    narrow screens. */

@@ -20,6 +20,9 @@ export function createLamp(THREE, ctx) {
   //                (a card, a label); remove them in dispose(). Added 2026-11-15 for the mic's card.
   // ctx.go(stopId) fly the camera to a stop (scene/stops.js); false if the room has no such stop. Added
   //                2026-11-15 for the mic card's "Write an email" (to the Studio Display).
+  // ctx.store      what the object remembers between visits: get(key) -> value or null, set(key, value) -> true
+  //                if kept. JSON, in the visitor's browser only (localStorage "room:<key>"), nothing is sent.
+  //                Can be empty on any visit (private windows): work without it. Added 2026-11-15 for the plant.
   const mesh = ctx.root.getObjectByName("lamp");
   if (!mesh) return null;              // the room may not have this object yet
 
@@ -28,7 +31,8 @@ export function createLamp(THREE, ctx) {
     click(part) {},                    // a registered part was clicked
     away() {},                         // optional: a click or tap landed on anything that is not this object
                                        // (another object, the room, empty space): close, tilt back, put down
-    key(k) { return false; },          // e.key lowercased; return true if consumed
+    key(k) { return false; },          // e.key lowercased; return true if consumed. Only called at a stop
+                                       // that holds one of the object's registered parts
     tip(hit) { return null; },         // hover text, or null
     get busy() { return false; },      // true while animating; the page waits
     dispose() {},

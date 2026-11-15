@@ -59,6 +59,7 @@ import { createPickMap } from "./pick.js";
 import { createFrames } from "./objects/frames.js";
 import { createMic } from "./objects/mic.js";
 import { createCompose } from "./objects/compose.js";
+import { createPlant } from "./objects/plant.js";
 import { batchRoom } from "./batch.js";
 import { createQuality, MODES } from "./quality.js";
 import { createGlide } from "./glide.js";
@@ -852,19 +853,37 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   // Phase 5 room objects (objects/CONTRACT.md). Each registers its own meshes with an owner; registerRoom leaves
   // those alone. A click on an object's part acts only where the object is read, at its stop; from anywhere else it
   // flies there first (as the laptop). Keys go to the objects at a stop; an object decides if they are for it.
-  const owned = new Set();
+  const owned = new Map(); // mesh -> the object that registered it
   const objectCtx = {
     root: room, scene, reduce, content, overlay,
-    interact: { set(m, info) { owned.add(m); interact.set(m, info); }, delete(m) { owned.delete(m); interact.delete(m); } },
+    interact: { set(m, info) { owned.set(m, info.owner); interact.set(m, info); }, delete(m) { owned.delete(m); interact.delete(m); } },
     view: () => camera,
     audio: () => null,
     live: (s) => say(s),
     go: (id) => { if (!stops || !stops.byId.has(id)) return false; flyTo(id); return true; },
+    // what an object remembers between visits (the plant's leaves): on this device only, nothing is sent anywhere;
+    // null and false when the browser has no storage (private windows, blocked site data)
+    store: {
+      get(key) { try { const v = localStorage.getItem("room:" + key); return v == null ? null : JSON.parse(v); } catch { return null; } },
+      set(key, value) { try { localStorage.setItem("room:" + key, JSON.stringify(value)); return true; } catch { return false; } },
+    },
   };
-  const roomObjects = useGlb ? [createFrames, createMic, createCompose].map((make) => {
+  const roomObjects = useGlb ? [createFrames, createMic, createCompose, createPlant].map((make) => {
     try { return make(THREE, objectCtx); } catch (err) { console.warn("room object:", err); return null; }
   }).filter(Boolean) : [];
   objectsAway = () => { for (const o of roomObjects) if (o.away) o.away(); needsRender = true; };
+  // The objects at a stop: those with a registered part in it. Keys go only to them (2026-11-15: at the plant the mic,
+  // 2.3 m away, took Enter for its card).
+  const _at = new THREE.Vector3();
+  function objectsAt(id) {
+    const here = new Set();
+    for (const [m, o] of owned) {
+      if (here.has(o) || !m.parent) continue;
+      const st = stops.classify(m, m.getWorldPosition(_at));
+      if (st && st.id === id) here.add(o);
+    }
+    return roomObjects.filter((o) => here.has(o));
+  }
   function registerRoom() {
     collectObstacles();
     for (const m of obstacles) if (m !== screenMesh && !owned.has(m)) interact.set(m, { kind: "room" });
@@ -1127,7 +1146,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     if (glide.active || moves.moving) return;
     if (freeCam && currentId() !== "desk" && currentId() !== POSTS_AT) { // at a stop: the room objects' keys
       const k = e.key.toLowerCase();
-      if (roomObjects.some((o) => o.key && o.key(k))) { e.preventDefault(); needsRender = true; }
+      if (objectsAt(currentId()).some((o) => o.key && o.key(k))) { e.preventDefault(); needsRender = true; }
       return;
     }
     if (freeCam && currentId() !== POSTS_AT) return; // keys reach the posts where they are read

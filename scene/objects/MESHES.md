@@ -446,12 +446,13 @@ which works.
 | Name | What | Code does | Pivot / origin |
 |---|---|---|---|
 | `plant_pot` | pot | click target: water it | — |
-| `plant_soil` | soil surface | click target; darkens when watered | — |
-| `plant_leaf_01` ... `plant_leaf_12` | leaves, in growth order | the first N show; one more per return visit | at the point where the leaf meets the stem. Grow = scale from 0 at the origin; sway = small rotation there |
+| `plant_soil` | soil surface | click target; darkens when watered (its own material) | — |
+| `plant_leaf_01` ... `plant_leaf_25` | leaves, in growth order | click targets; the first N show (14 on a first visit); one more unfurls with the watering, once a day | at the point where the leaf meets the stem. Grow = scale from 0 at the origin; sway = small rotation there |
 | `plant_static` | stem | — | — |
 
-Twelve leaves suggested, about five showing on a first visit. More can be added in
-Blender later with no code change, because the code counts them.
+Built (2026-11-15, `scene/objects/plant.js`): 25 leaves, 14 on a first visit. The watering can and its stream are
+made in code (`plant_can`, `plant_stream`, in the scene only while pouring). More leaves can be added in Blender with
+no code change, because the code counts them.
 
 ## 4. Static scenery
 
