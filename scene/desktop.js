@@ -712,11 +712,13 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   }
   const _q0 = new THREE.Quaternion();
   // Fly to a stop, the About view, or the desk ("desk"). Arrives in the free camera. Reduced motion: a cut.
+  let objectsAway = () => {}; // set once the room objects exist (below)
   function flyTo(id) {
     if (!useGlb || glide.active || (id !== "desk" && !isPlace(id))) return;
     if (id === "about" && !canAbout) return;
     const cur = currentId();
     if (id === cur && !moves.moving) return;
+    objectsAway(); // owner, 2026-11-15: an open form, card or tilted frame closes first, then the camera goes
     endGesture();
     keys.clear();
     hoverDirty = false;
@@ -862,6 +864,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   const roomObjects = useGlb ? [createFrames, createMic, createCompose].map((make) => {
     try { return make(THREE, objectCtx); } catch (err) { console.warn("room object:", err); return null; }
   }).filter(Boolean) : [];
+  objectsAway = () => { for (const o of roomObjects) if (o.away) o.away(); needsRender = true; };
   function registerRoom() {
     collectObstacles();
     for (const m of obstacles) if (m !== screenMesh && !owned.has(m)) interact.set(m, { kind: "room" });

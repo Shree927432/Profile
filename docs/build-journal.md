@@ -1500,3 +1500,8 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Checked on desktop and phone: Write flies to the display and the form opens; typing (WASD too) stays in the form
   and the camera does not move; Send with a stubbed network posts name, email and message to Web3Forms and says "Sent"
   (a dummy key, removed after); Close, a click on the screen, Escape, Back. Mic, frames, laptop checks pass; 112 draws.
+- Owner: "when i click back after opening write me email box there a glitch, first it should close the window and then
+  camera should go back". The form stayed open while the camera flew and vanished mid-flight (it closed only once the
+  camera looked away). Now every flight (Back, Escape, a stop, ctx.go) first calls the room objects' away(): the form,
+  the mic card or a tilted frame closes, then the camera moves. Checked: one frame after Back the form is closed and
+  the camera is moving; mic and frames checks pass.
