@@ -121,7 +121,24 @@ def build():
     log(f"lite GLBs, music side {RES['music'].get('ok')}")
     RES["guitars"] = guitars()
     log("guitars " + json.dumps(RES["guitars"]))
+    RES["ceiling_light"] = ceiling_light()
+    log("ceiling light " + json.dumps(RES["ceiling_light"]))
     BO.lights()
+
+
+def ceiling_light():
+    """The owner's three-square pendant and the switch by the door (2026-11-15, blender/components/ceiling_light.py) in
+    place of the blockout's drum."""
+    sys.path.insert(0, os.path.join(HERE, "components"))
+    import ceiling_light as CL
+    for o in list(bpy.data.objects):
+        if o.name.startswith("pendant_"):
+            bpy.data.objects.remove(o, do_unlink=True)
+    CL.CEIL = C.ROOM["height"]
+    root, info = CL.build(at=(P.LIGHT_V3["x"], P.LIGHT_V3["y"]))
+    S = C.SWITCH
+    CL.switch(wall_x=-C.RX, y=S["y"], z=S["z"], w=S["w"], h=S["h"])
+    return info
 
 
 # ---------------------------------------------------------------------------
@@ -138,7 +155,7 @@ KEEP = re.compile(
     r"|desk_led|desk_drawers_\d\d_drawer_\d\d|kb_key_[a-z0-9]+|kb_knob|mouse_wheel"
     r"|mic_(body|led)|keylight_\d_glow|cam_screen_lcd"
     r"|frame_\d_(border|picture)|neon|neon_glow|neon_halo|pegboard_glow|nanoleaf_panel_\d\d"
-    r"|laptop_screen|light_shade|plant_(pot|soil|leaf_\d\d)|window_(sash_\d|glass|curtains)"
+    r"|laptop_screen|light_(led|switch|switch_plate)|plant_(pot|soil|leaf_\d\d)|window_(sash_\d|glass|curtains)"
     r"|piano_(key_[a-g]s?\d|fallboard|lid|interior|strings|hammers|sheet)"
     r"|guitar_0\d_(body|strings))$")
 GROUPS = {f"frame_{i}" for i in (1, 2, 3)} | {f"guitar_0{i}" for i in range(1, 7)} | {"chair_swivel"}
@@ -155,11 +172,11 @@ TOP_ROOT = {
     "guitar_01": "obj_guitars", "guitar_03": "obj_guitars", "guitar_05": "obj_guitars", "guitar_06": "obj_guitars",
     "floor": "set_room", "ceiling": "set_room", "door": "set_room", "wall_front": "set_room", "wall_right": "set_room",
     "sky": "set_city", "ground": "set_city",
-    "pendant_cord": "obj_light", "pendant_shade": "obj_light",
+    "light_root": "obj_light", "switch_root": "obj_light",
 }
 TOP_PREFIX = [("wall_l_", "set_room"), ("wb_", "set_room"), ("sk_", "set_room"),
               ("city_", "set_city"), ("guitars_hook_", "obj_guitars"), ("rack_", "obj_guitars")]
-RENAME = {"pendant_shade": "light_shade", "pendant_cord": "light_cord"}
+RENAME = {}
 
 
 def root(name):
@@ -551,7 +568,8 @@ def check_names():
             "kb_key_a", "dj_jog_l", "chair_swivel", "frame_1_picture", "laptop_screen", "guitar_02_body",
             "piano_view", "piano_view_target", "piano_inside_view", "piano_inside_view_target",
             "plant_pot", "plant_soil", "plant_leaf_01", "plant_static", "plants_static",
-            "window_static", "window_sash_1", "window_sash_2", "window_glass", "window_curtains"]
+            "window_static", "window_sash_1", "window_sash_2", "window_glass", "window_curtains",
+            "light_static", "light_led", "light_switch", "light_switch_plate"]
     missing = [n for n in need if n not in bpy.data.objects]
     multi = [o.name for o in exported if o.type == "MESH" and KEEP.match(o.name) and len(o.data.materials) > 1]
     RES["names"] = dict(bad=bad, roots=roots, missing=missing, keep_multi_material=multi)
@@ -713,8 +731,28 @@ def dusk():
         cams = [("hero", BO.camera("still_hero", P.HERO_V3["pos"], P.HERO_V3["target"], P.HERO_V3["vfov"]), (1600, 900)),
                 ("intro", BO.camera("still_intro", P.INTRO["pos"], P.INTRO["target"], P.INTRO["vfov"]), (1600, 900)),
                 ("about", BO.camera("still_about", P.ABOUT["pos"], P.ABOUT["target"], P.ABOUT["vfov"]), (1600, 900)),
-                ("desk-corner", BO.camera("still_desk", (-0.55, -0.15, 1.62), (-1.85, 1.30, 1.10), 58), (1600, 1000))]
+                ("desk-corner", BO.camera("still_desk", (-0.55, -0.15, 1.62), (-1.85, 1.30, 1.10), 58), (1600, 1000)),
+                ("door", *door_view())]
         LD.stills(cams, DUSK_OUT, int(os.environ.get("DUSK_STILL_SPP", "64")), want)
+
+
+def door_view():
+    """A still of the switch by the door and the ceiling light (2026-11-15): from the piano side of the room."""
+    return BO.camera("still_door", (1.10, 0.35, 1.70), (-C.RX, C.SWITCH["y"] + 0.25, 1.75), 62), (1600, 900)
+
+
+def lamp():
+    """STAGES=...,lamp (after dusk, same run: the LM layout must be the dusk bake's): the ceiling light's layer."""
+    from lib import lighting_dusk as LD
+    sys.path.insert(0, os.path.join(HERE, "components"))
+    want = os.environ.get("LAMP_STILLS", "hero,about,door")
+    allc = {"hero": (BO.camera("still_hero_l", P.HERO_V3["pos"], P.HERO_V3["target"], P.HERO_V3["vfov"]), (1600, 900)),
+            "about": (BO.camera("still_about_l", P.ABOUT["pos"], P.ABOUT["target"], P.ABOUT["vfov"]), (1600, 900)),
+            "door": door_view()}
+    cams = [(k + "-lamp", *allc[k]) for k in want.split(",") if k in allc]
+    LD.lamp_layer(LD.bake_targets(), os.path.join(DUSK_DIR, "lightmap-lamp.exr"), os.path.join(DUSK_DIR, "env-lamp.exr"),
+                  int(os.environ.get("DUSK_LM", "2048")), int(os.environ.get("LAMP_SPP", os.environ.get("DUSK_SPP", "96"))),
+                  cams, DUSK_OUT, int(os.environ.get("DUSK_STILL_SPP", "64")))
 
 
 def main_rich():
@@ -778,6 +816,8 @@ def relight_and_export():
         RES["glb_bytes"] = export(GLB, True, "WEBP")
         RES["guitars_glb"] = export_guitars()
         RES["piano_glb"] = export_piano()
+    if "lamp" in STAGES:
+        lamp()
     RES["total_s"] = round(time.time() - T0, 1)
     rep = os.path.join(DUSK_OUT, "build-report.json") if "dusk" in STAGES else REPORT
     os.makedirs(os.path.dirname(rep), exist_ok=True)

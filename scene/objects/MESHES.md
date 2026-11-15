@@ -44,7 +44,8 @@ under `chair_swivel`).
 | `obj_plant` | the young monstera on the sill (2026-11-01, `blender/components/plants.py`, a downloaded model): `plant_pot` (terracotta), `plant_soil`, `plant_leaf_01`..`_25` (blade + petiole, one mesh each, largest first, the youngest last; origin where the petiole meets the stem or the crown, so grow = scale from 0 there, sway = a small rotation there; 23 at the petiole's foot, 21 and 24 have no petiole in the model and sit at the blade's nearest point on a stem; all 25 share one material, alpha-tested), `plant_static` (stem stubs at the crown). Pot, soil and `plant_static` are in the dusk bake; the leaves are lit by the environment map. The leaves are not batched (scene/batch.js has no group for them): one draw call per leaf in view |
 | `set_plants` | `plants_static`: the snake plant (our own model since 2026-11-01: 12 leaves, matte white pot, one atlas material) and the small desk plant (a zebra haworthia, downloaded), plants.py, one textured material each |
 | `obj_window` | the owner's casement pair and white net curtains (2026-11-02, `blender/components/window.py`, lite built live): `window_sash_1`, `window_sash_2` (proposed; origin on the hinge line, see the `obj_window` section), `window_glass`, `window_curtains` (both net panels), `window_static` (frame, board, architrave, track). All but the glass are baked. `window_sky`, `window_beam` do not exist yet |
-| `obj_light`, `set_city`, `set_rug` | stand-ins: `light_shade`, `light_static`, `city_static` (since 2026-11-12 an empty holding the window's view, the sea at sunset in five planes, far to near: `city_sky`, `city_far`, `city_sea`, `city_prom`, `city_near`; one atlas with alpha, drawn unlit and blended, all inside 30 m; `blender/tools/paint_beach_dusk.py`), `rug_static` |
+| `obj_light` | the ceiling light and its switch (2026-11-15, see the `obj_light` section): `light_led`, `light_switch`, `light_switch_plate`, `light_static`, empties `light_root`, `switch_root` |
+| `set_city`, `set_rug` | stand-ins: `city_static` (since 2026-11-12 an empty holding the window's view, the sea at sunset in five planes, far to near: `city_sky`, `city_far`, `city_sea`, `city_prom`, `city_near`; one atlas with alpha, drawn unlit and blended, all inside 30 m; `blender/tools/paint_beach_dusk.py`), `rug_static` |
 | `set_cars` (its own file, `scene/assets/cars.glb`, 2026-11-08) | the car display, loaded after the room (the first deferred asset, `blender/components/cars.py`): `cars_static` (both shelves and the four 1:18 cars, one mesh, one palette material, a second UV set for its own lightmap `scene/assets/dusk/cars-lightmap.webp`), `cars_shadow` (a card 1 mm off the back wall, black with the shelves' baked shadow as alpha; drawn unlit). Not interactive. (Blender, `cars.blend`: `cars_shelf_1`, `_2`, `car_w17`, `car_porsche`, `car_gt3`, `car_one` with the downloaded parts as `car_<key>_*`) |
 
 Replaced by the names above (the components' own names): `frame_NN` with two digits by
@@ -418,17 +419,24 @@ not pulse.
 `studio_lightstick_glow` (its halo) and the room pulse are made by code. Blender
 must not use the name.
 
-### `obj_light`: ceiling light (first Phase 5 object)
+### `obj_light`: ceiling light and its switch
+
+Built 2026-11-15 (`blender/components/ceiling_light.py`) from the owner's photo ("use this exact light design"): a
+black ceiling bar, three black square frames (80, 60, 40 cm) at three heights on fine wires, a thin light line along
+each frame's inner bottom edge; the switch is a Pune-style modular board by the door (constants.SWITCH). Replaces the
+blockout's drum (`light_shade`, `light_cord`, gone).
 
 | Name | What | Code does | Pivot / origin |
 |---|---|---|---|
-| `light_shade` | the dome diffuser | click target, glows when on | at its centre |
-| `light_switch` | one rocker on the wall switchboard | click target, flips | on the rocker's axis, at its centre. Flip = rotate about local X. Rest = off (matches the dawn bake) |
-| `light_static` | ceiling base, switchboard plate | — | — |
+| `light_root` | empty at the bar's centre on the ceiling | — | — |
+| `light_led` | the three frames' diffusers, one mesh, one material | glows while on (emissive) | — |
+| `switch_root` | empty at the plate's centre on the wall | — | — |
+| `light_switch` | the working rocker (the first of four) | click target, flips | on its pivot; local X along the wall. Off = the top half pressed in (as built and baked); on = a turn of +14 degrees about local X |
+| `light_switch_plate` | the plate and the three idle rockers | click target; baked | — |
+| `light_static` | bar, frames, wires, power sleeves | baked | — |
 
-Suggest the switch on the left wall near the front corner, where the door is in
-the photo, as a Pune-style modular switchboard with several rockers, only one of
-which works.
+The light itself is a second bake (`scene/assets/dusk/lightmap-lamp.webp`, `env-lamp.webp`, `room-light.json`
+`lamp`), loaded on the first switch-on and faded over the dusk light (`scene/room-light.js` createLamp, ctx.light).
 
 ### `obj_window`: window (Pune time and weather)
 

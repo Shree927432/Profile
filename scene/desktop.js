@@ -60,13 +60,14 @@ import { createFrames } from "./objects/frames.js";
 import { createMic } from "./objects/mic.js";
 import { createCompose } from "./objects/compose.js";
 import { createPlant } from "./objects/plant.js";
+import { createLight } from "./objects/light.js";
 import { batchRoom } from "./batch.js";
 import { createQuality, MODES } from "./quality.js";
 import { createGlide } from "./glide.js";
 import { createMoves } from "./camera-moves.js";
 import { createStops } from "./stops.js";
 import { createRoomSpace } from "./room-space.js";
-import { loadRoomLight, applyRoomLight, createBloom, loadDeferredLight, applyDeferredLight } from "./room-light.js";
+import { loadRoomLight, applyRoomLight, createBloom, loadDeferredLight, applyDeferredLight, createLamp } from "./room-light.js";
 
 const deg = THREE.MathUtils.degToRad;
 
@@ -256,6 +257,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   let room;
   let roomExposure = null; // the dusk light's exposure, for the deferred assets
   let roomLight = null; // the room's lightmap and its JSON, for a deferred asset baked into the room's atlas (the piano)
+  let lamp = null; // the ceiling light's layer (room-light.js createLamp), ctx.light for the room objects
   if (useGlb) {
     room = await glbLoad;
   } else {
@@ -271,6 +273,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     if (light) applyRoomLight(THREE, { renderer, scene, room, light, exposure: Number.isFinite(exp) ? exp : undefined });
     if (light) roomExposure = Number.isFinite(exp) ? exp : light.json.exposure;
     if (light) roomLight = { json: light.json, lightMap: light.lightMap };
+    if (light) lamp = createLamp(THREE, { renderer, scene, light, exposure: roomExposure });
     else scene.add(new THREE.HemisphereLight(0xcdd5e6, 0x8c8a86, 1.1)); // the bake files missing: plain light, still usable
     if (light && bloomAllowed) {
       post = await bloomLoad;
@@ -867,8 +870,14 @@ export async function start({ canvas, content, overlay, params, reduce }) {
       get(key) { try { const v = localStorage.getItem("room:" + key); return v == null ? null : JSON.parse(v); } catch { return null; } },
       set(key, value) { try { localStorage.setItem("room:" + key, JSON.stringify(value)); return true; } catch { return false; } },
     },
+    // the ceiling light's layer (2026-11-15, room-light.js createLamp): load() once, then set(0..1) fades the room
+    light: {
+      get ready() { return !!lamp && lamp.ready; },
+      load: () => (lamp ? lamp.load() : Promise.resolve(false)),
+      set: (v) => { if (lamp && lamp.ready) { lamp.set(v); needsRender = true; } },
+    },
   };
-  const roomObjects = useGlb ? [createFrames, createMic, createCompose, createPlant].map((make) => {
+  const roomObjects = useGlb ? [createFrames, createMic, createCompose, createPlant, createLight].map((make) => {
     try { return make(THREE, objectCtx); } catch (err) { console.warn("room object:", err); return null; }
   }).filter(Boolean) : [];
   objectsAway = () => { for (const o of roomObjects) if (o.away) o.away(); needsRender = true; };

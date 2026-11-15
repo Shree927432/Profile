@@ -42,7 +42,7 @@ WORLD = (0.030, 0.040, 0.075)
 # baked (closed; if the site ever opens one, its baked light turns with it); window_glass is not (env reflections only);
 # the net curtains (window_curtains) are baked with their own unfolded layout (LM_PRE, see lightmap_uvs)
 BAKE = re.compile(r"^(?!(chair|city|frame_\d|guitar_0\d)_static$)(.+_static|monitor_body|rig_case|rig_gpu|"
-                  r"studio_speaker_0\d|mic_body|plant_pot|plant_soil|window_sash_\d|window_curtains)$")
+                  r"studio_speaker_0\d|mic_body|plant_pot|plant_soil|window_sash_\d|window_curtains|light_switch_plate)$")
 # the window's sky light sits behind the glass (2026-11-02, window.py: frame 8-15 cm into the 23 cm opening), so the
 # frame and the glazing bars shade it as they shade the sun; it was 6 cm in, in front of the old frame
 SKY_Y = 0.20
@@ -189,9 +189,8 @@ def lights(P):
                     pb = next((n for n in m.node_tree.nodes if n.bl_idname == "ShaderNodeBsdfPrincipled"), None)
                     if pb:
                         pb.inputs["Emission Strength"].default_value *= k
-    # the pendant is off at dusk until the visitor switches it on (obj_light)
-    if ob.get("light_shade"):
-        _emit_strength(ob["light_shade"], 0.0)
+    # the ceiling light is off at dusk until the visitor switches it on (obj_light: its diffusers are built unlit,
+    # and its own light is the separate lamp layer, lamp_layer() below)
     log("lights")
 
 
@@ -533,6 +532,37 @@ def env(path, res=(512, 256), samples=128):
     sc.render.image_settings.color_depth = "8"
     log(f"env {res}")
     return path
+
+
+def lamp_layer(objs, lm_path, env_path, size=2048, samples=96, cams=(), out=None, still_spp=64):
+    """The ceiling light's own light (2026-11-15, obj_light; the owner: "Real lights-on bake"). Run LAST in a build: it
+    changes the scene. First the room at dusk with the light on: env_path (the moving parts' light and reflections
+    with the light on) and the stills `cams` for review. Then the light alone: every other light hidden, the world
+    black, the window's view hidden, every emission off but the diffusers', and the same DIFFUSE bake into the same LM
+    layout: lm_path. The site adds it, faded in, over the dusk lightmap (scene/room-light.js)."""
+    import ceiling_light as CL
+    root = bpy.data.objects["light_root"]
+    lamps = CL.lamps(root)
+    CL.lamp_on(True)
+    log(f"lamp: {len(lamps)} strips")
+    env(env_path)
+    if cams:
+        stills(cams, out, still_spp)
+    for o in bpy.data.objects:
+        if (o.type == "LIGHT" and o not in lamps) or o.name.startswith("city"):
+            o.hide_render = True
+    bg = bpy.context.scene.world.node_tree.nodes["Background"]
+    bg.inputs["Strength"].default_value = 0.0
+    for m in bpy.data.materials:
+        if m.name == "light_led" or not m.use_nodes:
+            continue
+        for n in m.node_tree.nodes:
+            if n.bl_idname == "ShaderNodeBsdfPrincipled":
+                n.inputs["Emission Strength"].default_value = 0.0
+            elif n.bl_idname == "ShaderNodeEmission":
+                n.inputs["Strength"].default_value = 0.0
+    bake(objs, lm_path, size, samples)
+    log("lamp layer baked")
 
 
 def stills(cams, out, samples=64, only=""):

@@ -23,6 +23,9 @@ export function createLamp(THREE, ctx) {
   // ctx.store      what the object remembers between visits: get(key) -> value or null, set(key, value) -> true
   //                if kept. JSON, in the visitor's browser only (localStorage "room:<key>"), nothing is sent.
   //                Can be empty on any visit (private windows): work without it. Added 2026-11-15 for the plant.
+  // ctx.light      the room's ceiling-light layer: load() -> Promise<boolean> (fetches the lights-on bake once;
+  //                false when there is none), set(t) fades it, 0 dusk .. 1 on, ready. Added 2026-11-15 for the
+  //                switch (objects/light.js).
   const mesh = ctx.root.getObjectByName("lamp");
   if (!mesh) return null;              // the room may not have this object yet
 

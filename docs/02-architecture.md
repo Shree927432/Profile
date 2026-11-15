@@ -104,7 +104,10 @@ registration. A click on an object's part acts only at the object's stop; from a
 (the laptop's posts screen works the same way). Keys at a stop reach only the objects with a registered part in that
 stop (stops.classify); each decides if a key is its own.
 Today: `frames.js` (the picture frames), `mic.js` (the email card, HTML in `ctx.overlay`), `compose.js` (the Studio Display's "write to me" form, sending
-through Web3Forms; the only outside service the room calls), `plant.js` (the monstera: water it, a leaf a day).
+through Web3Forms; the only outside service the room calls), `plant.js` (the monstera: water it, a leaf a day),
+`light.js` (the switch by the door turns the ceiling light on: a second bake of the light alone,
+`scene/assets/dusk/lightmap-lamp.webp` with `env-lamp.webp`, loaded on the first switch-on and faded over the dusk
+lightmap in every baked material's shader; `ctx.light`, room-light.js createLamp).
 `ctx.go(stopId)` lets an object fly the camera; `ctx.store` lets it remember things between visits, in the visitor's
 browser only (localStorage `room:<key>`; nothing leaves the device).
 

@@ -118,9 +118,27 @@ def main():
         lightmap=dict(file="lightmap.webp", max=round(lmax, 4)),
         env=dict(file="env.webp", max=round(emax, 4), gain=float(E.get("ENV_GAIN", "0.6"))),
     )
+    # the ceiling light's layer (2026-11-15): the light alone, the same layout, encoded the same way with its own max;
+    # and the environment with the light on
+    names = ["lightmap.webp", "env.webp", "room-light.json"]
+    if os.path.exists(os.path.join(SRC, "lightmap-lamp.exr")):
+        la = load(os.path.join(SRC, "lightmap-lamp.exr"))
+        lrgb = fill(blur_masked(la[..., :3], mask), mask)
+        lamx = float(np.percentile(lrgb[mask].max(axis=1), 99.8))
+        png(os.path.join(tmp, "lightmap-lamp.png"), srgb(lrgb / lamx))
+        le = load(os.path.join(SRC, "env-lamp.exr"))[..., :3]
+        lemx = float(np.percentile(le.max(axis=2), 99.0))
+        png(os.path.join(tmp, "env-lamp.png"), srgb(le / lemx))
+        subprocess.run([PY, "-c", code, os.path.join(tmp, "lightmap-lamp.png"), os.path.join(DST, "lightmap-lamp.webp"),
+                        str(lm_px), str(lq), os.path.join(tmp, "env-lamp.png"), os.path.join(DST, "env-lamp.webp"), str(eq)],
+                       check=True)
+        out["lamp"] = dict(file="lightmap-lamp.webp", max=round(lamx, 4), env=dict(file="env-lamp.webp", max=round(lemx, 4)),
+                           gain=float(E.get("LAMP_GAIN", "1.0")))
+        print(f"ENCODE lamp lmax {lamx:.3f} (mean {lrgb[mask].mean():.3f}) emax {lemx:.3f}", flush=True)
+        names += ["lightmap-lamp.webp", "env-lamp.webp"]
     with open(os.path.join(DST, "room-light.json"), "w") as f:
         json.dump(out, f, indent=1)
-    for n in ("lightmap.webp", "env.webp", "room-light.json"):
+    for n in names:
         print(f"ENCODE {n} {os.path.getsize(os.path.join(DST, n)) / 1e3:.0f} KB", flush=True)
 
 

@@ -38,12 +38,71 @@ export async function loadRoomLight(THREE) {
   return { json, lightMap, env };
 }
 
+// The ceiling light's layer (2026-11-15, obj_light): its light alone, baked into the same atlas layout as the dusk
+// lightmap (blender/lib/lighting_dusk.py lamp_layer), added on top times lampK. Shared by every baked material (the
+// room's and the piano's), so one number fades the whole room. Loaded on the first switch-on (createLamp).
+const LAMP = { map: { value: null }, k: { value: 0 } };
+
 // The environment's diffuse share is dropped for baked materials (the lightmap carries their diffuse light).
 function bakedShader(shader, THREE) {
-  shader.fragmentShader = shader.fragmentShader.replace(
+  shader.uniforms.lampMap = LAMP.map;
+  shader.uniforms.lampK = LAMP.k;
+  shader.fragmentShader = "uniform sampler2D lampMap;\nuniform float lampK;\n" + shader.fragmentShader.replace(
     "#include <lights_fragment_maps>",
-    THREE.ShaderChunk.lights_fragment_maps.replace("iblIrradiance += getIBLIrradiance( geometryNormal );", "")
+    THREE.ShaderChunk.lights_fragment_maps
+      .replace("iblIrradiance += getIBLIrradiance( geometryNormal );", "")
+      .replace("irradiance += lightMapIrradiance;",
+        "irradiance += lightMapIrradiance;\n\t\tif ( lampK > 0.0 ) irradiance += texture2D( lampMap, vLightMapUv ).rgb * lampK;")
   );
+}
+
+// ctx.light for the room objects (objects/CONTRACT.md, 2026-11-15): load() fetches the ceiling light's layer and its
+// environment once (false when the bake has none); set(t) fades it, 0 (dusk) to 1 (on). The baked surfaces add the
+// layer; the parts lit by the environment cross over to the lights-on environment half way, their intensity eased
+// between the two. light: loadRoomLight's result. exposure: the room's.
+export function createLamp(THREE, { renderer, scene, light, exposure }) {
+  const spec = light && light.json.lamp;
+  const k = exposure ?? (light && light.json.exposure) ?? 1;
+  let state = spec ? "idle" : "none", loading = null, envOn = null, envDusk = null, t = 0;
+  const duskI = light ? light.json.env.max * k * (light.json.env.gain ?? 1) : 0;
+  const onI = spec ? spec.env.max * k * (light.json.env.gain ?? 1) : 0;
+  async function load() {
+    if (state === "none") return false;
+    if (state === "ready") return true;
+    if (!loading) {
+      loading = (async () => {
+        const base = "/scene/assets/dusk/";
+        const loader = new THREE.TextureLoader();
+        const [map, env] = await Promise.all([loader.loadAsync(base + spec.file), loader.loadAsync(base + spec.env.file)]);
+        map.flipY = false;
+        map.channel = 1;
+        map.colorSpace = THREE.SRGBColorSpace;
+        env.mapping = THREE.EquirectangularReflectionMapping;
+        env.colorSpace = THREE.SRGBColorSpace;
+        const pmrem = new THREE.PMREMGenerator(renderer);
+        envOn = pmrem.fromEquirectangular(env).texture;
+        env.dispose();
+        pmrem.dispose();
+        envDusk = scene.environment;
+        LAMP.map.value = map;
+        state = "ready";
+        return true;
+      })().catch((err) => { console.warn("lamp:", err); state = "none"; return false; });
+    }
+    return loading;
+  }
+  return {
+    get ready() { return state === "ready"; },
+    load,
+    set(v) {
+      if (state !== "ready") return;
+      t = Math.min(1, Math.max(0, v));
+      LAMP.k.value = Math.PI * spec.max * k * (spec.gain ?? 1) * t;
+      scene.environment = t >= 0.5 ? envOn : envDusk;
+      scene.environmentIntensity = duskI + (onI - duskI) * t;
+    },
+    get value() { return t; },
+  };
 }
 
 export function applyRoomLight(THREE, { renderer, scene, room, light, exposure }) {

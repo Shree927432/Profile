@@ -38,7 +38,8 @@
       "guitars": "Guitar wall",
       "rack": "Guitar rack",
       "decks": "DJ decks",
-      "display": "Write to me"
+      "display": "Write to me",
+      "switch": "Light switch"
     },
     "debug": {
       "fps": "fps",
@@ -77,6 +78,12 @@
       "copied": "Copied",
       "write": "Write an email",
       "close": "Close"
+    },
+    "light": {
+      "tipOn": "Turn the light on",
+      "tipOff": "Turn the light off",
+      "on": "The light is on.",
+      "off": "The light is off."
     },
     "plant": {
       "tip": "Water the monstera",

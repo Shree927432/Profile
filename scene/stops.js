@@ -41,6 +41,10 @@ export const STOPS = [
   { id: "window", parent: "hero", nodes: ["obj_window"], view: "intro" }, // its stop is the intro's view
   { id: "plant", parent: "hero", nodes: ["obj_plant"], dir: [-0.3, 0.3, 1], fit: 1.05 },
   { id: "chair", parent: "hero", nodes: ["set_chair"], dir: [1, 0.5, 0.75], fit: 1.0 },
+  // the light switch by the door (2026-11-15, objects/light.js): from the front corner (the front wall pulls the camera
+  // in): the door's edge, the board, the desk beyond it
+  { id: "switch", parent: "hero", nodes: ["switch_root"], frame: [[-2.2, 0.75, 0.55], [-2.05, 1.65, 1.45]],
+    dir: [1, 0.3, 0.9], fit: 2.4 },
   // The music side (Back: its overview, the About view)
   { id: "piano", parent: "about", nodes: ["obj_piano"], frame: [[1.55, 0.0, -0.95], [2.15, 1.3, 0.45]],
     dir: [-1, 0.28, 0.05], fit: 1.0 },

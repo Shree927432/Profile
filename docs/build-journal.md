@@ -1525,3 +1525,28 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Checked on desktop, phone and reduced motion: first visit 14 leaves; the hint at the stop; watering grows leaf 15;
   a second watering the same day grows none; a return visit the next day grows leaf 16 with Enter; Back. No errors.
   Mic, frames and compose checks still pass (their keys too).
+
+## 2026-11-15: the ceiling light and its switch (Phase 5, object 5)
+
+- Three ideas rendered (paper lantern, opal globe, halo ring), off and on. The first sheet was unfair: A's and B's
+  own shades blocked their bulbs, so they looked dark when on; rerendered with the shades letting light through.
+- Owner: "i give the light design", then a photo: "use this exact light design". A black ceiling bar and three black
+  square frames at three heights, a thin light line round each. Also "A wall switch", "By the door", "Real lights-on
+  bake", no memory of the light between visits, and "Yes, add ctx.light".
+- blender/components/ceiling_light.py: the fixture (bar 110 cm, squares 80/60/40 cm, the lowest at 2.40 m) and a
+  Pune-style board of four rockers at constants.SWITCH. First render: the diffuser filled the whole underside, so
+  from below the frames read white, not black with a line as in the photo; the line is now 12 mm on the inner edge,
+  and the tiers were spaced out to match.
+- The bake: the room rebuilt with the light (the blockout drum gone), the dusk bake as before, then a second Cycles
+  bake of the ceiling light alone into the same atlas layout (24 thin area lights under and over the frames), and an
+  environment with the light on. 16 minutes in all. lightmap-lamp.webp 162 KB, env-lamp.webp 15 KB, loaded on the
+  first switch-on, so the first load does not grow.
+- The site: every baked material adds the lamp layer times one shared number (room-light.js), so one value fades the
+  whole room, the piano too; the parts lit by the environment switch to the lights-on environment half way.
+  scene/objects/light.js flips the rocker, lights the strips (bloom) and fades the room over 0.7 s. New stop
+  "switch": the first framing showed a bare wall; now from the front corner, the door's edge, the board, the desk.
+- Checked on desktop, phone and reduced motion: click flies to the switch, a click turns it on (the bake loads in
+  about 0.2 s locally), Back shows the lit room, Enter turns it off. Plant, mic, frames and compose checks pass; the
+  desk view draws 111 times. First room frame on throttled 4G: 3.08 s against 3.17 s for the previous version timed
+  in the same session on battery (the 2.94 s of 2026-11-15 was on mains); no change from the light.
+- Not done: the car shelf keeps its own dusk lightmap, so it does not brighten with the light.

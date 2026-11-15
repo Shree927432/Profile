@@ -269,3 +269,7 @@ next to the clips it renders.
   corner and edge stills). For the directed shoot this means any angle a visitor can reach should hold up: the
   front wall, the door, the ceiling and the pendant need real models before wide or low shots.
 
+- 2026-11-15, the ceiling light: the blockout pendant is now the owner's three-square light, and its switch by the door
+  lights the room (a second bake). A new shot for the dusk section: a hand-free click on the switch and the room
+  warming up over 0.7 s, or the lights coming on as the sun sets. Stills, off and on, from Blender and the browser in
+  `video-local/footage/2026-11-15-light/`.
