@@ -312,6 +312,8 @@ not by the name.
 | `frame_NN_border` | frame and glass | click target | child |
 | `frame_NN_picture` | the picture | screen: painted from `content/links.json`, click target | screen rules, portrait 3 : 4 |
 
+Built 2026-11-15 in `scene/objects/frames.js` (the GLB names are `frame_N`, one digit). The borders are not batched (each frame tilts on its own). The pictures' V runs down the screen in the GLB; the object reads the corners' UVs.
+
 ### `obj_studio`: the studio desk (electronic music)
 
 Replaces `obj_speakers`. Everything is prefixed `studio_` because `monitor_*` is

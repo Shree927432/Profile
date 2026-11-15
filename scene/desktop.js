@@ -56,6 +56,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { buildPlaceholderRoom } from "./placeholder-room.js";
 import monitorPosts from "./objects/monitor-posts.js";
 import { createPickMap } from "./pick.js";
+import { createFrames } from "./objects/frames.js";
 import { batchRoom } from "./batch.js";
 import { createQuality, MODES } from "./quality.js";
 import { createGlide } from "./glide.js";
@@ -844,9 +845,23 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   interact.set(screenMesh, { kind: "screen", part: screenMesh.name });
   // Stops: every mesh in the room can be picked (so nearer things hide farther ones); stops.classify() says
   // which stop a hit belongs to, or none (a wall, the floor). Deferred assets register when they arrive.
+  // Phase 5 room objects (objects/CONTRACT.md). Each registers its own meshes with an owner; registerRoom leaves
+  // those alone. A click on an object's part acts only where the object is read, at its stop; from anywhere else it
+  // flies there first (as the laptop). Keys go to the objects at a stop; an object decides if they are for it.
+  const owned = new Set();
+  const objectCtx = {
+    root: room, scene, reduce, content,
+    interact: { set(m, info) { owned.add(m); interact.set(m, info); }, delete(m) { owned.delete(m); interact.delete(m); } },
+    view: () => camera,
+    audio: () => null,
+    live: (s) => say(s),
+  };
+  const roomObjects = useGlb ? [createFrames].map((make) => {
+    try { return make(THREE, objectCtx); } catch (err) { console.warn("room object:", err); return null; }
+  }).filter(Boolean) : [];
   function registerRoom() {
     collectObstacles();
-    for (const m of obstacles) if (m !== screenMesh) interact.set(m, { kind: "room" });
+    for (const m of obstacles) if (m !== screenMesh && !owned.has(m)) interact.set(m, { kind: "room" });
     addStopButtons();
   }
   if (stops) registerRoom();
@@ -1024,6 +1039,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     const picked = pickShown(e.clientX, e.clientY);
     const what = stopOf(picked);
     if (what === "screen") { if (postsHere()) dispatchTap(picked); else flyTo(POSTS_AT); return; }
+    if (picked && picked.info.owner && (!what || what.id === currentId())) { dispatchTap(picked); needsRender = true; return; }
     if (what && what.id !== currentId()) flyTo(what.id);
   }
   canvas.addEventListener("pointerup", onPointerEnd);
@@ -1055,8 +1071,10 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     hoverDirty = false;
     if (!stops) { setHover(!!interact.pick(hoverX, hoverY), ""); return; }
     if (down && down.looking) { setHover(false, ""); return; } // no label while dragging
-    const what = stopOf(pickShown(hoverX, hoverY));
+    const hovered = pickShown(hoverX, hoverY);
+    const what = stopOf(hovered);
     if (what === "screen") setHover(true, postsHere() ? "" : nameOf(POSTS_AT));
+    else if (hovered && hovered.info.owner && (!what || what.id === currentId())) setHover(true, (hovered.info.owner.tip && hovered.info.owner.tip(hovered.hit)) || "");
     else if (what && what.id !== currentId()) setHover(true, nameOf(what.id));
     else setHover(false, "");
   }
@@ -1099,7 +1117,13 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   canvas.tabIndex = 0;
   canvas.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (glide.active || moves.moving || (freeCam && currentId() !== POSTS_AT)) return; // keys reach the posts where they are read
+    if (glide.active || moves.moving) return;
+    if (freeCam && currentId() !== "desk" && currentId() !== POSTS_AT) { // at a stop: the room objects' keys
+      const k = e.key.toLowerCase();
+      if (roomObjects.some((o) => o.key && o.key(k))) { e.preventDefault(); needsRender = true; }
+      return;
+    }
+    if (freeCam && currentId() !== POSTS_AT) return; // keys reach the posts where they are read
     if (screenHandle.input({ type: "key", key: e.key })) e.preventDefault();
   });
   // Keys anywhere on the page: during the intro's hold Enter or Space starts the move (the keyboard's
@@ -1219,6 +1243,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
       if (deferredWaiting.length && !moves.moving) for (const add of deferredWaiting.splice(0)) add();
     }
     if (screenHandle.frame(t, dt)) { screenTexture.needsUpdate = true; needsRender = true; }
+    for (const o of roomObjects) { const was = o.busy; o.frame(dt, t); if (was || o.busy) needsRender = true; }
     if (fades.length) stepFades(t);
     const drew = needsRender;
     if (drew) {
@@ -1355,7 +1380,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     window.roomDebug.deferred = deferredTiming;
     for (const a of DEFERRED) window.roomDebug[a.id] = deferredTiming[a.id]; // roomDebug.cars, roomDebug.guitars
     // Moves, for measuring and frame capture: stop() the loop, then tick(t) with fixed steps.
-    Object.assign(window.roomDebug, { moves, controls, setAbout, playIntro, tick: renderFrame, stop, run, stops, flyTo, back, currentId, pickShown, stopOf, poseFor, space, spaceTiming, heroPose, walkBy, keys });
+    Object.assign(window.roomDebug, { roomObjects, moves, controls, setAbout, playIntro, tick: renderFrame, stop, run, stops, flyTo, back, currentId, pickShown, stopOf, poseFor, space, spaceTiming, heroPose, walkBy, keys });
   }
 
   renderFrame(performance.now()); // first frame, drawn before start() resolves

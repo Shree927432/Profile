@@ -31,7 +31,7 @@ export const BATCHES = {
   dj_knobs: /^dj_knob_[a-z_]+$/,
   dj_faders: /^dj_(fader_[lr]|tempo_[lr]|xfader)$/,
   desk_drawers: /^desk_drawers_\d\d_drawer_\d\d$/,
-  frame_borders: /^frame_\d_border$/,
+  // frame_borders left out since 2026-11-15: each frame tilts on its own (objects/frames.js)
   nanoleaf_panels: /^nanoleaf_panel_\d\d$/,
   rig_fans: /^rig_(gpu_)?fan_\d\d$/,
 };

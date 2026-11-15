@@ -18,7 +18,7 @@
     "reducedMotionNote": "Your device asks for less motion, so the room is off.",
     "noWebglNote": "This browser cannot draw the room.",
     "failedNote": "The room did not load. This is the plain page.",
-    "canvasLabel": "A 3D room with a desk and a monitor. Use the arrow keys to read the posts on the monitor.",
+    "canvasLabel": "A 3D room with a desk, a laptop that lists the posts, and a music side. Click a thing to go to it; at the laptop the arrow keys and Enter read the posts.",
     "back": "Back",
     "stops": {
       "desk": "Desk",
@@ -44,6 +44,30 @@
       "full": "Full",
       "auto": "Auto",
       "smooth": "Smooth"
+    },
+    "frames": {
+      "open": "Open",
+      "hint": "Click again to open.",
+      "items": [
+        {
+          "link": "github",
+          "name": "GitHub",
+          "handle": "@Shree927432",
+          "motif": "code"
+        },
+        {
+          "link": "linkedin",
+          "name": "LinkedIn",
+          "handle": "Shrikant Pawade",
+          "motif": "work"
+        },
+        {
+          "link": "x",
+          "name": "X",
+          "handle": "@Shrey9075",
+          "motif": "posts"
+        }
+      ]
     }
   },
   "notFound": {

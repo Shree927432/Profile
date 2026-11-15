@@ -1441,3 +1441,20 @@ site or the room. Keep each entry short. No polishing; the post does that.
   errors. The plain `?room` placeholder still shows the posts on its monitor. Desk view still 110 draw calls.
 - Found: on the phone's desk view the laptop is just off the right edge (the framing made for the chair on
   2026-11-13); phone visitors reach it from the stops list or by turning.
+
+## 2026-11-15: the picture frames (Phase 5, object 2)
+
+- Owner: "next". Drew three looks for the frames (no real logos allowed): A name cards, B pictures of the work, C dusk
+  art. Owner: "B: pictures of the work", and "Tilt, then open" for the click.
+- scene/objects/frames.js, the first room object on the contract, and its host in desktop.js (make, tick, route clicks
+  and keys; owned meshes stay out of the stops' registration). Pictures are drawn on canvases from content/site.json
+  (room.frames) and links.json, set as the baked material's map, so the room's light falls on them. The frame borders
+  leave the merge in batch.js so each frame can tilt: desk view 110 -> 112 draw calls (the target).
+- Misses, each found by the check (video-local/scripts/frames-check.mjs) or a still:
+  - the pictures were too dark to read under the dusk bake: they now give a little light of their own (30 %);
+  - a 14 degree tilt hardly showed on frames that already lean back about 6: now 22;
+  - on the phone a tap tilted the frame and the next frame untilted it at once: "the visitor left" was a distance of
+    1.7 m, and the phone's frames view is 1.9 m away (desktop 1.2, the desk view 3.7). Now 2.6 m.
+- Checked on desktop and phone: a click from the desk flies to the frames, a click tilts LinkedIn, a second opens its
+  URL (window.open stubbed), key 1 tilts GitHub and Enter opens it, Back tilts it upright. No errors. The laptop's
+  check still passes.
