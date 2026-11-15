@@ -22,6 +22,8 @@ export function createLamp(THREE, ctx) {
   return {
     frame(dt, t) {},                   // once per frame, after the camera is final
     click(part) {},                    // a registered part was clicked
+    away() {},                         // optional: a click or tap landed on anything that is not this object
+                                       // (another object, the room, empty space): close, tilt back, put down
     key(k) { return false; },          // e.key lowercased; return true if consumed
     tip(hit) { return null; },         // hover text, or null
     get busy() { return false; },      // true while animating; the page waits

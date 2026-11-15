@@ -1458,3 +1458,8 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Checked on desktop and phone: a click from the desk flies to the frames, a click tilts LinkedIn, a second opens its
   URL (window.open stubbed), key 1 tilts GitHub and Enter opens it, Back tilts it upright. No errors. The laptop's
   check still passes.
+- Owner, after trying it live: "frame does not lean back if i click anywhere apart from frame, it only leans back when
+  i zoom out the camera". Only walking away tilted it back. Asked before touching the contract; owner: "Yes, add
+  away()". CONTRACT.md gains an optional away() (a click on anything that is not the object); desktop.js calls it on
+  every tap that misses the object; frames.js stands the frame up. Checked on desktop and phone: a click on the wall
+  above the shelf stands the frame up and the camera stays at the shelf.

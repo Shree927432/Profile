@@ -1037,6 +1037,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     // The posts screen keeps its own behaviour from anywhere (a row opens its post with the glide); a stop
     // flies there; a wall or the floor does nothing (Back and Escape go back).
     const picked = pickShown(e.clientX, e.clientY);
+    for (const o of roomObjects) if (o.away && (!picked || picked.info.owner !== o)) { o.away(); needsRender = true; }
     const what = stopOf(picked);
     if (what === "screen") { if (postsHere()) dispatchTap(picked); else flyTo(POSTS_AT); return; }
     if (picked && picked.info.owner && (!what || what.id === currentId())) { dispatchTap(picked); needsRender = true; return; }

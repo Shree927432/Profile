@@ -1,5 +1,6 @@
 // Room object: the three picture frames leaning on the shelf (GitHub, LinkedIn, X, from content).
-// A click tilts a frame forward and shows "Open <name>"; a second click opens the link in a new tab.
+// A click tilts a frame forward and shows "Open <name>"; a second click opens the link in a new tab; a click
+// anywhere else, or walking away, stands it back up.
 //
 // Meshes (scene/objects/MESHES.md, obj_frames):
 //   frame_1 .. frame_3          empties, the pivot on the frame's bottom edge at the wall (frame_1 the leftmost)
@@ -192,6 +193,12 @@ export function createFrames(THREE, ctx) {
       if (!f) return;
       if (tilted === f) open(f);
       else tilt(f);
+    },
+    away() { // a click anywhere else (owner, 2026-11-15): the tilted frame stands back up
+      if (!tilted) return;
+      tilted.goal = 0;
+      paint(tilted, false);
+      tilted = null;
     },
     key(k) {
       const cam = ctx.view();
