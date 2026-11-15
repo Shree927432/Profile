@@ -726,3 +726,21 @@ html.js .screen-slot:has(canvas:focus-visible) {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
+
+/* The room's Sound button (scene/audio.js, 2026-11-15): in the bar once something has played; pressed while on. */
+.room-sound {
+  min-height: 2rem;
+  padding: 0.15rem 0.8rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg) 45%, transparent);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.room-sound:hover { background: color-mix(in srgb, var(--fg) 24%, transparent); }
+.room-sound[aria-pressed="false"] { color: var(--fg-muted); }
+.room-sound:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* The piano's note (scene/objects/piano.js) uses the plant's note style; a little wider for the piece's name. */
+.room-piano-note { max-width: min(24rem, calc(100vw - 1.5rem)); }

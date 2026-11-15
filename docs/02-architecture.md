@@ -108,6 +108,11 @@ through Web3Forms; the only outside service the room calls), `plant.js` (the mon
 `light.js` (the switch by the door turns the ceiling light on: a second bake of the light alone,
 `scene/assets/dusk/lightmap-lamp.webp` with `env-lamp.webp`, loaded on the first switch-on and faded over the dusk
 lightmap in every baked material's shader; `ctx.light`, room-light.js createLamp).
+`piano.js` (the keys play, the music on the rest plays three excerpts; made when `piano.glb` arrives, desktop.js
+LATE_OBJECTS). Sound (`scene/audio.js`, 2026-11-16): one Web Audio context and master gain behind `ctx.audio()`, started
+by the first play inside a click or key; a Sound button in the bar mutes it; piano samples in `scene/assets/sound/piano/`,
+the notes in `/piano.json` (content/piano.json), both fetched on the first play. Keys at a stop are offered to the
+objects there before walking (the window's key listener), so the piano's letters do not move the camera.
 `ctx.go(stopId)` lets an object fly the camera; `ctx.store` lets it remember things between visits, in the visitor's
 browser only (localStorage `room:<key>`; nothing leaves the device).
 

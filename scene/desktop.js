@@ -61,6 +61,8 @@ import { createMic } from "./objects/mic.js";
 import { createCompose } from "./objects/compose.js";
 import { createPlant } from "./objects/plant.js";
 import { createLight } from "./objects/light.js";
+import { createPiano } from "./objects/piano.js";
+import { createAudio } from "./audio.js";
 import { batchRoom } from "./batch.js";
 import { createQuality, MODES } from "./quality.js";
 import { createGlide } from "./glide.js";
@@ -857,11 +859,17 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   // those alone. A click on an object's part acts only where the object is read, at its stop; from anywhere else it
   // flies there first (as the laptop). Keys go to the objects at a stop; an object decides if they are for it.
   const owned = new Map(); // mesh -> the object that registered it
+  // the room's sound (audio.js, 2026-11-15): starts on the first play; its Sound button joins the bar
+  const roomText = (content && content.site && content.site.room) || {};
+  const sound = createAudio({ bar: overlay, labels: roomText.sound || {}, say: (s) => say(s) });
+  // objects whose meshes come in a deferred asset (the piano, scene/assets/piano.glb): made when it arrives, with
+  // ctx.root that asset's scene
+  const LATE_OBJECTS = { piano: [createPiano] };
   const objectCtx = {
     root: room, scene, reduce, content, overlay,
     interact: { set(m, info) { owned.set(m, info.owner); interact.set(m, info); }, delete(m) { owned.delete(m); interact.delete(m); } },
     view: () => camera,
-    audio: () => null,
+    audio: () => sound.get(),
     live: (s) => say(s),
     go: (id) => { if (!stops || !stops.byId.has(id)) return false; flyTo(id); return true; },
     // what an object remembers between visits (the plant's leaves): on this device only, nothing is sent anywhere;
@@ -1153,11 +1161,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   canvas.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (glide.active || moves.moving) return;
-    if (freeCam && currentId() !== "desk" && currentId() !== POSTS_AT) { // at a stop: the room objects' keys
-      const k = e.key.toLowerCase();
-      if (objectsAt(currentId()).some((o) => o.key && o.key(k))) { e.preventDefault(); needsRender = true; }
-      return;
-    }
+    if (freeCam && currentId() !== "desk" && currentId() !== POSTS_AT) return; // at a stop: the objects' keys (window, below)
     if (freeCam && currentId() !== POSTS_AT) return; // keys reach the posts where they are read
     if (screenHandle.input({ type: "key", key: e.key })) e.preventDefault();
   });
@@ -1175,11 +1179,18 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     // Escape inside an object's own HTML (the mic's card, the display's form) is the object's: it closes that first
     if (e.key === "Escape" && e.target instanceof Element && e.target.closest("form, [role=dialog]")) return;
     if (e.key === "Escape" && back()) { e.preventDefault(); return; }
-    // Walking (free camera): WASD always, the arrows unless the posts screen has them (the canvas focused at
-    // the desk). Never while a button or link has focus.
-    if (!freeCam || e.ctrlKey || e.metaKey || e.altKey || !WALK_KEYS[e.code]) return;
+    if (!freeCam || e.ctrlKey || e.metaKey || e.altKey) return;
     const el = document.activeElement;
-    if (el && el !== canvas && el !== document.body) return;
+    if (el && el !== canvas && el !== document.body) return; // never while a button, link or field has focus
+    // At a stop, the objects there first (2026-11-15: the piano's A to ; would otherwise walk the camera); a key
+    // held down repeats nothing
+    const at = stops ? currentId() : "desk";
+    if (at !== "desk" && at !== POSTS_AT && !moves.moving && !glide.active) {
+      if (e.repeat && !WALK_KEYS[e.code] && objectsAt(at).length) { e.preventDefault(); return; }
+      if (!e.repeat && objectsAt(at).some((o) => o.key && o.key(e.key.toLowerCase()))) { e.preventDefault(); needsRender = true; return; }
+    }
+    // Walking (free camera): WASD always, the arrows unless the posts screen has them (the canvas focused at the desk)
+    if (!WALK_KEYS[e.code]) return;
     if (e.code.startsWith("Arrow") && el === canvas && currentId() === POSTS_AT) return;
     keys.add(e.code);
     e.preventDefault();
@@ -1387,6 +1398,9 @@ export async function start({ canvas, content, overlay, params, reduce }) {
       deferredRoots.push(root);
       root.visible = asset.always || !quality.lowest;
       if (quiet) warm = false; // the next tick draws the hero once more, out of sight (warmUp), with the asset in
+      for (const make of LATE_OBJECTS[asset.id] || []) {
+        try { const o = make(THREE, { ...objectCtx, root }); if (o) roomObjects.push(o); } catch (err) { console.warn("room object:", err); }
+      }
       if (stops) { stops.build(root); registerRoom(); } // a new stop (the car shelf), or more meshes for one (the guitars)
       if (space && space.ready) { const ms = []; root.traverseVisible((o) => { if (o.isMesh) ms.push(o); }); space.build(ms); }
       needsRender = true;

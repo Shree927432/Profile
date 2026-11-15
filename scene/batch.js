@@ -12,6 +12,8 @@
 //   setOffset(name, x, y, z)       move one part by (x,y,z) in the batch's frame, from its rest place
 //   setOffsetLocal(name, x, y, z)  the same, with (x,y,z) in the part's own axes (a drawer slides along local -Y)
 //   setAngle(name, radians)        turn one part about its own local +Z through its pivot (a fan, a knob)
+//   setAxisLocal(name, x, y, z)    turn about this axis of the part's own instead (2026-11-15: a piano key tips about
+//                                  its local +X at its back end); then setAngle as before
 //   setGlow(name, r, g, b)         add a light colour to one part's emissive (linear rgb, 0 = off)
 //   partAtFace(hit)                part name for a raycast hit on this mesh (reads the per-vertex index)
 //   (offset, then angle: a part turns where it stands, and the offset moves the turned part)
@@ -175,6 +177,12 @@ function buildBatch(id, parts, room) {
       data[(2 * n + p.index) * 4 + 3] = a;
       tex.needsUpdate = true;
       return true;
+    },
+    setAxisLocal: (name, x, y, z) => {
+      const p = info[name];
+      if (!p) return false;
+      _v.set(x, y, z).normalize().applyQuaternion(p.quat);
+      return write(3, name, _v.x, _v.y, _v.z);
     },
     setGlow: (name, r, g, b) => write(1, name, r, g, b),
     partAtFace: (hit) => partNames[Math.round(geometry.attributes.aPart.getX(hit.face.a))],

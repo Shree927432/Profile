@@ -273,3 +273,6 @@ next to the clips it renders.
   lights the room (a second bake). A new shot for the dusk section: a hand-free click on the switch and the room
   warming up over 0.7 s, or the lights coming on as the sun sets. Stills, off and on, from Blender and the browser in
   `video-local/footage/2026-11-15-light/`.
+- 2026-11-16, the piano plays: three excerpts (Bach, Beethoven, Chopin) with the keys moving, through the site's own
+  sound. A close shot of the keys during the Prelude is a natural cut for the music section. Offline renders of the
+  three excerpts in `video-local/footage/2026-11-16-piano/` (the same samples and levels as the site).

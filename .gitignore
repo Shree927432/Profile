@@ -42,3 +42,8 @@ blender/assets/cars/*/
 # Downloaded guitar models (2026-11-12): reference only, the originals stay local; each folder's README lists the source.
 blender/assets/guitars/*/*
 !blender/assets/guitars/*/README.md
+# downloaded piano samples (2026-11-15): originals kept local; the trimmed web copies are in scene/assets/sound/piano/
+blender/assets/piano-samples/*/*
+!blender/assets/piano-samples/*/README.md
+# downloaded MIDI files (2026-11-16, the Mutopia Project): the excerpts the site plays are content/piano.json
+blender/assets/piano-midi/*.mid

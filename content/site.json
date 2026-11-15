@@ -79,6 +79,22 @@
       "write": "Write an email",
       "close": "Close"
     },
+    "sound": {
+      "sound": "Sound",
+      "soundOn": "Turn sound on",
+      "soundOff": "Turn sound off",
+      "soundOnSaid": "Sound on",
+      "soundOffSaid": "Sound off"
+    },
+    "piano": {
+      "hint": "Play the keys (or A to ; on your keyboard), or click the music for a piece.",
+      "playing": "Playing: {piece}. Click the music to stop.",
+      "stopped": "Stopped. Click the music for the next piece.",
+      "loading": "Tuning the piano…",
+      "tipKeys": "Play",
+      "tipSheet": "Play a piece",
+      "tipStop": "Stop the piece"
+    },
     "light": {
       "tipOn": "Turn the light on",
       "tipOff": "Turn the light off",

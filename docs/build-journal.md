@@ -1550,3 +1550,37 @@ site or the room. Keep each entry short. No polishing; the post does that.
   desk view draws 111 times. First room frame on throttled 4G: 3.08 s against 3.17 s for the previous version timed
   in the same session on battery (the 2.94 s of 2026-11-15 was on mains); no change from the light.
 - Not done: the car shelf keeps its own dusk lightmap, so it does not brighten with the light.
+
+## 2026-11-16: the piano plays (Phase 5, object 6), and the room's first sound
+
+- Owner: "free but high quality sample" for the sound; "Three short excerpts", "Click the sheet music", "On when they
+  play". Checked the free sets (FreePats page, sfz lists): the Salamander Grand Piano (Yamaha C5, 16 layers, CC BY 3.0)
+  is the reference; the CC0 Upright Piano KW has 2 layers. Owner: "Yes, Salamander". Downloaded Tone.js's 30-note web
+  copies (2.0 MB), trimmed with ffmpeg to 3-5 s with a fade, 96 kbps: 1.4 MB, none over 61 KB, in
+  scene/assets/sound/piano/. The originals stay local (git-ignored).
+- The notes: Mutopia's MIDI files (owner: "Yes, download them"): Bach and Beethoven public domain, the Nocturne CC BY-SA.
+  blender/tools/midi_excerpt.py (standard library) reads them, folds the pedal into the note lengths and cuts bars.
+  Misses: Für Elise and the Nocturne start with a pickup that LilyPond's MIDI puts at tick 0, so the bars were off
+  by an eighth until the tool took PICKUP; Für Elise's bar numbers drift after the first ending, so its excerpt is cut
+  just before the middle phrase comes round again. The files carry no dynamics: the top note of each moment is voiced
+  over the rest in code.
+- scene/audio.js: the sound starts with the first play and a Sound button joins the bar. scene/objects/piano.js: the
+  keys play (click, tap, or A to ' at the piano), the music on the rest plays the next piece with the keys moving, or
+  stops it. The piano arrives in its own file after the room, so its object is made then (LATE_OBJECTS). batch.js
+  gained setAxisLocal: a key tips about its own +X at its back end (checked: its front drops, 2.6 cm at 10 degrees).
+- Misses found by video-local/scripts/piano-check.mjs: a note's stop was scheduled before its start (an error in
+  every piece); the "Click the music to stop" note stayed on screen after Back; the letters A, S, D walked the camera,
+  because the window's walking listener runs before the canvas's, so the stop's objects now get keys there first.
+- Loudness, from offline renders of the three excerpts with the same samples and settings: peaks of -15 to -19 dBFS at
+  first; with one voicing for all pieces and the piano's bus at 1.7, peaks about -5 dBFS, mean about -21 dB. The
+  renders are in video-local/footage/2026-11-16-piano/ for the owner to listen to.
+- Checked on desktop, phone and reduced motion: the piano object is made when piano.glb arrives, the hint, a key, a
+  piece, stop, the letter keys (the camera stays), Enter for the next piece, Back. Plant, mic, frames, compose and light
+  checks pass with the new key handling. Not done: the lid and the key cover do not open yet.
+- Owner on the first renders: "Needs changes": "Dynamics / balance" and "Pedal / note lengths". The files had no
+  pedal and no dynamics, so everything was even and dry. midi_excerpt.py perform() now plays them as a pianist would:
+  pedal with the harmony (Bach every half bar; Beethoven and Chopin on each left-hand bass note, Für Elise's lone
+  E-D# bars dry), the right hand over the left, phrases following the line, light downbeat accents, an overall swell,
+  a short ritardando; the piano darkens soft notes (a low-pass by velocity) and damps a re-struck key. The settings
+  per piece are in blender/tools/piano_pieces.py, which writes content/piano.json. Second renders in
+  video-local/footage/2026-11-16-piano/v2/; owner: "Sounds good, push".

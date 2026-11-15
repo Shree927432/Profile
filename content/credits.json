@@ -10,10 +10,14 @@
     "licence": "Licence",
     "changes": "Changes",
     "fonts": "Fonts",
-    "software": "Software"
+    "software": "Software",
+    "sounds": "Sound and music"
   },
   "licences": {
-    "CC BY 4.0": "https://creativecommons.org/licenses/by/4.0/"
+    "CC BY 4.0": "https://creativecommons.org/licenses/by/4.0/",
+    "CC BY 3.0": "https://creativecommons.org/licenses/by/3.0/",
+    "CC BY-SA 3.0": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "Public domain": "https://creativecommons.org/publicdomain/mark/1.0/"
   },
   "models": [
     {
@@ -73,18 +77,76 @@
       "changes": "Scaled to 1:18, repainted, logos and sponsor marks removed, cut down for the web."
     }
   ],
-  "fontsLicence": { "name": "SIL Open Font License 1.1", "href": "https://openfontlicense.org/" },
+  "fontsLicence": {
+    "name": "SIL Open Font License 1.1",
+    "href": "https://openfontlicense.org/"
+  },
   "fonts": [
-    { "name": "Montserrat", "href": "https://fonts.google.com/specimen/Montserrat" },
-    { "name": "Roboto Condensed", "href": "https://fonts.google.com/specimen/Roboto+Condensed" },
-    { "name": "Rokkitt", "href": "https://fonts.google.com/specimen/Rokkitt" },
-    { "name": "Rajdhani", "href": "https://fonts.google.com/specimen/Rajdhani" },
-    { "name": "Saira", "href": "https://fonts.google.com/specimen/Saira" },
-    { "name": "Libre Caslon Text", "href": "https://fonts.google.com/specimen/Libre+Caslon+Text" },
-    { "name": "Comfortaa", "href": "https://fonts.google.com/specimen/Comfortaa" }
+    {
+      "name": "Montserrat",
+      "href": "https://fonts.google.com/specimen/Montserrat"
+    },
+    {
+      "name": "Roboto Condensed",
+      "href": "https://fonts.google.com/specimen/Roboto+Condensed"
+    },
+    {
+      "name": "Rokkitt",
+      "href": "https://fonts.google.com/specimen/Rokkitt"
+    },
+    {
+      "name": "Rajdhani",
+      "href": "https://fonts.google.com/specimen/Rajdhani"
+    },
+    {
+      "name": "Saira",
+      "href": "https://fonts.google.com/specimen/Saira"
+    },
+    {
+      "name": "Libre Caslon Text",
+      "href": "https://fonts.google.com/specimen/Libre+Caslon+Text"
+    },
+    {
+      "name": "Comfortaa",
+      "href": "https://fonts.google.com/specimen/Comfortaa"
+    }
   ],
   "software": [
-    { "name": "Three.js", "href": "https://threejs.org/", "licence": "MIT" },
-    { "name": "Astro", "href": "https://astro.build/", "licence": "MIT" }
+    {
+      "name": "Three.js",
+      "href": "https://threejs.org/",
+      "licence": "MIT"
+    },
+    {
+      "name": "Astro",
+      "href": "https://astro.build/",
+      "licence": "MIT"
+    }
+  ],
+  "sounds": [
+    {
+      "use": "The piano's sound",
+      "title": "Salamander Grand Piano V3",
+      "author": "Alexander Holm",
+      "source": "https://freepats.zenvoid.org/Piano/acoustic-grand-piano.html",
+      "licence": "CC BY 3.0",
+      "changes": "One velocity layer, 30 notes (Tone.js's web copies), trimmed to 3 to 5 seconds with a fade."
+    },
+    {
+      "use": "The piano's pieces: Nocturne in E-flat major, Op. 9 No. 2 (Chopin)",
+      "title": "Nocturne Op. 9 No. 2, MIDI",
+      "author": "Mutopia Project",
+      "source": "https://www.mutopiaproject.org/",
+      "licence": "CC BY-SA 3.0",
+      "changes": "The opening bars, played note by note by the room's piano. The excerpt (content/piano.json) is under the same licence."
+    },
+    {
+      "use": "The piano's pieces: Prelude in C major, BWV 846 (Bach); Für Elise, WoO 59 (Beethoven)",
+      "title": "Prelude in C, Für Elise, MIDI",
+      "author": "Mutopia Project",
+      "source": "https://www.mutopiaproject.org/",
+      "licence": "Public domain",
+      "changes": "Short excerpts, played note by note by the room's piano."
+    }
   ]
 }

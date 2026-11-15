@@ -12,7 +12,10 @@ export function createLamp(THREE, ctx) {
   // ctx.scene      the scene, if you must move your mesh out of the room tree
   // ctx.interact   the pick map. Register parts: ctx.interact.set(mesh, {kind:"lamp", part:"switch"})
   // ctx.view()     the camera as drawn this frame
-  // ctx.audio()    {ctx, out} while sound is on, else null
+  // ctx.audio()    {ctx, out} while sound is on, else null (muted, or no Web Audio). Since 2026-11-15 (audio.js):
+  //                the first call, made inside a click or a key, starts the sound and shows the Sound button;
+  //                connect to `out`. An object in a deferred asset (the piano) is made when that file arrives,
+  //                with ctx.root the asset's scene (desktop.js LATE_OBJECTS).
   // ctx.live(text) one line for screen readers
   // ctx.reduce     true when prefers-reduced-motion
   // ctx.content    the parsed content (projects, posts, links, about)

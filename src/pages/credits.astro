@@ -28,6 +28,23 @@ const licenceHref = (name: string) => (credits.licences as Record<string, string
       </ul>
     </section>
 
+    <section class="section" aria-labelledby="h-sounds">
+      <h2 id="h-sounds">{L.sounds}</h2>
+      <ul class="credit-list">
+        {credits.sounds.map((m) => (
+          <li>
+            <h3><a href={m.source} rel="noopener">{m.title}</a></h3>
+            <dl>
+              <dt>{L.inRoom}</dt><dd>{m.use}</dd>
+              <dt>{L.author}</dt><dd>{m.author}</dd>
+              <dt>{L.licence}</dt><dd><a href={licenceHref(m.licence)} rel="noopener">{m.licence}</a></dd>
+              <dt>{L.changes}</dt><dd>{m.changes}</dd>
+            </dl>
+          </li>
+        ))}
+      </ul>
+    </section>
+
     <section class="section" aria-labelledby="h-fonts">
       <h2 id="h-fonts">{L.fonts}</h2>
       <p>
