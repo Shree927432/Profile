@@ -46,7 +46,9 @@ export const STOPS = [
   { id: "switch", parent: "hero", nodes: ["switch_root"], frame: [[-2.2, 0.75, 0.55], [-2.05, 1.65, 1.45]],
     dir: [1, 0.3, 0.9], fit: 2.4 },
   // The music side (Back: its overview, the About view)
-  { id: "piano", parent: "about", nodes: ["obj_piano"], frame: [[1.55, 0.0, -0.95], [2.15, 1.3, 0.45]],
+  // the keys up to the top of the music (2026-11-16, owner: "i can not see pages": framed to the pedals, the music fell
+  // off the top in a tall window)
+  { id: "piano", parent: "about", nodes: ["obj_piano"], frame: [[1.55, 0.6, -0.95], [2.15, 1.32, 0.45]],
     dir: [-1, 0.28, 0.05], fit: 1.0 },
   { id: "guitars", parent: "about", late: true, nodes: ["guitar_01", "guitar_05", "guitar_03"], add: [[[2.0, 1.4, -1.0], [2.2, 2.55, 0.5]]],
     dir: [-1, -0.05, 0], fit: 1.1 },

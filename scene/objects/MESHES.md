@@ -197,12 +197,12 @@ and free play of keys and chords; which pieces is content, not names.
 | Name | What | Code does | Pivot / origin |
 |---|---|---|---|
 | `piano_key_a0` ... `piano_key_c8` | 88 keys, 52 white, 36 black | merged into `batch_piano_keys` at load (scene/batch.js, one draw call; the hit's key from partAtFace); click target, plays the note, key dips (setAxisLocal +X, setAngle); pieces play them. Hidden while the fallboard is closed | on the hinge line at the key's back end, centred on its width. Press = positive rotation about local +X by a few degrees (front goes down) |
-| `piano_fallboard` | the key cover | click target: opens or closes. Playing opens it first | on its hinge line where it folds into the case. Open = negative rotation about local +X (lifts up and back); angle set in code |
+| `piano_fallboard` | the key cover | click target: opens or closes; closing stops a piece (2026-11-16). Playing opens it first | on its hinge line where it folds into the case. Open = negative rotation about local +X (lifts up and back); angle set in code |
 | `piano_lid` | top lid | click target: opens or closes; the camera moves to `piano_inside_view` | on the hinge along the back top edge. Open = negative rotation about local +X, front edge up; angle set in code |
 | `piano_interior` | inside of the case: iron plate, pin block, tuning pins, dampers, action rail | hidden while the lid is closed | — |
 | `piano_strings` | all strings as one mesh, about 220, copper-wound in the bass | hidden while the lid is closed | — |
 | `piano_hammers` | all 88 hammers as one mesh, at rest | hidden while the lid is closed; static in v1 (below) | — |
-| `piano_sheet` | open music on the music rest | click target: plays the next piece, or stops one (2026-11-16, owner: "Click the sheet music"; About is not shown here) | screen rules. Two A4 pages open, aspect about 1.41 : 1 |
+| `piano_sheet` | open music on the music rest | a songbook drawn in code (2026-11-16): the contents, then a spread per piece with its name; click target: the right page turns forward and plays, the left turns back (the turning page is a strip made in code). About is not shown here | screen rules. Two A4 pages open, aspect about 1.41 : 1 |
 | `piano_static` | case, music rest, pedals, bench | click target: "the piano", starts the close-up | — |
 | `piano_view`, `piano_view_target` | keys close-up | camera moves here; video close-up | empties, keys and sheet in frame |
 | `piano_inside_view`, `piano_inside_view_target` | looking down into the open top | camera moves here when the lid opens | empties, strings and hammers in frame |

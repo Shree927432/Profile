@@ -1082,7 +1082,7 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     for (const o of roomObjects) if (o.away && (!picked || picked.info.owner !== o)) { o.away(); needsRender = true; }
     const what = stopOf(picked);
     if (what === "screen") { if (postsHere()) dispatchTap(picked); else flyTo(POSTS_AT); return; }
-    if (picked && picked.info.owner && (!what || what.id === currentId())) { dispatchTap(picked); needsRender = true; return; }
+    if (picked && picked.info.owner && (!what || what.id === currentId())) { dispatchTap(picked); hoverDirty = true; needsRender = true; return; } // the label may change (a cover now closed)
     if (what && what.id !== currentId()) flyTo(what.id);
   }
   canvas.addEventListener("pointerup", onPointerEnd);
@@ -1390,6 +1390,11 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     // the fade, and is made ready (drawn once out of sight) while nothing moves.
     const add = () => {
       const quiet = holding();
+      // its room objects first, with the materials as loaded: an object that copies a material during the fade below
+      // would keep the copy at opacity 0 (2026-11-16, owner: "why pages still not there": the piano's pages)
+      for (const make of LATE_OBJECTS[asset.id] || []) {
+        try { const o = make(THREE, { ...objectCtx, root }); if (o) roomObjects.push(o); } catch (err) { console.warn("room object:", err); }
+      }
       if (!reduce && !quiet) {
         for (const m of mats) { m.transparent = true; m.opacity = 0; }
         fades.push({ mats, t0: performance.now() });
@@ -1398,9 +1403,6 @@ export async function start({ canvas, content, overlay, params, reduce }) {
       deferredRoots.push(root);
       root.visible = asset.always || !quality.lowest;
       if (quiet) warm = false; // the next tick draws the hero once more, out of sight (warmUp), with the asset in
-      for (const make of LATE_OBJECTS[asset.id] || []) {
-        try { const o = make(THREE, { ...objectCtx, root }); if (o) roomObjects.push(o); } catch (err) { console.warn("room object:", err); }
-      }
       if (stops) { stops.build(root); registerRoom(); } // a new stop (the car shelf), or more meshes for one (the guitars)
       if (space && space.ready) { const ms = []; root.traverseVisible((o) => { if (o.isMesh) ms.push(o); }); space.build(ms); }
       needsRender = true;

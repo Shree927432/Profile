@@ -1584,3 +1584,30 @@ site or the room. Keep each entry short. No polishing; the post does that.
   a short ritardando; the piano darkens soft notes (a low-pass by velocity) and damps a re-struck key. The settings
   per piece are in blender/tools/piano_pieces.py, which writes content/piano.json. Second renders in
   video-local/footage/2026-11-16-piano/v2/; owner: "Sounds good, push".
+
+## 2026-11-16: the piano's songbook and key cover
+
+- Owner: "can add a paging turning feature to change the peice of piano, and names of peices on the pages, something
+  else to stop playing"; chose "Close the key cover" and "Turn and play".
+- scene/objects/piano.js: the music on the rest is drawn in code as a songbook (contents; a spread per piece with its
+  title, composer, era, year and its opening as noteheads on grand staves from its own notes). A click on the right
+  page turns it (a strip of 24 segments bent over the spine, the outer edge leading) and plays the new piece; the left
+  page turns back. The key cover (piano_fallboard) closes over the keys and stops the music; a key or a turn opens it.
+- Misses: two scripted edits did not apply (an escaped arrow, then `grep -c` with `$` read as an end anchor stopped the
+  chain), so a check ran on the old pages; caught by the crops. At the piano stop the names were too small and dim to
+  read: the type is larger and the paper gives a little light of its own (0.35), as the frames' prints do.
+- Checked on desktop, phone and reduced motion: contents, turn forward (Bach, then Beethoven), turn back, cover closed
+  (0 degrees, the piece stops) and open (-95), letters, Enter. No errors.
+- Owner, trying it: "cover is not closing properly and i can not see pages". In the owner's pane (about 800 x 930, taller
+  than wide) the piano stop, framed down to the pedals, put the music above the top edge; and the closed cover sits
+  1.2 cm over the keys and is shallower than they are, so their white fronts showed under it. The stop now frames the
+  keys to the top of the music (the pages larger everywhere), and the keys hide while the cover is closed (as the
+  plan had it), the cover seating 2 degrees past level. Stills at 1440 x 900, 800 x 929 and a phone in
+  video-local/footage/2026-11-16-piano/fix-pages-cover.jpg; the piano check passes.
+- Owner, again: "why pages still not there". Seen in the owner's own pane: the music rest was empty. The piano arrives
+  after the room and fades in; its object was made after the fade had set the loaded materials to opacity 0, and the
+  pages' material is a copy of one of them, so it stayed invisible while the originals faded back. The headless
+  checks never saw it: there the piano arrived during the opening's hold, which skips the fade. Late objects are now
+  made before the fade, and the pages are opaque whatever happens. Checked in the owner's pane (800 x 929): the
+  contents, a turn to Bach (playing), the cover closing (keys hidden, the music stopped). The hover label now
+  refreshes after a click (it said "Close the key cover" over a closed cover). All six object checks pass.

@@ -87,13 +87,22 @@
       "soundOffSaid": "Sound off"
     },
     "piano": {
-      "hint": "Play the keys (or A to ; on your keyboard), or click the music for a piece.",
-      "playing": "Playing: {piece}. Click the music to stop.",
-      "stopped": "Stopped. Click the music for the next piece.",
+      "hint": "Play the keys (or A to ' on your keyboard), turn the page for a piece, close the key cover to stop.",
+      "playing": "Playing: {piece}. Close the key cover to stop.",
       "loading": "Tuning the piano…",
+      "contents": "The contents. Turn the page for a piece.",
+      "closed": "The cover is closed. Turn the page or open it to play.",
+      "closedSaid": "The key cover is closed.",
+      "opened": "The key cover is open.",
+      "book": "Three pieces",
+      "bookSub": "for the piano in this room",
+      "turn": "Turn the page to play →",
       "tipKeys": "Play",
-      "tipSheet": "Play a piece",
-      "tipStop": "Stop the piece"
+      "tipNext": "Turn the page",
+      "tipBack": "Previous piece",
+      "tipContents": "Back to the contents",
+      "tipClose": "Close the key cover",
+      "tipOpen": "Open the key cover"
     },
     "light": {
       "tipOn": "Turn the light on",
