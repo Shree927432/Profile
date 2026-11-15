@@ -58,6 +58,7 @@ import monitorPosts from "./objects/monitor-posts.js";
 import { createPickMap } from "./pick.js";
 import { createFrames } from "./objects/frames.js";
 import { createMic } from "./objects/mic.js";
+import { createCompose } from "./objects/compose.js";
 import { batchRoom } from "./batch.js";
 import { createQuality, MODES } from "./quality.js";
 import { createGlide } from "./glide.js";
@@ -856,8 +857,9 @@ export async function start({ canvas, content, overlay, params, reduce }) {
     view: () => camera,
     audio: () => null,
     live: (s) => say(s),
+    go: (id) => { if (!stops || !stops.byId.has(id)) return false; flyTo(id); return true; },
   };
-  const roomObjects = useGlb ? [createFrames, createMic].map((make) => {
+  const roomObjects = useGlb ? [createFrames, createMic, createCompose].map((make) => {
     try { return make(THREE, objectCtx); } catch (err) { console.warn("room object:", err); return null; }
   }).filter(Boolean) : [];
   function registerRoom() {
@@ -1139,6 +1141,8 @@ export async function start({ canvas, content, overlay, params, reduce }) {
       return;
     }
     if (introRunning()) handOver();
+    // Escape inside an object's own HTML (the mic's card, the display's form) is the object's: it closes that first
+    if (e.key === "Escape" && e.target instanceof Element && e.target.closest("form, [role=dialog]")) return;
     if (e.key === "Escape" && back()) { e.preventDefault(); return; }
     // Walking (free camera): WASD always, the arrows unless the posts screen has them (the canvas focused at
     // the desk). Never while a button or link has focus.

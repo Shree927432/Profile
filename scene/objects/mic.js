@@ -81,6 +81,11 @@ export function createMic(THREE, ctx) {
     clearTimeout(copiedTimer);
     copiedTimer = setTimeout(() => { copy.textContent = t.copy || "Copy"; }, 1600);
   });
+  // Write: to the Studio Display's form when the room has it (ctx.go, 2026-11-15, owner: "open in the monitors screen
+  // where one can write mail directly"); otherwise the mailto link does its usual thing
+  write.addEventListener("click", (e) => {
+    if (ctx.go && ctx.go("display")) { e.preventDefault(); setOpen(false); }
+  });
   close.addEventListener("click", () => setOpen(false));
   card.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); } });
 

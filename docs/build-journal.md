@@ -1481,3 +1481,22 @@ site or the room. Keep each entry short. No polishing; the post does that.
 - Checked on desktop and phone: the first click flies to the mic, the second opens the card (in view, LED 0.84 -> 3.36),
   Copy (headless has no clipboard: the address is selected), a click on the wall closes it, Enter opens it with focus
   on Write, Back closes it. No errors. Frames and laptop checks still pass; desk view 112 draws.
+
+## 2026-11-15: write to me on the Studio Display
+
+- Owner: "it does not redirect to email page when we select write an email". Checked: the click reached the mailto
+  link and was not blocked; a mailto link only opens a desktop mail app, and with none set up nothing happens.
+- Owner: "can we open in the monitors screen where one can wirte mail directly in screen". A static site cannot send
+  mail by itself; owner chose "Form service (Web3Forms)" and agreed to `ctx.go()` in the contract.
+- scene/objects/compose.js: the Studio Display shows "Write to me" (an idle picture drawn on its glass); a new stop
+  straight at it (stops.js "display"). At the stop a form opens laid over the glass (a sheet on phones): name, email,
+  message, Send, a hidden botcheck. Send posts to Web3Forms with the public key from content; no key yet, so it offers
+  Copy my address. The mic card's Write flies there (ctx.go). desktop.js leaves Escape inside a form or dialog to it.
+- Misses, found by video-local/scripts/compose-check.mjs:
+  - the form did not open on arrival: the mic stop is within 1.6 m of the display too, so the form had opened there
+    unseen and the click on the mic counted as "away", which kept it closed. It now needs the camera looking at the
+    screen (within about 14 degrees), not only near it;
+  - Escape in the form left the display: the room's key listener runs first (capture on window).
+- Checked on desktop and phone: Write flies to the display and the form opens; typing (WASD too) stays in the form
+  and the camera does not move; Send with a stubbed network posts name, email and message to Web3Forms and says "Sent"
+  (a dummy key, removed after); Close, a click on the screen, Escape, Back. Mic, frames, laptop checks pass; 112 draws.

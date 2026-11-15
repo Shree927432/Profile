@@ -542,6 +542,77 @@ html.room-on #room { touch-action: none; }
 .room-mic-write:focus-visible,
 .room-mic-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .room-mic-card { transition: none; } }
+/* The Studio Display's form (scene/objects/compose.js, 2026-11-15): laid over the glass's rectangle on screen, in the
+   posts screen's colours so it reads as the monitor's own app; font-size is set from the glass's height. A sheet on
+   narrow screens. */
+.room-compose {
+  position: fixed;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55em;
+  padding: 1.1em 1.4em;
+  box-sizing: border-box;
+  color: #e6f3ff;
+  background: #0d1626;
+  border-radius: 0.3em;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow: auto;
+}
+.room-compose[hidden] { display: none; }
+.room-compose.is-sheet {
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  max-height: calc(100dvh - 5rem);
+  font-size: 15px;
+  border: 1px solid #1f3554;
+  box-shadow: 0 0.6rem 2rem rgb(0 0 0 / 0.4);
+}
+.room-compose-title { margin: 0 0 0.2em; font-size: 1.5em; font-weight: 600; color: #9fd0ff; }
+.room-compose-field { display: flex; flex-direction: column; gap: 0.2em; font-size: 0.85em; color: #6a97c4; }
+.room-compose-field input,
+.room-compose-field textarea {
+  font: inherit;
+  font-size: 1.15em;
+  color: #e6f3ff;
+  background: #13253b;
+  border: 1px solid #1f4068;
+  border-radius: 0.35em;
+  padding: 0.4em 0.55em;
+}
+.room-compose-field textarea { resize: none; flex: 1; min-height: 4.5em; }
+.room-compose-field:has(textarea) { flex: 1; }
+.room-compose-field input:focus-visible,
+.room-compose-field textarea:focus-visible,
+.room-compose-send:focus-visible,
+.room-compose-close:focus-visible { outline: 2px solid #9fd0ff; outline-offset: 1px; }
+.room-compose-trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.room-compose-row { display: flex; align-items: center; gap: 0.9em; flex-wrap: wrap; }
+.room-compose-send {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.45em 1.4em;
+  color: #0d1626;
+  background: #9fd0ff;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.room-compose-send[disabled] { opacity: 0.6; cursor: progress; }
+.room-compose-status { margin: 0; font-size: 0.9em; color: #9fd0ff; overflow-wrap: anywhere; }
+.room-compose-close {
+  position: absolute;
+  top: 0.3em;
+  right: 0.4em;
+  width: 2em;
+  height: 2em;
+  font-size: 1.1em;
+  color: #9fd0ff;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
 .room-loading { color: var(--fg-muted); }
 .room-loading[hidden] { display: none; }
 

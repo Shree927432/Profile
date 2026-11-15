@@ -26,6 +26,8 @@ export const STOPS = [
   { id: "pc", parent: "hero", nodes: ["rig_case", "rig_case_glass", "rig_gpu_root", "rig_fans", "batch_rig_fans", "rig_glow_strips"],
     dir: [0.35, 0.45, 1], fit: 1.25 },
   { id: "dashboard", parent: "hero", nodes: ["rig_display", "rig_screen"], dir: [1, 0.18, 0.05], fit: 1.15 },
+  // the Studio Display, straight at its glass (2026-11-15): the "write to me" screen (objects/compose.js)
+  { id: "display", parent: "hero", nodes: ["obj_monitor"], dir: [1, 0.06, 0.02], fit: 1.08 },
   { id: "gear", parent: "hero", nodes: ["keyboard", "mouse", "apollo", "deck", "batch_kb_keys"],
     add: [[[-2.0, 0.76, -1.32], [-1.45, 0.9, -0.74]]], dir: [0.9, 1.1, 0.12], fit: 1.15 },
   { id: "mic", parent: "hero", nodes: ["obj_mic", "set_camera"], frame: [[-1.76, 0.86, -0.68], [-1.42, 1.34, -0.3]],

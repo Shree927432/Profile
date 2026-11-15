@@ -303,6 +303,8 @@ Built 2026-11-15 in `scene/objects/mic.js`. In the GLB `mic_body` has two materi
 | `mic_static` | arm and desk clamp | — | — |
 | `mic_view`, `mic_view_target` | close-up anchors | camera moves here; video close-up | empties |
 
+`monitor_screen` carries the "Write to me" screen since 2026-11-15 (`scene/objects/compose.js`; its V may run either way, the object reads the corners' UVs).
+
 ### `obj_frames`: picture frames (GitHub, LinkedIn, X)
 
 Three frames, `NN` = `01` ... `03`. Which link each frame shows is set in content,

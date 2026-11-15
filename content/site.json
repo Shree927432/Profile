@@ -37,7 +37,8 @@
       "piano": "Piano",
       "guitars": "Guitar wall",
       "rack": "Guitar rack",
-      "decks": "DJ decks"
+      "decks": "DJ decks",
+      "display": "Write to me"
     },
     "debug": {
       "fps": "fps",
@@ -76,6 +77,23 @@
       "copied": "Copied",
       "write": "Write an email",
       "close": "Close"
+    },
+    "compose": {
+      "idle": "Write to me",
+      "hint": "click the screen",
+      "title": "Write to me",
+      "name": "Your name",
+      "email": "Your email",
+      "message": "Message",
+      "send": "Send",
+      "sending": "Sending…",
+      "sent": "Sent. Thank you, I'll write back soon.",
+      "failed": "Could not send. My address:",
+      "copy": "Copy my address",
+      "copied": "Copied",
+      "close": "Close",
+      "subject": "A message from shrikantpawade.pages.dev",
+      "accessKey": ""
     }
   },
   "notFound": {
