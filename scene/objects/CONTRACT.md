@@ -16,6 +16,8 @@ export function createLamp(THREE, ctx) {
   // ctx.live(text) one line for screen readers
   // ctx.reduce     true when prefers-reduced-motion
   // ctx.content    the parsed content (projects, posts, links, about)
+  // ctx.overlay    the room's overlay element (HTML over the canvas): put real buttons and text here
+  //                (a card, a label); remove them in dispose(). Added 2026-11-15 for the mic's card.
   const mesh = ctx.root.getObjectByName("lamp");
   if (!mesh) return null;              // the room may not have this object yet
 

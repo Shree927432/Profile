@@ -1463,3 +1463,21 @@ site or the room. Keep each entry short. No polishing; the post does that.
   away()". CONTRACT.md gains an optional away() (a click on anything that is not the object); desktop.js calls it on
   every tap that misses the object; frames.js stands the frame up. Checked on desktop and phone: a click on the wall
   above the shelf stands the frame up and the camera stays at the shelf.
+
+## 2026-11-15: the mic (Phase 5, object 3)
+
+- Owner: "start next". Mocked three ways for the mic to show the email on a still of the mic stop (A a card by the mic,
+  B the dashboard goes ON AIR, C the address glows in the air). Owner: "A: card by the mic". Real buttons need HTML, and
+  objects had no way to the page: asked, owner "Yes, add ctx.overlay" (CONTRACT.md).
+- scene/objects/mic.js: a click lights mic_led (its own material, 4x) and opens the card (content: links.email,
+  site.room.mic words; styles .room-mic-card in global.css). Copy uses the clipboard, else selects the address; Write
+  is a mailto link; a close button for touch. Beside the mic on wide screens, a sheet at the bottom below 600 px.
+- Misses, found by video-local/scripts/mic-check.mjs and its stills:
+  - the second click did nothing: mic_body has two materials, so three.js loads it as a group of two meshes, and the
+    pick map tests meshes only. The object now registers every mesh under it.
+  - the card covered the mic's head (placed from its centre; the mic lies sideways): now past the right edge of the
+    mic's box on screen;
+  - the hover label "Let's talk" sat on the Copy button: no label while the card is open.
+- Checked on desktop and phone: the first click flies to the mic, the second opens the card (in view, LED 0.84 -> 3.36),
+  Copy (headless has no clipboard: the address is selected), a click on the wall closes it, Enter opens it with focus
+  on Write, Back closes it. No errors. Frames and laptop checks still pass; desk view 112 draws.

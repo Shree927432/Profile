@@ -68,6 +68,14 @@
           "motif": "posts"
         }
       ]
+    },
+    "mic": {
+      "onAir": "On air",
+      "title": "Let's talk",
+      "copy": "Copy",
+      "copied": "Copied",
+      "write": "Write an email",
+      "close": "Close"
     }
   },
   "notFound": {

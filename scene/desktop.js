@@ -57,6 +57,7 @@ import { buildPlaceholderRoom } from "./placeholder-room.js";
 import monitorPosts from "./objects/monitor-posts.js";
 import { createPickMap } from "./pick.js";
 import { createFrames } from "./objects/frames.js";
+import { createMic } from "./objects/mic.js";
 import { batchRoom } from "./batch.js";
 import { createQuality, MODES } from "./quality.js";
 import { createGlide } from "./glide.js";
@@ -850,13 +851,13 @@ export async function start({ canvas, content, overlay, params, reduce }) {
   // flies there first (as the laptop). Keys go to the objects at a stop; an object decides if they are for it.
   const owned = new Set();
   const objectCtx = {
-    root: room, scene, reduce, content,
+    root: room, scene, reduce, content, overlay,
     interact: { set(m, info) { owned.add(m); interact.set(m, info); }, delete(m) { owned.delete(m); interact.delete(m); } },
     view: () => camera,
     audio: () => null,
     live: (s) => say(s),
   };
-  const roomObjects = useGlb ? [createFrames].map((make) => {
+  const roomObjects = useGlb ? [createFrames, createMic].map((make) => {
     try { return make(THREE, objectCtx); } catch (err) { console.warn("room object:", err); return null; }
   }).filter(Boolean) : [];
   function registerRoom() {

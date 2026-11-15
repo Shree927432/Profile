@@ -298,6 +298,8 @@ widest body):
 | Name | What | Code does | Pivot / origin |
 |---|---|---|---|
 | `mic_body` | microphone and shock mount | click target: camera moves in, shows email | origin at the capsule centre |
+
+Built 2026-11-15 in `scene/objects/mic.js`. In the GLB `mic_body` has two materials, so it loads as a group of two meshes; the object registers every mesh under it and `mic_led` (lit while the card is open).
 | `mic_static` | arm and desk clamp | — | — |
 | `mic_view`, `mic_view_target` | close-up anchors | camera moves here; video close-up | empties |
 

@@ -98,11 +98,11 @@ vendored three.js; the room's own files keep Cloudflare's default (they must cha
 ## Room objects (Phase 5, from 2026-11-15)
 
 `desktop.js` hosts the room objects of `scene/objects/` (`objects/CONTRACT.md`): it makes each with the ctx (the room,
-the scene, `interact`, `view`, `live`, `reduce`, `content`; `audio` is null until sound), calls `frame(dt, t)` every
+the scene, `interact`, `view`, `live`, `reduce`, `content`, `overlay`; `audio` is null until sound), calls `frame(dt, t)` every
 tick and draws while one is `busy`. The meshes an object registers with an owner stay out of the stops' "room"
 registration. A click on an object's part acts only at the object's stop; from anywhere else it flies there first
 (the laptop's posts screen works the same way). Keys reach the objects at a stop; each decides if a key is its own.
-Today: `frames.js` (the picture frames).
+Today: `frames.js` (the picture frames), `mic.js` (the email card, HTML in `ctx.overlay`).
 
 ## Deferred assets (2026-11-08, the car display first; the guitars 2026-11-13; the piano 2026-11-14)
 
