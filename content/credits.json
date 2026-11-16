@@ -17,7 +17,8 @@
     "CC BY 4.0": "https://creativecommons.org/licenses/by/4.0/",
     "CC BY 3.0": "https://creativecommons.org/licenses/by/3.0/",
     "CC BY-SA 3.0": "https://creativecommons.org/licenses/by-sa/3.0/",
-    "Public domain": "https://creativecommons.org/publicdomain/mark/1.0/"
+    "Public domain": "https://creativecommons.org/publicdomain/mark/1.0/",
+    "CC BY-SA 2.5": "https://creativecommons.org/licenses/by-sa/2.5/"
   },
   "models": [
     {
@@ -139,6 +140,14 @@
       "source": "https://www.mutopiaproject.org/",
       "licence": "CC BY-SA 3.0",
       "changes": "The opening bars, played note by note by the room's piano. The excerpt (content/piano.json) is under the same licence."
+    },
+    {
+      "use": "The piano's pieces: Moonlight Sonata, Op. 27 No. 2, third movement (Beethoven)",
+      "title": "Sonata No. 14 \"Moonlight\", MIDI",
+      "author": "Mutopia Project",
+      "source": "https://www.mutopiaproject.org/",
+      "licence": "CC BY-SA 2.5",
+      "changes": "The exposition of the third movement, played note by note by the room's piano. The excerpt (content/piano.json) is under the same licence."
     },
     {
       "use": "The piano's pieces: Prelude in C major, BWV 846 (Bach); Für Elise, WoO 59 (Beethoven)",

@@ -47,3 +47,12 @@ blender/assets/piano-samples/*/*
 !blender/assets/piano-samples/*/README.md
 # downloaded MIDI files (2026-11-16, the Mutopia Project): the excerpts the site plays are content/piano.json
 blender/assets/piano-midi/*.mid
+blender/assets/piano-midi/*/*.mid
+blender/assets/piano-midi/*/*.zip
+# downloaded guitar samples (2026-11-16, FreePats FSBS Direct, CC0): originals local; web copies in scene/assets/sound/guitar/
+blender/assets/guitar-samples/*/*
+!blender/assets/guitar-samples/*/README.md
+# models the owner downloaded to try in the room (2026-11-16): local only until one is chosen and its licence checked
+blender/assets/downloads/
+# models being tried in the browser room (not shipped)
+scene/assets/_test/

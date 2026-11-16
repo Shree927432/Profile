@@ -1611,3 +1611,42 @@ site or the room. Keep each entry short. No polishing; the post does that.
   made before the fade, and the pages are opaque whatever happens. Checked in the owner's pane (800 x 929): the
   contents, a turn to Bach (playing), the cover closing (keys hidden, the music stopped). The hover label now
   refreshes after a click (it said "Close the key cover" over a closed cover). All six object checks pass.
+
+## 2026-11-16: the owner's downloaded office chair, tried in the room (a test, nothing shipped)
+
+- Owner: "you can use 3d modeled chair that i have downloaded for testing how it looks in the room". I first took the
+  piano stool (concertStool.blend) for it; the owner: "file name is s0+02", the mesh office chair "SO 002".
+- Its first download was a 3ds Max file only (Blender cannot open .max). The page's FBX opened but scattered the five
+  casters and mis-scaled the seat (3ds Max group scales); the OBJ from the multi-format archive is intact (234,572
+  triangles, in decimetres, placeholder colours only).
+- blender/design/chair_so002_test.py: materials rebuilt from the archive's photos (white frame and arms, grey mesh
+  back, grey seat, chrome base, black casters), scaled to metres, cut to 46k triangles, a 1.4 MB GLB in
+  scene/assets/_test/ (git-ignored). Swapped in for set_chair in the browser room at the same spot and facing:
+  video-local/footage/2026-11-16-chair-test/compare.jpg. Light previews only: the laptop was at 17 % on battery.
+- Open before it could ship: the model's licence and source page, a see-through mesh back, a cut to about 12k
+  triangles, building it into the Blender room in place of the chair component, and a rebake.
+- Owner: "Yes, replace it". blender/components/chair_so002.py makes the chair a room component (lite 15,262 triangles:
+  the mesh back kept at 65 %, cut harder it showed blotchy triangles through its see-through weave; the casters and
+  the mechanism under the seat cut hardest), and build_v3.py places it where the Aeron stood. Stopped before the
+  rebuild and rebake: the laptop was at 14 % on battery, and the model's licence (its download page) is not known yet.
+- Later the same day, on 99 % battery: the room rebuilt and rebaked with SO 002 (dusk and the lights-on layer, 12
+  minutes). room.glb 1.80 -> 1.85 MB (gzipped 1.43 -> 1.48); the chair is 15,262 triangles and two draw calls (the
+  Aeron was eight), so the desk view draws 110 times (was 111). First room frame on throttled 4G, on battery: 3.23 s
+  (3.08 to 3.17 s before, also on battery): the chair's 55 KB. All seven object checks pass; stills in
+  video-local/footage/2026-11-16-chair-test/final-in-room.jpg. A shell outage on the assistant's side (a safety check
+  timing out six times) delayed the start. Still not pushed: the model's licence is unconfirmed (the owner has not sent
+  the download page), and the tree also holds the unfinished guitars.
+
+## 2026-11-16: the Moonlight's finale joins the songbook
+
+- Owner: "can you add moonlight sonata 3rd movement to piano"; "Yes, download it" (Mutopia's moonlight-mids.zip, 9.5 KB,
+  CC BY-SA 2.5) and "The first section, about 1.5 min". The file has no tempo (it would last 13 minutes): played at 168.
+  The exposition ends on the dominant, so the excerpt takes the downbeat chord of bar 65 as its close.
+- blender/tools/piano_pieces.py: a fourth piece (CHORD: a hand's full chords struck harder, for the sforzandi; no
+  pedal). 1,626 notes, 95.75 s. content/piano.json is 47 KB.
+- Misses: the first render clipped (peak 1.55) and sat 5 dB over the other pieces: its dynamics were lowered and the
+  piano got a limiter; the limiter's automatic make-up gain then lifted every piece 2 dB, so the piano's bus went from
+  2.4 to 2.0. The offline render script had been in a temp folder that was cleared; it is now
+  video-local/scripts/piano-render.mjs. The contents page said "Three pieces" from content: it now counts.
+- scene/objects/piano.js schedules a piece's notes 1.5 s ahead instead of all at the click. Checked on desktop, phone
+  and reduced motion. Render: video-local/footage/2026-11-16-piano/moonlight-3rd-movement.mp3. Not pushed.

@@ -22,7 +22,8 @@ const DOWN_MS = 40; // a key goes down this fast, and comes up over UP_MS
 const UP_MS = 110;
 const HOLD_MIN = 0.12, HOLD_MAX = 0.35; // seconds a key stays down for a note in a piece
 const LEAD = 0.12; // seconds between a click on the music and the first note
-const BUS = 2.4; // the piano's level into the room's sound (the samples peak low; measured 2026-11-16: pieces peak about -4 dBFS, mean about -22 dB)
+const AHEAD = 1.5; // seconds of a piece's notes handed to the sound ahead of the playing
+const BUS = 2.0; // the piano's level into the room's sound (the samples peak low; measured 2026-11-16: pieces peak about -4 dBFS, mean about -22 dB)
 const TURN_MS = 750; // a page turning over
 const PAPER_GLOW = 0.35; // the pages' own light (share of their colours)
 const COVER_MS = 650; // the key cover folding down or up
@@ -78,7 +79,9 @@ export function createPiano(THREE, ctx) {
       comp.ratio.value = 4;
       comp.attack.value = 0.003;
       comp.release.value = 0.25;
-      g.connect(comp).connect(a.out);
+      const limit = a.ctx.createDynamicsCompressor(); // and a limiter: the Moonlight's full chords never clip
+      limit.threshold.value = -4; limit.knee.value = 2; limit.ratio.value = 20; limit.attack.value = 0.001; limit.release.value = 0.1;
+      g.connect(comp).connect(limit).connect(a.out);
       bus = g;
     }
     return bus;
@@ -168,8 +171,8 @@ export function createPiano(THREE, ctx) {
     if (piece !== current()) return; // the page was turned again meanwhile
     const a2 = ctx.audio();
     const startAt = a2 ? a2.ctx.currentTime + LEAD : 0;
-    if (a2) for (const n of piece.ns) sound(n.m, n.vel, startAt + n.s, n.len);
-    playing = { piece, i: 0, t0: performance.now() + LEAD * 1000, a: a2, startAt };
+    playing = { piece, i: 0, sched: 0, t0: performance.now() + LEAD * 1000, a: a2, startAt };
+    schedule(0);
     const line = playingLine(piece);
     showNote(line);
     ctx.live(line);
@@ -181,10 +184,20 @@ export function createPiano(THREE, ctx) {
     for (const name of down.keys()) down.set(name, 0);
     if (said) { showNote(said, 2600); ctx.live(said); } else hideNote();
   }
+  // the notes are handed to the sound a little ahead of time, not all at once (the Moonlight's finale is 1,600 notes)
+  function schedule(el) {
+    const p = playing;
+    if (!p || !p.a) return;
+    while (p.sched < p.piece.ns.length && p.piece.ns[p.sched].s < el + AHEAD) {
+      const n = p.piece.ns[p.sched++];
+      sound(n.m, n.vel, p.startAt + n.s, n.len);
+    }
+  }
   function stepPiece() {
     if (!playing) return;
     const p = playing;
     const el = p.a ? p.a.ctx.currentTime - p.startAt : (performance.now() - p.t0) / 1000;
+    schedule(el);
     while (p.i < p.piece.ns.length && p.piece.ns[p.i].s <= el) {
       const n = p.piece.ns[p.i++];
       press(keyOf.get(n.m), 1000 * Math.min(HOLD_MAX, Math.max(HOLD_MIN, n.len * 0.8)));
@@ -288,14 +301,15 @@ export function createPiano(THREE, ctx) {
     const ink = "#26221d", soft = "#6c655b";
     if (n === 0) {
       if (side === "l") {
-        centred(g, x0, 140, t.book || "Three pieces", `italic 58px ${SERIF}`, ink);
+        const count = ["", "One piece", "Two pieces", "Three pieces", "Four pieces", "Five pieces", "Six pieces"][(pieces || []).length] || t.book || "Pieces";
+        centred(g, x0, 140, t.book || count, `italic 58px ${SERIF}`, ink);
         centred(g, x0, 190, t.bookSub || "for the piano in this room", `24px ${SERIF}`, soft);
         (pieces || []).forEach((p, i) => {
-          const y = 300 + i * 175;
-          g.fillStyle = ink; g.font = `600 38px ${SERIF}`; g.fillText(`${i + 1}.`, x0 + 52, y);
-          g.font = `600 36px ${SERIF}`; g.fillText(p.composer, x0 + 100, y);
-          g.font = `${p.title.length > 30 ? 26 : 30}px ${SERIF}`; g.fillText(p.title, x0 + 100, y + 44);
-          g.fillStyle = soft; g.font = `italic 26px ${SERIF}`; g.fillText(`${p.era}, ${p.year}`, x0 + 100, y + 84);
+          const y = 275 + i * Math.min(175, 590 / pieces.length);
+          g.fillStyle = ink; g.font = `600 36px ${SERIF}`; g.fillText(`${i + 1}.`, x0 + 52, y);
+          g.font = `600 34px ${SERIF}`; g.fillText(p.composer, x0 + 100, y);
+          g.font = `30px ${SERIF}`; g.fillText(p.title.split(", ")[0], x0 + 100, y + 42); // the name; its number is on its own page
+          g.fillStyle = soft; g.font = `italic 25px ${SERIF}`; g.fillText(`${p.era}, ${p.year}`, x0 + 100, y + 78);
         });
       } else {
         staves(g, x0, 210, 3, null, 0, 1);

@@ -161,7 +161,7 @@ def main():
         at = until
     data = perform(data, bars, bar_s, at)
     tail = max(n[0] + n[2] for n in data)
-    print(json.dumps(dict(notes=data, seconds=round(max(at, tail), 2))))
+    print(json.dumps(dict(notes=data, seconds=round(max(at, tail), 2), seconds_per_bar=bar_s)))
 
 
 def perform(data, bars, bar_s, total):
@@ -174,6 +174,8 @@ def perform(data, bars, bar_s, total):
               half bar and the top note of each beat a little stronger (Bach).
       ARCH    the piece's overall shape, fraction:level pairs (default 0:0.86,0.55:1,0.85:1.02,1:0.84).
       RIT     seconds of ritardando at the end (default 2.5), slowing to about 18 % at the last note.
+      CHORD   a hand's chords of three notes or more are struck this much harder (default 1: the sforzando chords
+              of the Moonlight's finale, 1.3).
     Velocities are 0..1; the piano code turns them into loudness and tone (softer is darker)."""
     import os
     import random
@@ -182,6 +184,7 @@ def perform(data, bars, bar_s, total):
     voice = os.environ.get("VOICE", "melody")
     arch = [tuple(float(x) for x in p.split(":")) for p in os.environ.get("ARCH", "0:0.86,0.55:1,0.85:1.02,1:0.84").split(",")]
     rit = float(os.environ.get("RIT", "2.5"))
+    chord = float(os.environ.get("CHORD", "1"))
     data.sort(key=lambda n: (n[0], n[1]))
     # pedal: change points, then each note held to its window's lift
     lifts = []                                                 # (down, up)
@@ -230,6 +233,8 @@ def perform(data, bars, bar_s, total):
             if hand == "r" and win and m == max(o[1] for o in win):
                 base += 0.06                                    # the line on top of the broken chord
         accent = 1.07 if any(abs(s - b) < 0.02 for b in bars) else 1.03 if any(abs(s - b - bar_s / 2) < 0.02 for b in bars) else 1.0
+        if chord != 1.0 and sum(1 for o in data if o[4] == hand and abs(o[0] - s) < 0.012) >= 3:
+            accent *= chord
         n[3] = max(0.15, min(1.0, base * accent * level(s) * (1 + rnd.uniform(-0.03, 0.03))))
     # the ending slows: time stretched by up to 18 % over the last RIT seconds
     t_r = last - rit

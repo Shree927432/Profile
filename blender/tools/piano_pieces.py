@@ -21,6 +21,12 @@ PIECES = [
          env=dict(PEDAL="half", VOICE="even", ARCH="0:0.82,0.45:1,0.8:1.04,1:0.8", RIT="3"),
          title="Prelude in C major, BWV 846", composer="J. S. Bach", era="Baroque", year=1722,
          excerpt="bars 1 to 11 and the last chord, a little quicker than the file", licence="Public domain"),
+    # the exposition (bars 1 to 64) and the chord that resolves it (the downbeat of bar 65); the file has no tempo: 168
+    dict(id="moonlight3", file="moonlight/moonlight3.mid", bars="1-65", speed="2.8",
+         env=dict(PEDAL="none", VOICE="melody", CHORD="1.22", ARCH="0:0.6,0.3:0.7,0.6:0.74,0.9:0.78,1:0.72", RIT="1.2"),   # a dense piece: lower, to sit with the others
+         until_bar=65,
+         title="Moonlight Sonata, Op. 27 No. 2, III. Presto agitato", composer="Ludwig van Beethoven", era="Classical", year=1801,
+         excerpt="the exposition (bars 1 to 64) and its resolving chord, at 168 to the minute", licence="CC BY-SA 2.5"),
     dict(id="elise", file="fur_Elise_WoO59.mid", bars="0-23", speed="1",
          env=dict(PICKUP="192", PEDAL="bass:1.2", VOICE="melody", ARCH="0:0.8,0.3:0.92,0.55:1,0.8:0.95,1:0.78", RIT="2"),
          until=("B4", "C5", "D5"),                     # stop before the lead-in that brings the middle phrase round again
@@ -50,6 +56,11 @@ def main():
             seq = [name(n[1]) for n in raw]
             k = next(i for i in range(len(seq) - 2) if tuple(seq[i:i + 3]) == p["until"] and raw[i][0] > 20)
             extra = dict(UNTIL=str(raw[k][0] - 0.01))
+        if p.get("until_bar"):                          # end on that bar's downbeat chord
+            raw = cut(p, dict(PEDAL="none", RIT="0", CHORD="1"))
+            first = int(p["bars"].split("-")[0])
+            bar_s = raw["seconds_per_bar"]
+            extra = dict(UNTIL=str((p["until_bar"] - first) * bar_s + 0.02))
         d = cut(p, extra)
         pieces.append(dict(id=p["id"], title=p["title"], composer=p["composer"], era=p["era"], year=p["year"],
                            excerpt=p["excerpt"], source="Mutopia Project", licence=p["licence"],
